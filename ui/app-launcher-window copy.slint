@@ -1,0 +1,176 @@
+import { Button, VerticalBox, HorizontalBox, ScrollView, StandardListView, ComboBox } from "std-widgets.slint";
+
+struct ProjectItem {    // Removed ':=' as it's deprecated
+    name: string,
+    path: string,
+}
+
+component SidebarButton inherits Rectangle {
+    in property <image> icon;
+    in property <string> text;
+    in property <bool> selected;
+    callback clicked();
+    
+    width: 200px;
+    height: 40px;
+    background: selected ? #303040 : transparent;
+    animate background { duration: 200ms; }
+
+    HorizontalLayout {
+        padding: 8px;
+        spacing: 8px;
+        Image {
+            source: icon;
+            width: 24px;
+            height: 24px;
+            colorize: selected ? #00E5FF : #888;
+        }
+        Text {
+            text: root.text;
+            color: selected ? #00E5FF : #888;
+            font-size: 14px;
+            vertical-alignment: center;
+        }
+    }
+
+    TouchArea {
+        clicked => {
+            root.clicked();
+        }
+    }
+}
+
+export component AppWindow inherits Window {
+    // Properties
+    in-out property <int> selected-tab: 0;
+    in-out property <[ProjectItem]> recent-projects: [
+        { name: "Project 1", path: "/path/1" },
+        { name: "Project 2", path: "/path/2" },
+    ];
+    
+    // Theme colors
+    private property <color> bg-color: #000000;
+    private property <color> accent-color: #00E5FF;
+    private property <color> secondary-bg: #151520;
+    private property <color> text-color: #FFFFFF;
+    title: "Pulsar Engine";
+    
+    background: bg-color;
+    preferred-width: 1080px;
+    min-width: 0px;
+    min-height: 0px;
+    preferred-height: 600px;
+    
+    HorizontalLayout {
+        x: 0px;
+        y: 0cm;
+        // Sidebar
+        Rectangle {
+            background: secondary-bg;
+            width: 200px;
+            VerticalLayout {
+                padding: 16px;
+                spacing: 8px;
+                
+                // Logo area
+                Rectangle {
+                    height: 60px;
+                    Text {
+                        text: "Pulsar Launchpad";
+                        color: accent-color;
+                        font-size: 20px;
+                        font-weight: 700;
+                    }
+                }
+                
+                // Navigation buttons
+                SidebarButton {
+                    text: "Projects";
+                    selected: selected-tab == 0;
+                    clicked => { selected-tab = 0; }
+                }
+                SidebarButton {
+                    text: "Scene";
+                    selected: selected-tab == 1;
+                    clicked => { selected-tab = 1; }
+                }
+                SidebarButton {
+                    text: "Assets";
+                    selected: selected-tab == 2;
+                    clicked => { selected-tab = 2; }
+                }
+                SidebarButton {
+                    text: "Build";
+                    selected: selected-tab == 3;
+                    clicked => { selected-tab = 3; }
+                }
+            }
+        }
+        
+        // Main content area
+        VerticalLayout {
+            padding: 24px;
+            alignment: LayoutAlignment.start;
+            spacing: 16px;
+            
+            // Top bar
+            HorizontalLayout {
+                height: 40px;
+                spacing: 16px;
+                
+                Button {
+                    text: "New Project";
+                    primary: true;
+                }
+                
+                Button {
+                    text: "Open";
+                }
+                
+                ComboBox {
+                    model: ["Debug", "Release", "Profile"];
+                    current-value: "Debug";
+                    width: 120px;
+                }
+            }
+            
+            // Content panels
+            Rectangle {
+                background: secondary-bg;
+                border-radius: 8px;
+                
+                if selected-tab == 0 : VerticalLayout {
+                    padding: 16px;
+                    spacing: 8px;
+                    
+                    Text {
+                        text: "Recent Projects";
+                        color: text-color;
+                        font-size: 18px;
+                        font-weight: 600;
+                    }
+                    
+                    for project[i] in recent-projects: Rectangle {
+                        height: 60px;
+                        background: Math.mod(i, 2) == 0 ? #1A1A25 : #202030;  // Fixed modulo operation
+                        
+                        HorizontalLayout {
+                            padding: 8px;
+                            spacing: 8px;
+                            
+                            Text {
+                                text: project.name;
+                                color: text-color;
+                            }
+                            Text {
+                                text: project.path;
+                                color: #888;
+                                font-size: 12px;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

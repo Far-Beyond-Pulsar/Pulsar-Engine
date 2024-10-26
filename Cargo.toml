@@ -1,0 +1,12 @@
+[package]
+name = "Horizon-Level-Editor"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+ez_logging = "0.1.2"
+hey_listen = "0.5.0"
+slint = "1.7.2"
+
+[build-dependencies]
+slint-build = "1.7.2"
