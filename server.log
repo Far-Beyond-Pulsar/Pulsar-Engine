@@ -10,3 +10,110 @@
 [2024-10-26 11:06:26] Set status to Disabled
 [2024-10-26 11:06:26] test
 [2024-10-26 11:06:26] new reference is active
+[2024-10-26 14:33:57] Logging system initialized
+[2024-10-26 14:33:57] Hello, world!
+[2024-10-26 14:33:57] Set status to Active
+[2024-10-26 14:33:57] Set status to Disabled
+[2024-10-26 14:33:57] test
+[2024-10-26 14:33:57] new reference is active
+[2024-10-26 14:54:39] Logging system initialized
+[2024-10-26 14:54:39] Hello, world!
+[2024-10-26 14:55:24] Logging system initialized
+[2024-10-26 14:55:24] Hello, world!
+[2024-10-26 14:55:24] Set status to Active
+[2024-10-26 14:55:24] Set status to Disabled
+[2024-10-26 14:55:24] test
+[2024-10-26 14:55:24] new reference is active
+[2024-10-26 14:55:24] Object {
+    name: "",
+    components: {
+        1: Component {
+            name: "name",
+            status: Active,
+        },
+    },
+}
+[2024-10-26 14:56:14] Logging system initialized
+[2024-10-26 14:56:14] Hello, world!
+[2024-10-26 14:56:14] Set status to Active
+[2024-10-26 14:56:14] Set status to Disabled
+[2024-10-26 14:56:14] test
+[2024-10-26 14:56:14] new reference is active
+[2024-10-26 14:56:14] Object {
+    name: "",
+    components: {
+        1: Component {
+            name: "name",
+            status: Active,
+        },
+    },
+}
+[2024-10-26 14:58:42] Logging system initialized
+[2024-10-26 14:58:42] Hello, world!
+[2024-10-26 15:00:27] Logging system initialized
+[2024-10-26 15:00:27] Hello, world!
+[2024-10-26 15:03:32] Logging system initialized
+[2024-10-26 15:03:32] Hello, world!
+[2024-10-26 15:05:09] Logging system initialized
+[2024-10-26 15:05:09] Hello, world!
+[2024-10-26 15:06:40] Logging system initialized
+[2024-10-26 15:06:40] Hello, world!
+[2024-10-26 15:06:40] Invalid object name, cannot be empty!
+[2024-10-26 15:10:26] Logging system initialized
+[2024-10-26 15:10:26] Hello, world!
+[2024-10-26 15:10:33] Logging system initialized
+[2024-10-26 15:10:33] Hello, world!
+[2024-10-26 15:10:38] Logging system initialized
+[2024-10-26 15:10:38] Hello, world!
+[2024-10-26 15:11:08] Logging system initialized
+[2024-10-26 15:11:08] Hello, world!
+[2024-10-26 15:11:11] Logging system initialized
+[2024-10-26 15:11:11] Hello, world!
+[2024-10-26 15:11:15] Logging system initialized
+[2024-10-26 15:11:15] Hello, world!
+[2024-10-26 15:12:01] Logging system initialized
+[2024-10-26 15:12:01] Hello, world!
+[2024-10-26 15:13:10] Logging system initialized
+[2024-10-26 15:13:10] Hello, world!
+[2024-10-26 15:14:00] Logging system initialized
+[2024-10-26 15:14:00] Hello, world!
+[2024-10-26 15:14:22] Logging system initialized
+[2024-10-26 15:14:22] Hello, world!
+[2024-10-26 15:14:26] Logging system initialized
+[2024-10-26 15:14:26] Hello, world!
+[2024-10-26 15:17:33] Logging system initialized
+[2024-10-26 15:17:33] Hello, world!
+[2024-10-26 15:17:48] Logging system initialized
+[2024-10-26 15:17:48] Hello, world!
+[2024-10-26 15:17:48] Set status to Active
+[2024-10-26 15:17:48] Set status to Disabled
+[2024-10-26 15:17:48] test
+[2024-10-26 15:17:48] new reference is active
+[2024-10-26 15:17:48] Object {
+    name: "thing",
+    components: {
+        1: Component {
+            name: "name",
+            status: Active,
+        },
+    },
+}
+[2024-10-26 15:20:31] Logging system initialized
+[2024-10-26 15:20:31] Hello, world!
+[2024-10-26 15:20:31] Set status to Active
+[2024-10-26 15:20:31] Set status to Disabled
+[2024-10-26 15:20:31] test
+[2024-10-26 15:20:31] new reference is active
+[2024-10-26 15:20:31] Object {
+    name: "thing",
+    components: {
+        1: Component {
+            name: "name",
+            status: Active,
+        },
+        2: Component {
+            name: "name",
+            status: Active,
+        },
+    },
+}
