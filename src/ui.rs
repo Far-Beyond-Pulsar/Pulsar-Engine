@@ -1,6 +1,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 #![allow(rustdoc::missing_crate_level_docs)]
 
+//use crate::viewport::Viewport3D;
 use eframe::egui;
 use egui::Theme;
 use std::collections::HashMap;
@@ -31,6 +32,7 @@ struct GameEngineUI {
     scene_objects: Vec<String>,
     properties: HashMap<String, String>,
     console_logs: Vec<String>,
+//    viewport: Option<Viewport3D>,
 }
 
 impl Default for GameEngineUI {
@@ -48,6 +50,30 @@ impl Default for GameEngineUI {
         let mut tabs = vec![
             Tab { name: "Scene".to_owned(), is_active: true },
             Tab { name: "Game".to_owned(), is_active: false },
+            Tab { name: "Game".to_owned(), is_active: false },
+            Tab { name: "Game".to_owned(), is_active: false },
+            Tab { name: "Game".to_owned(), is_active: false },
+            Tab { name: "Game".to_owned(), is_active: false },
+            Tab { name: "Game".to_owned(), is_active: false },
+            Tab { name: "Game".to_owned(), is_active: false },
+            Tab { name: "Game".to_owned(), is_active: false },
+            Tab { name: "Game".to_owned(), is_active: false },
+            Tab { name: "Game".to_owned(), is_active: false },
+            Tab { name: "Game".to_owned(), is_active: false },
+            Tab { name: "Game".to_owned(), is_active: false },
+            Tab { name: "Game".to_owned(), is_active: false },
+            Tab { name: "Game".to_owned(), is_active: false },
+            Tab { name: "Game".to_owned(), is_active: false },
+            Tab { name: "Game".to_owned(), is_active: false },
+            Tab { name: "Game".to_owned(), is_active: false },
+            Tab { name: "Game".to_owned(), is_active: false },
+            Tab { name: "Game".to_owned(), is_active: false },
+            Tab { name: "Game".to_owned(), is_active: false },
+            Tab { name: "Game".to_owned(), is_active: false },
+            Tab { name: "Game".to_owned(), is_active: false },
+            Tab { name: "Game".to_owned(), is_active: false },
+            Tab { name: "Game".to_owned(), is_active: false },
+            Tab { name: "Game".to_owned(), is_active: false },
         ];
 
         Self {
@@ -60,6 +86,7 @@ impl Default for GameEngineUI {
             scene_objects: vec!["Main Camera".to_owned(), "Player".to_owned(), "Environment".to_owned()],
             properties: HashMap::new(),
             console_logs: vec!["Game engine initialized...".to_owned()],
+//            viewport: None,
         }
     }
 }
@@ -175,18 +202,37 @@ impl GameEngineUI {
         let is_scene_tab = self.dock_state.tabs.iter()
             .find(|t| t.name == "Scene")
             .map_or(false, |t| t.is_active);
-
+    
         if is_scene_tab {
             ui.heading("Scene View");
         } else {
             ui.heading("Game View");
         }
-
+    
         let available_size = ui.available_size();
-        let (rect, _) = ui.allocate_exact_size(available_size, egui::Sense::hover());
-        ui.painter().rect_filled(rect, 4.0, DARKER_GRAY);
-        
-        // Add a grid pattern for the scene view
+        let (rect, response) = ui.allocate_exact_size(available_size, egui::Sense::drag());
+    
+        // Initialize viewport if not already created
+//        if self.viewport.is_none() {
+//            self.viewport = Some(Viewport3D::new(window));
+//        }
+    
+        // Render 3D viewport
+//        if let Some(viewport) = &mut self.viewport {
+//            if response.changed() {
+//                viewport.resize(winit::dpi::PhysicalSize::new(
+//                    available_size.x as u32,
+//                    available_size.y as u32,
+//                ));
+//            }
+//            
+//            if let Err(err) = viewport.render() {
+//                eprintln!("Failed to render 3D viewport: {:?}", err);
+//                self.console_logs.push(format!("Render error: {}", err));
+//            }
+//        }
+    
+        // Grid overlay
         if is_scene_tab {
             let grid_color = egui::Color32::from_rgba_unmultiplied(255, 255, 255, 15);
             let grid_size = 20.0;
@@ -246,11 +292,93 @@ impl eframe::App for GameEngineUI {
                     if ui.button("Exit").clicked() {
         //                frame.quit();
                     }
+                    if ui.button("New Level").clicked() {}
+                    if ui.button("Open Level").clicked() {}
+                    ui.menu_button("Favorite Maps...", |ui| {
+                        if ui.button("Test Game 1").clicked() {}
+                        if ui.button("Test Game 2").clicked() {}
+                        if ui.button("Test Game 3").clicked() {}
+                    });
+                    if ui.button("Recent Maps...").clicked() {}
+                    if ui.button("-----------------------------").clicked() {}
+                    if ui.button("Open Asset").clicked() {}
+                    if ui.button("-----------------------------").clicked() {}
+                    if ui.button("Save Current Map").clicked() {}
+                    if ui.button("Save Current Map As").clicked() {}
+                    if ui.button("Save All").clicked() {}
+                    if ui.button("Save Selectivly").clicked() {}
+                    if ui.button("-----------------------------").clicked() {}
+                    if ui.button("New Project").clicked() {}
+                    if ui.button("Open Project").clicked() {}
+                    if ui.button("Recent Projects").clicked() {}
                 });
+
+                ui.menu_button("Edit", |ui| {
+                    ui.menu_button("Go to...", |ui| {
+                        if ui.button("Go to All").clicked() {}
+                        if ui.button("Go to Text").clicked() {}
+                        if ui.button("Go to Line").clicked() {}
+                        if ui.button("Go to File").clicked() {}
+                        if ui.button("Go to Recent File").clicked() {}
+                        if ui.button("Go to Type").clicked() {}
+                        if ui.button("Go to Member").clicked() {}
+                        if ui.button("Go to Symbol").clicked() {}
+                    });
+                    if ui.button("------------------------").clicked() {}
+                    if ui.button("Undo Local").clicked() {}
+                    if ui.button("Redo Local").clicked() {}
+                    if ui.button("Undo Global").clicked() {}
+                    if ui.button("Redo Global").clicked() {}
+                    if ui.button("------------------------").clicked() {}
+                    if ui.button("Cut").clicked() {}
+                    if ui.button("Copy").clicked() {}
+                    if ui.button("Paste").clicked() {}
+                    if ui.button("Delete").clicked() {}
+                    if ui.button("Select All").clicked() {}
+
+                });
+
                 ui.menu_button("View", |ui| {
                     for (name, shown) in &mut self.dock_state.windows {
                         ui.checkbox(shown, name);
                     }
+                });
+
+                ui.menu_button("Git", |ui| {
+                    if ui.button("Create Commit").clicked() {}
+                    if ui.button("Pull from remote").clicked() {}
+                    if ui.button("Fetch from remote").clicked() {}
+                    if ui.button("Push to remote").clicked() {}
+                });
+
+                ui.menu_button("Project", |ui| {
+                    if ui.button("New Wave Graph").clicked() {}
+                    if ui.button("New Rust Module").clicked() {}
+                    if ui.button("New Plugin").clicked() {}
+                    if ui.button("New Object").clicked() {}
+                    if ui.button("New Type").clicked() {}
+                    if ui.button("------------------------").clicked() {}
+                    if ui.button("Compile Project").clicked() {}
+                    if ui.button("").clicked() {}
+                });
+
+                ui.menu_button("Build", |ui| {
+                    if ui.button("Build All").clicked() {}
+                    if ui.button("Build Lights").clicked() {}
+                    if ui.button("Build reflections").clicked() {}
+                    if ui.button("Build Level").clicked() {}
+                });
+
+                ui.menu_button("Debug", |ui| {
+                });
+
+                ui.menu_button("Tools", |ui| {
+                });
+
+                ui.menu_button("Window", |ui| {
+                });
+
+                ui.menu_button("Help", |ui| {
                 });
             });
             
