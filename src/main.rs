@@ -1,54 +1,26 @@
-///////////////////////////////////////////////////////////////////////////////
-// Pulsar Engine Main File                                                   //
-//                                                                           //
-//   This file serves as the entrypoint for all things Pulsar Engine it is   //
-//   responsible for starting the engine's backend and frontend code as well //
-//   as fetching important important data from the configs.                  //
-//                                                                           //
-///////////////////////////////////////////////////////////////////////////////
+mod app;
+mod components;
+mod state;
+mod theme;
 
-mod ui;
-//mod viewport;
+pub use app::GameEngineUI;
+pub use state::DockState;
 
-use lazy_static::*;
-use std::sync::RwLock;
-
-pub struct Node {
-    parent: Option<Box<Node>>,
-    children: Box<Vec<Node>>
-}
-
-impl Node {
-    fn get_parent(&self) {}
-    fn add_child(&mut self) {}
-    fn remove_child(&mut self) {}
-    
-}
-
-struct SceneTree {
-    root: Node
-}
-
-impl SceneTree {
-    fn get_root(&self) {}
-    fn find_child(&self) {}
-    fn find_children(&self) {}
-}
-
-lazy_static! {
-    static ref SCENE_TREE: RwLock<SceneTree> = {
-        SceneTree {
-            root: Node {children:Box::new(vec![]), parent: None }
-        }.into()
+pub fn init_ui() -> eframe::Result<()> {
+    let options = eframe::NativeOptions {
+        viewport: egui::ViewportBuilder::default()
+            .with_inner_size([1920.0, 1080.0])
+            .with_min_inner_size([800.0, 600.0]),
+        ..Default::default()
     };
+
+    eframe::run_native(
+        "Pulsar Engine",
+        options,
+        Box::new(|cc| Ok(Box::new(GameEngineUI::default()))),
+    )
 }
 
 fn main() {
-    let test_tree = SCENE_TREE.read().unwrap();
-    test_tree.get_root();
-    test_tree.find_child();
-
-
-    
-    ui::initUI();
+    init_ui();
 }
