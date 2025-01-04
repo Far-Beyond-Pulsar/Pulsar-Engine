@@ -26,7 +26,11 @@
     "react-dom": "^18.3.1",
     "react-quill": "^2.0.0",
     "reactflow": "^11.11.4",
-    "three": "^0.171.0"
+    "three": "0.172.0",
+    "@radix-ui/react-dropdown-menu": "^2.1.4",
+    "@radix-ui/react-select": "^2.1.4",
+    "@radix-ui/react-switch": "^1.1.2",
+    "class-variance-authority": "^0.7.1"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.1",

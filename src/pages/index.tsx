@@ -1,13 +1,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Titlebar from "../components/Titlebar";
 import Menubar from '../components/Menubar';
-import SceneHierarchy from '../components/SceneHierarchy';
-import Viewport from '../components/panels/Viewport';
-import PropertiesPanel from '../components/panels/PropertiesPanel';
-import Console from '../components/panels/Console';
-import { DockablePanel, PanelManager } from '../components/DockablePanel/index';
 import useCanvas from '../hooks/useCanvas';
 import { initialSceneObjects, menus } from '../components/types';
+import EditorTabs from './EditorTabs';
 
 interface PanelVisibility {
   hierarchy: boolean;
@@ -294,85 +290,11 @@ const GameEngineUI = () => {
         onMenuAction={handleMenuAction}
       />
       
-      {/* Main content container */}
-      <div className="relative flex-1 overflow-hidden">
-        {/* Base layer - always docked panels */}
-        <div className="absolute inset-0 flex">
-          <DockablePanel
-            id="hierarchy"
-            title="Scene Hierarchy"
-            isVisible={visiblePanels.hierarchy}
-            onClose={() => togglePanel('hierarchy')}
-            defaultDock="left"
-            defaultSize={{ width: 250, height: '100%' }}
-            onMove={(pos) => handlePanelMove('hierarchy', pos)}
-          >
-            <SceneHierarchy 
-              sceneObjects={sceneObjects}
-              selectedObject={selectedObject}
-              onSelectObject={setSelectedObject}
-            />
-          </DockablePanel>
-  
-          <div className="flex-1">
-            <DockablePanel
-              id="viewport"
-              title="Viewport"
-              isVisible={visiblePanels.viewport}
-              onClose={() => togglePanel('viewport')}
-              defaultDock={null}
-              defaultSize={{ width: '100%', height: '100%' }}
-              onMove={(pos) => handlePanelMove('viewport', pos)}
-            >
-              <div className="w-full h-full bg-black">
-                <Viewport 
-                  canvasRef={canvasRef}
-                  activeTool={activeTool}
-                  isPlaying={isPlaying}
-                  fps={fps}
-                  onToolChange={handleToolChange}
-                  onPlayToggle={setIsPlaying}
-                  logMessage={logMessage}
-                />
-              </div>
-            </DockablePanel>
-          </div>
-  
-          <DockablePanel
-            id="properties"
-            title="Properties"
-            isVisible={visiblePanels.properties}
-            onClose={() => togglePanel('properties')}
-            defaultDock="right"
-            defaultSize={{ width: 300, height: '100%' }}
-            onMove={(pos) => handlePanelMove('properties', pos)}
-          >
-            <PropertiesPanel 
-              selectedObject={selectedObject}
-              onPropertyChange={handlePropertyChange}
-            />
-          </DockablePanel>
-        </div>
-  
-        {/* Bottom console */}
-        <div className="absolute inset-x-0 bottom-0">
-          <DockablePanel
-            id="console"
-            title="Console"
-            isVisible={visiblePanels.console}
-            onClose={() => togglePanel('console')}
-            defaultDock="bottom"
-            defaultSize={{ width: '100%', height: 200 }}
-            onMove={(pos) => handlePanelMove('console', pos)}
-          >
-            <Console 
-              messages={consoleMessages}
-              onClear={() => setConsoleMessages([])}
-              onHide={() => togglePanel('console')}
-            />
-          </DockablePanel>
-        </div>
-      </div>
+      {/* Replace the LevelEditor with EditorTabs */}
+      <EditorTabs onTabChange={(type) => {
+        // Handle tab type change here if needed
+        console.log('Tab changed to:', type);
+      }} />
     </div>
   );
 };
