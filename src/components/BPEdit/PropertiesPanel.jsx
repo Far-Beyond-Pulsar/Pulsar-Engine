@@ -8,7 +8,7 @@ import { RUST_TYPES } from './constants';
 const PropertiesPanel = ({ selectedNode, onUpdateNode }) => {
   if (!selectedNode) {
     return (
-      <div className="w-80 border-l border-neutral-800 bg-neutral-900">
+      <div className="w-80 border-l border-neutral-800 bg-black">
         <div className="p-4 text-neutral-500 text-center">
           Select a resource to view its properties
         </div>
@@ -39,7 +39,7 @@ const PropertiesPanel = ({ selectedNode, onUpdateNode }) => {
           <Input
             value={value || ''}
             onChange={(e) => updateProperty(e.target.value)}
-            className="bg-neutral-800 border-neutral-700 text-neutral-100"
+            className="bg-neutral-950 border-neutral-700 text-neutral-100"
           />
         );
 
@@ -51,7 +51,7 @@ const PropertiesPanel = ({ selectedNode, onUpdateNode }) => {
             onChange={(e) => updateProperty(Number(e.target.value))}
             min={property.validation?.min}
             max={property.validation?.max}
-            className="bg-neutral-800 border-neutral-700 text-neutral-100"
+            className="bg-neutral-950 border-neutral-700 text-neutral-100"
           />
         );
 
@@ -69,7 +69,7 @@ const PropertiesPanel = ({ selectedNode, onUpdateNode }) => {
             value={value || ''}
             onValueChange={updateProperty}
           >
-            <SelectTrigger className="bg-neutral-800 border-neutral-700 text-neutral-100">
+            <SelectTrigger className="bg-neutral-950 border-neutral-700 text-neutral-100">
               <SelectValue placeholder="Select..." />
             </SelectTrigger>
             <SelectContent>
@@ -88,7 +88,7 @@ const PropertiesPanel = ({ selectedNode, onUpdateNode }) => {
   };
 
   return (
-    <div className="w-80 border-l border-neutral-800 bg-neutral-900">
+    <div className="w-80 border-l border-neutral-800 bg-black">
       <div className="p-4">
         <h2 className="text-lg font-semibold mb-4">Resource Properties</h2>
         <div className="space-y-4">
@@ -100,7 +100,7 @@ const PropertiesPanel = ({ selectedNode, onUpdateNode }) => {
               onChange={(e) => {
                 onUpdateNode(selectedNode.id, { name: e.target.value });
               }}
-              className="bg-neutral-800 border-neutral-700 text-neutral-100"
+              className="bg-neutral-950 border-neutral-700 text-neutral-100"
             />
           </div>
           <div>
@@ -108,7 +108,7 @@ const PropertiesPanel = ({ selectedNode, onUpdateNode }) => {
             <Input 
               value={resourceType.name}
               disabled
-              className="bg-neutral-800 border-neutral-700 text-neutral-400"
+              className="bg-neutral-950 border-neutral-700 text-neutral-400"
             />
           </div>
           <div>
@@ -116,7 +116,7 @@ const PropertiesPanel = ({ selectedNode, onUpdateNode }) => {
             <Input 
               value={selectedNode.config.category}
               disabled
-              className="bg-neutral-800 border-neutral-700 text-neutral-400"
+              className="bg-neutral-950 border-neutral-700 text-neutral-400"
             />
           </div>
 

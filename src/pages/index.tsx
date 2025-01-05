@@ -276,7 +276,7 @@ const GameEngineUI = () => {
   }, [handleMenuAction, handleToolChange, togglePanel]);
 
   return (
-    <div className={`flex flex-col h-screen bg-black text-white ${isMaximized ? '' : 'rounded-lg'}`}>
+    <div className={`flex flex-col h-screen bg-black text-white ${isMaximized ? '' : 'rounded-lg'} overscroll-none`}>
       <Titlebar 
         isMaximized={isMaximized}
         onMinimize={handleMinimize}

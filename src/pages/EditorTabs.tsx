@@ -44,7 +44,7 @@ const EditorTabs = ({ onTabChange }) => {
 
   return (
     <div className="flex flex-col h-screen bg-black text-white">
-      <div className="flex items-center bg-neutral-900 border-b border-neutral-800">
+      <div className="flex items-center bg-neutral-950 border-b border-neutral-800">
         <div className="flex-1 flex overflow-x-auto">
           {tabs.map(tab => (
             <button
@@ -56,7 +56,7 @@ const EditorTabs = ({ onTabChange }) => {
               className={`flex items-center min-w-40 px-4 py-2 text-sm transition-colors ${
                 activeTab === tab.id
                   ? 'bg-black text-white border-b-2 border-blue-500'
-                  : 'text-neutral-400 hover:bg-neutral-800'
+                  : 'text-neutral-400 hover:bg-neutral-950'
               }`}
             >
               <span className="truncate">{tab.title}</span>
@@ -73,7 +73,7 @@ const EditorTabs = ({ onTabChange }) => {
         <div className="relative">
           <button
             onClick={() => setShowNewTabMenu(!showNewTabMenu)}
-            className="p-2 text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors flex items-center gap-1"
+            className="p-2 text-neutral-400 hover:text-white hover:bg-neutral-950 transition-colors flex items-center gap-1"
           >
             <Plus size={20} />
             <ChevronDown size={14} />
@@ -81,7 +81,7 @@ const EditorTabs = ({ onTabChange }) => {
           
           {/* New Tab Type Menu */}
           {showNewTabMenu && (
-            <div className="absolute right-0 top-full mt-1 bg-neutral-800 rounded shadow-lg py-1 z-10">
+            <div className="absolute right-0 top-full mt-1 bg-neutral-950 rounded shadow-lg py-1 z-10">
               {EDITOR_TYPES.map(editor => (
                 <button
                   key={editor.type}

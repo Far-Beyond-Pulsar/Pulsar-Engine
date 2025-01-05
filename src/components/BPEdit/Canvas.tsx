@@ -175,7 +175,7 @@ const Canvas = React.forwardRef<HTMLDivElement, CanvasProps>(({
   return (
     <div 
       ref={forwardedRef}
-      className={`flex-1 relative overflow-hidden bg-neutral-900 ${isDraggingCanvas ? 'cursor-grabbing' : 'cursor-grab'}`}
+      className={`flex-1 relative overflow-hidden bg-black h-[80vh] ${isDraggingCanvas ? 'cursor-grabbing' : 'cursor-grab'}`}
       onMouseDown={handleCanvasMouseDown}
       onMouseMove={handleCanvasMouseMove}
       onMouseUp={handleCanvasMouseUp}

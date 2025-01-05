@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from './components/ui/Button';
 import { Input } from './components/ui/Input';
-import { Plus, FileJson } from 'lucide-react';
+import { Plus, FileJson, Code } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,28 +39,28 @@ const TitleBar = ({ searchTerm, onSearchChange, onAddNode, onExport }: TitleBarP
   };
 
   return (
-    <div className="h-16 border-b border-neutral-800 flex items-center justify-between px-4 bg-neutral-900">
+    <div className="h-16 border-b border-neutral-800 flex items-center justify-between px-4 bg-black">
       <h1 className="text-xl font-semibold">Infrastructure Designer</h1>
       <div className="flex space-x-4">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button className="flex items-center bg-neutral-800 hover:bg-neutral-700">
+            <Button className="flex items-center bg-neutral-950 hover:bg-neutral-700">
               <Plus className="w-4 h-4 mr-2" />
               Add Resource
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-64 max-h-96 overflow-y-auto bg-neutral-800 border-neutral-700">
-            <div className="p-2 sticky top-0 bg-neutral-800 border-b border-neutral-700">
+          <DropdownMenuContent className="w-64 max-h-96 overflow-y-auto bg-neutral-950 border-neutral-700">
+            <div className="p-2 sticky top-0 bg-neutral-950 border-b border-neutral-700">
               <Input
                 placeholder="Search resources..."
                 value={searchTerm}
                 onChange={(e) => onSearchChange(e.target.value)}
-                className="bg-neutral-900 border-neutral-700"
+                className="bg-black border-neutral-700"
               />
             </div>
             {Object.entries(filteredTypes).map(([category, types]) => (
               <div key={category}>
-                <div className="px-2 py-1 text-sm font-semibold bg-neutral-800 sticky top-14">
+                <div className="px-2 py-1 text-sm font-semibold bg-neutral-950 sticky top-14">
                   {category.toUpperCase()}
                 </div>
                 {Object.entries(types).map(([typeKey, typeInfo]) => (
@@ -81,11 +81,11 @@ const TitleBar = ({ searchTerm, onSearchChange, onAddNode, onExport }: TitleBarP
 
         <Button
           onClick={onExport}
-          className="flex items-center bg-neutral-800 hover:bg-neutral-700"
+          className="flex items-center bg-neutral-950 hover:bg-neutral-700"
           variant="outline"
         >
-          <FileJson className="w-4 h-4 mr-2" />
-          Export JSON
+          <Code className="w-4 h-4 mr-2" />
+          Export Rust
         </Button>
       </div>
     </div>

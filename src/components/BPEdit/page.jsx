@@ -41,7 +41,7 @@ const RustCodeDesigner = () => {
         category: typeInfo.category,
         properties: {}
       },
-      pins: pins // Add the pins here
+      pins: pins
     };
   
     setNodes(prev => [...prev, newNode]);
@@ -104,7 +104,7 @@ const RustCodeDesigner = () => {
   };
 
   return (
-    <div className="w-full h-screen flex flex-col bg-neutral-900 text-neutral-100 select-none">
+    <div className="w-full h-screen flex flex-col bg-black text-neutral-100 select-none">
       <TitleBar
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}

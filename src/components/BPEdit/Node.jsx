@@ -66,7 +66,7 @@ const Node = ({
   
   return (
     <div
-      className={`absolute border-2 rounded-lg bg-neutral-800 cursor-move shadow-lg
+      className={`absolute border-2 rounded-lg bg-neutral-950 cursor-move shadow-lg
                 ${isSelected ? 'border-neutral-500' : 'border-neutral-700'}
                 hover:border-neutral-600 transition-colors`}
       style={{
