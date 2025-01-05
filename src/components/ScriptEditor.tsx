@@ -7,7 +7,9 @@ import {
   AlertCircle, Check, Clock,
   X, Maximize2, Minimize2
 } from 'lucide-react';
+import { invoke } from '@tauri-apps/api';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import TerminalPanel from '../components/Terminal';
 
 const CodeEditor = () => {
   
@@ -246,33 +248,7 @@ const CodeEditor = () => {
       ))}
     </div>
   );
-
-  // Console component
-  const Console = () => (
-    <div className="h-48 bg-black border-t border-gray-800">
-      <div className="flex items-center justify-between p-2 bg-gray-900 border-b border-gray-800">
-        <span className="text-sm font-medium">Console</span>
-        <button onClick={() => setConsoleOpen(false)}>
-          <X size={16} />
-        </button>
-      </div>
-      <div className="p-2 h-40 overflow-auto font-mono text-sm">
-        {consoleOutput.map((output, index) => (
-          <div 
-            key={index}
-            className={`mb-1 ${
-              output.type === 'error' ? 'text-red-400' :
-              output.type === 'success' ? 'text-green-400' :
-              'text-gray-300'
-            }`}
-          >
-            {output.message}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-
+  
   return (
     <div className="flex flex-col h-full bg-black text-gray-300">
       {/* Toolbar */}
@@ -376,11 +352,13 @@ const CodeEditor = () => {
         onClick={updateCursorPosition}
         spellCheck="false"
         className="block w-full p-2 bg-black text-gray-200 border-none outline-none leading-6 font-mono text-sm"
+        wrap='off'
         style={{
           tabSize: 2,
           WebkitFontSmoothing: 'antialiased',
           resize: 'none',
-          overflow: 'hidden',
+          overflowX: 'auto',
+          overflowY: 'hidden',
           minHeight: '100%',
           height: `${textareaRef.current?.scrollHeight}px`
         }}
@@ -407,7 +385,7 @@ const CodeEditor = () => {
       </div>
 
       {/* Console */}
-      {consoleOpen && <Console />}
+      {consoleOpen && <TerminalPanel />}
 
       {/* Status Bar */}
       <div className="flex items-center px-2 py-1 bg-gray-900 text-gray-400 text-xs border-t border-gray-800">

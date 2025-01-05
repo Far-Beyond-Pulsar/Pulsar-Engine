@@ -40,11 +40,11 @@ const TitleBar = ({ searchTerm, onSearchChange, onAddNode, onExport }: TitleBarP
 
   return (
     <div className="h-16 border-b border-neutral-800 flex items-center justify-between px-4 bg-black">
-      <h1 className="text-xl font-semibold">Infrastructure Designer</h1>
+      <h1 className="text-xl font-semibold"> </h1>
       <div className="flex space-x-4">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button className="flex items-center bg-neutral-950 hover:bg-neutral-700">
+            <Button className="flex items-center bg-neutral-950 hover:bg-neutral-900">
               <Plus className="w-4 h-4 mr-2" />
               Add Resource
             </Button>
@@ -81,7 +81,7 @@ const TitleBar = ({ searchTerm, onSearchChange, onAddNode, onExport }: TitleBarP
 
         <Button
           onClick={onExport}
-          className="flex items-center bg-neutral-950 hover:bg-neutral-700"
+          className="flex items-center bg-blue-500 border-blue-950 hover:bg-blue-700"
           variant="outline"
         >
           <Code className="w-4 h-4 mr-2" />

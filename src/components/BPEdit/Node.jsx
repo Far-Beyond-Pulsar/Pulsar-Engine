@@ -67,8 +67,7 @@ const Node = ({
   return (
     <div
       className={`absolute border-2 rounded-lg bg-neutral-950 cursor-move shadow-lg
-                ${isSelected ? 'border-neutral-500' : 'border-neutral-700'}
-                hover:border-neutral-600 transition-colors`}
+                  ${isSelected ? 'border-yellow-500' : 'border-blue-700'} transition-colors`}
       style={{
         left: node.position.x,
         top: node.position.y,
