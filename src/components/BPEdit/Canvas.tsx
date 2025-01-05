@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import Node from './Node';
 import ConnectionLines from './ConnectionLines';
 import NavigationControls from './NavigationControls';
 import { 
-  transformCoordinates, 
+  // transformCoordinates, 
   inverseTransformCoordinates, 
   getConnectionPoint,
   wouldCreateCycle
@@ -48,14 +48,15 @@ const Canvas = React.forwardRef<HTMLDivElement, CanvasProps>(({
     type: 'parent' | 'child';
   } | null>(null);
   const [tempLine, setTempLine] = useState<{
-    fromPoint: Point;
-    toPoint: Point;
-  } | null>(null);
+      fromPoint: Point;
+      toPoint: Point;
+      color: string;
+    } | null>(null);
   const [draggedNode, setDraggedNode] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState<Point>({ x: 0, y: 0 });
 
   const handleCanvasMouseDown = (e: React.MouseEvent) => {
-    if (e.target === forwardedRef.current) {
+    if (forwardedRef && 'current' in forwardedRef && e.target === forwardedRef.current) {
       setIsDraggingCanvas(true);
       setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
     }
@@ -69,8 +70,8 @@ const Canvas = React.forwardRef<HTMLDivElement, CanvasProps>(({
       });
     }
 
-    if (isDrawing && tempLine && forwardedRef.current) {
-      const rect = forwardedRef.current.getBoundingClientRect();
+    if (isDrawing && tempLine && forwardedRef && 'current' in forwardedRef && forwardedRef.current) {
+      const rect = forwardedRef?.current?.getBoundingClientRect();
       const coords = inverseTransformCoordinates(
         e.clientX - rect.left,
         e.clientY - rect.top,
@@ -78,15 +79,15 @@ const Canvas = React.forwardRef<HTMLDivElement, CanvasProps>(({
       );
       
       if (coords) {
-        setTempLine(prev => ({
+        setTempLine(prev => prev ? ({
           ...prev,
           toPoint: coords
-        }));
+        }) : null);
       }
     }
 
     // Handle node dragging
-    if (draggedNode && forwardedRef.current) {
+    if (draggedNode && forwardedRef && 'current' in forwardedRef && forwardedRef.current) {
       const rect = forwardedRef.current.getBoundingClientRect();
       const coords = inverseTransformCoordinates(
         e.clientX - rect.left,
@@ -131,7 +132,7 @@ const Canvas = React.forwardRef<HTMLDivElement, CanvasProps>(({
 
   const handleNodeMouseDown = (e: React.MouseEvent, nodeId: string) => {
     e.stopPropagation();
-    if (!forwardedRef.current) return;
+    if (!forwardedRef || !('current' in forwardedRef) || !forwardedRef.current) return;
 
     const rect = e.currentTarget.getBoundingClientRect();
     const coords = inverseTransformCoordinates(
@@ -155,7 +156,8 @@ const Canvas = React.forwardRef<HTMLDivElement, CanvasProps>(({
     });
     setTempLine({
       fromPoint: point,
-      toPoint: point
+      toPoint: point,
+      color: 'black' // or any default color
     });
   };
 
@@ -198,12 +200,12 @@ const Canvas = React.forwardRef<HTMLDivElement, CanvasProps>(({
             key={node.id}
             node={node}
             isSelected={selectedNode?.id === node.id}
-            isDrawing={isDrawing}
-            onStartConnection={startConnection}
-            onEndConnection={endConnection}
             onMouseDown={handleNodeMouseDown}
+            onMouseUp={handleCanvasMouseUp}
             onSelect={onNodeSelect}
             onDelete={onNodeDelete}
+            onStartConnection={startConnection}
+            onEndConnection={endConnection}
           />
         ))}
       </div>

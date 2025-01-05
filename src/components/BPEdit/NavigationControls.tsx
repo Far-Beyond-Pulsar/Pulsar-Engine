@@ -18,27 +18,21 @@ const NavigationControls = ({
   zoom
 }: NavigationControlsProps) => (
   <div className="absolute bottom-4 right-4 flex flex-col space-y-2 bg-neutral-950 p-2 rounded-lg shadow-lg">
-    <Button 
-      variant="outline" 
-      size="icon" 
+    <button 
       onClick={onZoomIn} 
       className="border-neutral-600 hover:bg-neutral-700"
     >
       <ZoomIn className="h-4 w-4" />
-    </Button>
+    </button>
     
-    <Button 
-      variant="outline" 
-      size="icon" 
+    <button 
       onClick={onZoomOut} 
       className="border-neutral-600 hover:bg-neutral-700"
     >
       <ZoomOut className="h-4 w-4" />
-    </Button>
+    </button>
     
-    <Button 
-      variant="outline" 
-      size="icon" 
+    <button 
       onClick={() => { 
         onResetZoom();
         onResetPan();
@@ -46,7 +40,7 @@ const NavigationControls = ({
       className="border-neutral-600 hover:bg-neutral-700"
     >
       <Move className="h-4 w-4" />
-    </Button>
+    </button>
     
     <div className="text-center text-sm text-neutral-400">
       {Math.round(zoom * 100)}%

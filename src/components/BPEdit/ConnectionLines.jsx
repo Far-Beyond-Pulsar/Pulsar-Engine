@@ -1,22 +1,11 @@
 import React from 'react';
-import type { Connection, Point } from './types';
 
-interface ConnectionLinesProps {
-  connections: Connection[];
-  tempLine: {
-    fromPoint: Point;
-    toPoint: Point;
-    color: string;
-  } | null;
-  zoom: number;
-}
-
-const ConnectionLines: React.FC<ConnectionLinesProps> = ({ 
+const ConnectionLines = ({ 
   connections, 
   tempLine, 
   zoom 
 }) => {
-  const generatePath = (start: Point, end: Point) => {
+  const generatePath = (start, end) => {
     const deltaX = end.x - start.x;
     const deltaY = end.y - start.y;
     const controlPointOffset = Math.min(Math.abs(deltaX) * 0.5, 100);

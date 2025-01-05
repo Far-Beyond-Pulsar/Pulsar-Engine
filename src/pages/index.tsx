@@ -55,7 +55,7 @@ const GameEngineUI = () => {
 
   // Canvas references
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const { lastFrameTimeRef, animationFrameRef, renderScene } = useCanvas(sceneObjects, selectedObject);
+  const { lastFrameTimeRef, animationFrameRef, renderScene } = useCanvas(sceneObjects, selectedObject) as { lastFrameTimeRef: React.MutableRefObject<number | null>, animationFrameRef: React.MutableRefObject<number | null>, renderScene: (ctx: CanvasRenderingContext2D, width: number, height: number) => void };
 
   // Update panel positions after mount
   useEffect(() => {

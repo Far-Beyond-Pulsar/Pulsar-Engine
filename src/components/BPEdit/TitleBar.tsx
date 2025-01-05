@@ -9,6 +9,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator
 } from "./components/ui/DropdownMenu";
+import { ReactNode } from 'react';
 import { RUST_TYPES } from './constants';
 
 interface TitleBarProps {
@@ -30,7 +31,7 @@ const TitleBar = ({ searchTerm, onSearchChange, onAddNode, onExport }: TitleBarP
       acc[category] = Object.fromEntries(filtered);
     }
     return acc;
-  }, {});
+  }, {} as Record<string, any>);
 
   const handleNodeAdd = (typeKey: string, typeInfo: any) => {
     console.log('Adding node:', { typeKey, typeInfo });
@@ -42,13 +43,8 @@ const TitleBar = ({ searchTerm, onSearchChange, onAddNode, onExport }: TitleBarP
     <div className="h-16 border-b border-neutral-800 flex items-center justify-between px-4 bg-black">
       <h1 className="text-xl font-semibold"> </h1>
       <div className="flex space-x-4">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button className="flex items-center bg-neutral-950 hover:bg-neutral-900">
-              <Plus className="w-4 h-4 mr-2" />
-              Add Resource
-            </Button>
-          </DropdownMenuTrigger>
+        {/* <DropdownMenu>
+          <DropdownMenuTrigger asChild></DropdownMenuTrigger>
           <DropdownMenuContent className="w-64 max-h-96 overflow-y-auto bg-neutral-950 border-neutral-700">
             <div className="p-2 sticky top-0 bg-neutral-950 border-b border-neutral-700">
               <Input
@@ -73,20 +69,19 @@ const TitleBar = ({ searchTerm, onSearchChange, onAddNode, onExport }: TitleBarP
                     <span className="text-xs text-neutral-400">{typeInfo.description}</span>
                   </DropdownMenuItem>
                 ))}
-                <DropdownMenuSeparator className="bg-neutral-700" />
+                <DropdownMenuSeparator/>
               </div>
             ))}
           </DropdownMenuContent>
-        </DropdownMenu>
+        </DropdownMenu> */}
 
-        <Button
+        <button
           onClick={onExport}
           className="flex items-center bg-blue-500 border-blue-950 hover:bg-blue-700"
-          variant="outline"
         >
           <Code className="w-4 h-4 mr-2" />
           Export Rust
-        </Button>
+        </button>
       </div>
     </div>
   );

@@ -1,9 +1,14 @@
 import { useState } from 'react';
 import { X } from 'lucide-react';
 
+interface OutputLine {
+  type: 'command' | 'error' | 'success';
+  message: string;
+}
+
 const Terminal = () => {
   const [input, setInput] = useState('');
-  const [output, setOutput] = useState([]);
+  const [output, setOutput] = useState<OutputLine[]>([]);
 
   const runCommand = async (cmd: string) => {
     if (!cmd.trim()) return;
@@ -22,7 +27,7 @@ const Terminal = () => {
     } catch (err) {
       setOutput(prev => [...prev, { 
         type: 'error', 
-        message: err.message 
+        message: (err as Error).message 
       }]);
     }
 
@@ -33,9 +38,6 @@ const Terminal = () => {
     <div className="h-48 bg-black border-t border-gray-800">
       <div className="flex items-center justify-between p-2 bg-gray-900 border-b border-gray-800">
         <span className="text-sm font-medium">Console</span>
-        <button onClick={() => setConsoleOpen(false)}>
-          <X size={16} />
-        </button>
       </div>
       <div className="p-2 h-32 overflow-auto font-mono text-sm">
         {output.map((line, i) => (

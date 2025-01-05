@@ -60,7 +60,7 @@ const LevelEditor: React.FC = () => {
   const [consoleMessages, setConsoleMessages] = useState<ConsoleMessage[]>([]);
   const [fps, setFps] = useState<number>(1024);
   const [isMaximized, setIsMaximized] = useState<boolean>(false);
-
+  
   // Panel visibility state
   const [visiblePanels, setVisiblePanels] = useState<PanelVisibility>({
     hierarchy: true,
@@ -76,8 +76,9 @@ const LevelEditor: React.FC = () => {
     console: { x: 0, y: 40 },
     viewport: { x: 250, y: 40 }
   });
-
-  const { lastFrameTimeRef, animationFrameRef, renderScene } = useCanvas(sceneObjects, selectedObject);
+  
+  const { lastFrameTimeRef, renderScene } = useCanvas(sceneObjects, selectedObject);
+  const animationFrameRef = useRef<number | null>(null);
 
   // Utility functions
   const logMessage = useCallback((type: string, message: string) => {
@@ -326,7 +327,7 @@ const LevelEditor: React.FC = () => {
             >
               <div className="w-full h-full bg-black">
                 <Viewport
-                  canvasRef={canvasRef}
+                  // canvasRef={canvasRef}
                   activeTool={activeTool}
                   isPlaying={isPlaying}
                   fps={fps}
