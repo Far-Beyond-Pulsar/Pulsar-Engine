@@ -56,8 +56,6 @@
     "class-variance-authority": "^0.7.1",
     "cross-env": "^7.0.3",
     "cssnano": "^7.0.6",
-    "eslint": "^8.57.0",
-    "eslint-config-next": "^14.2.11",
     "husky": "^9.1.6",
     "lint-staged": "^15.2.10",
     "postcss": "^8.4.47",

@@ -1,12 +1,7 @@
 import React, { useState, ReactNode } from 'react';
 
-interface PanelButtonProps {
-  onClick: () => void;
-  title: string;
-  children: ReactNode;
-}
 
-export const PanelButton: React.FC<PanelButtonProps> = ({ onClick, title, children }) => {
+export const PanelButton = ({ onClick, title, children }) => {
   const [isHovered, setIsHovered] = useState(false);
 
   return (

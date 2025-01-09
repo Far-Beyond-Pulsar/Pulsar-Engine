@@ -5,40 +5,19 @@ import useCanvas from '../hooks/useCanvas';
 import { initialSceneObjects, menus } from '../components/types';
 import EditorTabs from './EditorTabs';
 
-interface PanelVisibility {
-  hierarchy: boolean;
-  properties: boolean;
-  console: boolean;
-  viewport: boolean;
-  [key: string]: boolean;
-}
-
-interface PanelPosition {
-  x: number;
-  y: number;
-}
-
-interface PanelPositions {
-  hierarchy: PanelPosition;
-  properties: PanelPosition;
-  console: PanelPosition;
-  viewport: PanelPosition;
-  [key: string]: PanelPosition;
-}
-
 const GameEngineUI = () => {
   // Core state management
+  const [activeMenu, setActiveMenu] = useState(null);
+  const [consoleMessages, setConsoleMessages] = useState([]);
   const [sceneObjects, setSceneObjects] = useState(initialSceneObjects);
   const [selectedObject, setSelectedObject] = useState(null);
   const [activeTool, setActiveTool] = useState('select');
   const [isPlaying, setIsPlaying] = useState(false);
-  const [activeMenu, setActiveMenu] = useState<string | null>(null);
-  const [consoleMessages, setConsoleMessages] = useState<{ type: string; message: string; timestamp: string; }[]>([]);
   const [fps, setFps] = useState(1000);
   const [isMaximized, setIsMaximized] = useState(false);
   
   // Panel visibility state
-  const [visiblePanels, setVisiblePanels] = useState<PanelVisibility>({
+  const [visiblePanels, setVisiblePanels] = useState({
     hierarchy: true,
     properties: true,
     console: true,
@@ -46,7 +25,7 @@ const GameEngineUI = () => {
   });
 
   // Panel positions state with safe initial values
-  const [panelPositions, setPanelPositions] = useState<PanelPositions>({
+  const [panelPositions, setPanelPositions] = useState({
     hierarchy: { x: 0, y: 40 },
     properties: { x: 0, y: 40 },
     console: { x: 0, y: 40 },
@@ -54,8 +33,8 @@ const GameEngineUI = () => {
   });
 
   // Canvas references
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const { lastFrameTimeRef, animationFrameRef, renderScene } = useCanvas(sceneObjects, selectedObject) as { lastFrameTimeRef: React.MutableRefObject<number | null>, animationFrameRef: React.MutableRefObject<number | null>, renderScene: (ctx: CanvasRenderingContext2D, width: number, height: number) => void };
+  const canvasRef = useRef(null);
+  const { lastFrameTimeRef, animationFrameRef, renderScene } = useCanvas(sceneObjects, selectedObject);
 
   // Update panel positions after mount
   useEffect(() => {
@@ -84,7 +63,7 @@ const GameEngineUI = () => {
   }, []);
 
   // Utility functions
-  const logMessage = useCallback((type: string, message: string) => {
+  const logMessage = useCallback((type, message) => {
     setConsoleMessages(prev => [
       ...prev, 
       { type, message, timestamp: new Date().toISOString() }
@@ -92,11 +71,11 @@ const GameEngineUI = () => {
   }, []);
 
   // Menu handlers
-  const handleMenuClick = useCallback((menuName: string) => {
+  const handleMenuClick = useCallback((menuName) => {
     setActiveMenu(prev => prev === menuName ? null : menuName);
   }, []);
 
-  const handleMenuAction = useCallback((action: string) => {
+  const handleMenuAction = useCallback((action) => {
     switch(action) {
       case 'new':
         setSceneObjects(initialSceneObjects);
@@ -125,13 +104,13 @@ const GameEngineUI = () => {
   }, [logMessage]);
 
   // Tool handlers
-  const handleToolChange = useCallback((tool: string) => {
+  const handleToolChange = useCallback((tool) => {
     setActiveTool(tool);
     logMessage('info', `Selected tool: ${tool}`);
   }, [logMessage]);
 
   // Property handlers
-  const handlePropertyChange = useCallback((obj: any, property: string, axis: string, value: string) => {
+  const handlePropertyChange = useCallback((obj, property, axis, value) => {
     if (!obj?.id) return;
     
     const numValue = parseFloat(value);
@@ -141,7 +120,7 @@ const GameEngineUI = () => {
       if (o.id === obj.id) {
         return {
           ...o,
-          [property]: { ...(o as any)[property], [axis]: numValue }
+          [property]: { ...(o)[property], [axis]: numValue }
         };
       }
       return o;
@@ -149,14 +128,14 @@ const GameEngineUI = () => {
   }, []);
 
   // Panel handlers
-  const handlePanelMove = useCallback((panelId: string, position: PanelPosition) => {
+  const handlePanelMove = useCallback((panelId, position) => {
     setPanelPositions(prev => ({
       ...prev,
       [panelId]: position
     }));
   }, []);
 
-  const togglePanel = useCallback((panelName: keyof PanelVisibility) => {
+  const togglePanel = useCallback((panelName) => {
     setVisiblePanels(prev => ({
       ...prev,
       [panelName]: !prev[panelName]
@@ -165,7 +144,7 @@ const GameEngineUI = () => {
   }, [visiblePanels, logMessage]);
 
   // Animation loop
-  const animate = useCallback((timestamp: number) => {
+  const animate = useCallback((timestamp) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -185,7 +164,7 @@ const GameEngineUI = () => {
     }
 
     renderScene(ctx, canvas.width, canvas.height);
-    animationFrameRef.current = requestAnimationFrame(animate) as unknown as null;
+    animationFrameRef.current = requestAnimationFrame(animate);
   }, [renderScene]);
 
   // Window control handlers
@@ -208,8 +187,8 @@ const GameEngineUI = () => {
 
   // Menu click outside handler
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
+    const handleClickOutside = (e) => {
+      const target = e.target;
       if (target && !target.closest('.menu-item') && !target.closest('.menu-dropdown')) {
         setActiveMenu(null);
       }
@@ -221,7 +200,7 @@ const GameEngineUI = () => {
 
   // Keyboard shortcuts
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
+    const handleKeyDown = (e) => {
       if (e.ctrlKey) {
         switch (e.key.toLowerCase()) {
           case 'n':
@@ -290,9 +269,7 @@ const GameEngineUI = () => {
         onMenuAction={handleMenuAction}
       />
       
-      {/* Replace the LevelEditor with EditorTabs */}
       <EditorTabs onTabChange={(type) => {
-        // Handle tab type change here if needed
         console.log('Tab changed to:', type);
       }} />
     </div>

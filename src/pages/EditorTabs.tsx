@@ -10,11 +10,11 @@ const EDITOR_TYPES = [
   { type: 'blueprint', title: 'Blueprint Editor' }
 ];
 
-interface EditorTabProps {
+interface EditorTabsProps {
   onTabChange?: (type: string) => void;
 }
 
-const EditorTabs: React.FC<EditorTabProps> = ({ onTabChange }) => {
+const EditorTabs: React.FC<EditorTabsProps> = ({ onTabChange }) => {
   const [tabs, setTabs] = useState([
     { id: 1, title: 'Level Editor', type: 'level' },
     { id: 2, title: 'Script Editor', type: 'script' }
@@ -22,19 +22,16 @@ const EditorTabs: React.FC<EditorTabProps> = ({ onTabChange }) => {
   const [activeTab, setActiveTab] = useState(tabs[0].id);
   const [showNewTabMenu, setShowNewTabMenu] = useState(false);
 
-
-  interface EditorInfo {
-    type: string;
+  interface Tab {
+    id: number;
     title: string;
+    type: string;
   }
 
-  const addNewTab = (editorType: string): void => {
+  const addNewTab = (editorType: string) => {
     const newId = Math.max(...tabs.map(t => t.id)) + 1;
-    const editorInfo: EditorInfo | undefined = EDITOR_TYPES.find(e => e.type === editorType);
-    if (!editorInfo) {
-      console.error(`Editor type "${editorType}" not found.`);
-      return;
-    }
+    const editorInfo = EDITOR_TYPES.find(e => e.type === editorType);
+    if (!editorInfo) return;
     const newTab: Tab = { 
       id: newId, 
       title: editorInfo.title, 
@@ -43,13 +40,7 @@ const EditorTabs: React.FC<EditorTabProps> = ({ onTabChange }) => {
     setTabs([...tabs, newTab]);
   };
 
-  interface Tab {
-    id: number;
-    title: string;
-    type: string;
-  }
-
-  const removeTab = (tabId: number, e: React.MouseEvent<SVGElement, MouseEvent>): void => {
+  const removeTab = (tabId: number, e: React.MouseEvent<SVGElement, MouseEvent>) => {
     e.stopPropagation();
     if (tabs.length > 1) {
       const newTabs = tabs.filter((t: Tab) => t.id !== tabId);

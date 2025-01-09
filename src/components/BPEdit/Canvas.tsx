@@ -56,7 +56,7 @@ const Canvas = React.forwardRef<HTMLDivElement, CanvasProps>(({
   const [dragOffset, setDragOffset] = useState<Point>({ x: 0, y: 0 });
 
   const handleCanvasMouseDown = (e: React.MouseEvent) => {
-    if (forwardedRef && 'current' in forwardedRef && e.target === forwardedRef.current) {
+    if (forwardedRef && 'current' in forwardedRef && forwardedRef.current && e.target === forwardedRef.current) {
       setIsDraggingCanvas(true);
       setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
     }
@@ -71,7 +71,7 @@ const Canvas = React.forwardRef<HTMLDivElement, CanvasProps>(({
     }
 
     if (isDrawing && tempLine && forwardedRef && 'current' in forwardedRef && forwardedRef.current) {
-      const rect = forwardedRef?.current?.getBoundingClientRect();
+      const rect = forwardedRef.current.getBoundingClientRect();
       const coords = inverseTransformCoordinates(
         e.clientX - rect.left,
         e.clientY - rect.top,
@@ -191,7 +191,7 @@ const Canvas = React.forwardRef<HTMLDivElement, CanvasProps>(({
       >
         <ConnectionLines
           connections={connections}
-          tempLine={tempLine}
+          tempLine={tempLine ? { ...tempLine, color: 'black' } : null}
           zoom={zoom}
         />
 
@@ -200,6 +200,9 @@ const Canvas = React.forwardRef<HTMLDivElement, CanvasProps>(({
             key={node.id}
             node={node}
             isSelected={selectedNode?.id === node.id}
+            // isDrawing={isDrawing}
+            onStartConnection={startConnection}
+            onEndConnection={endConnection}
             onMouseDown={handleNodeMouseDown}
             onMouseUp={handleCanvasMouseUp}
             onSelect={onNodeSelect}

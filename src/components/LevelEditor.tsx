@@ -196,7 +196,7 @@ const LevelEditor: React.FC = () => {
     renderScene(ctx, canvas.width, canvas.height);
 
     if (isPlaying) {
-      animationFrameRef.current = requestAnimationFrame(animate);
+      requestAnimationFrame(animate);
     }
   }, [renderScene, isPlaying]);
 
@@ -217,7 +217,7 @@ const LevelEditor: React.FC = () => {
   // Animation frame effect
   useEffect(() => {
     if (isPlaying) {
-      animationFrameRef.current = requestAnimationFrame(animate);
+      requestAnimationFrame(animate);
     }
     return () => {
       if (animationFrameRef.current) {
@@ -327,7 +327,6 @@ const LevelEditor: React.FC = () => {
             >
               <div className="w-full h-full bg-black">
                 <Viewport
-                  // canvasRef={canvasRef}
                   activeTool={activeTool}
                   isPlaying={isPlaying}
                   fps={fps}

@@ -12,14 +12,7 @@ import {
 import { ReactNode } from 'react';
 import { RUST_TYPES } from './constants';
 
-interface TitleBarProps {
-  searchTerm: string;
-  onSearchChange: (value: string) => void;
-  onAddNode: (typeKey: string, typeInfo: any) => void;
-  onExport: () => void;
-}
-
-const TitleBar = ({ searchTerm, onSearchChange, onAddNode, onExport }: TitleBarProps) => {
+const TitleBar = ({ searchTerm, onSearchChange, onAddNode, onExport }) => {
   // Filter infrastructure types based on search
   const filteredTypes = Object.entries(RUST_TYPES).reduce((acc, [category, types]) => {
     const filtered = Object.entries(types).filter(([key, value]) =>
@@ -31,9 +24,9 @@ const TitleBar = ({ searchTerm, onSearchChange, onAddNode, onExport }: TitleBarP
       acc[category] = Object.fromEntries(filtered);
     }
     return acc;
-  }, {} as Record<string, any>);
+  });
 
-  const handleNodeAdd = (typeKey: string, typeInfo: any) => {
+  const handleNodeAdd = (typeKey, typeInfo) => {
     console.log('Adding node:', { typeKey, typeInfo });
     onAddNode(typeKey, typeInfo);
     onSearchChange('');

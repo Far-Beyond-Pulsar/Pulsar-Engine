@@ -1,11 +1,6 @@
 import React, { ReactNode } from 'react';
 
-interface PanelManagerProps {
-  children: ReactNode;
-  className?: string;
-}
-
-export const PanelManager: React.FC<PanelManagerProps> = ({ 
+export const PanelManager = ({ 
   children, 
   className = '' 
 }) => {

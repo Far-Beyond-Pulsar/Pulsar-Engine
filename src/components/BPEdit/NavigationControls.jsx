@@ -1,14 +1,6 @@
 import React from 'react';
-import { Button } from './components/ui/Button';
+import Button from './components/ui/Button';
 import { ZoomIn, ZoomOut, Move } from 'lucide-react';
-
-interface NavigationControlsProps {
-  onZoomIn: () => void;
-  onZoomOut: () => void;
-  onResetZoom: () => void;
-  onResetPan: () => void;
-  zoom: number;
-}
 
 const NavigationControls = ({
   onZoomIn,
@@ -16,9 +8,11 @@ const NavigationControls = ({
   onResetZoom,
   onResetPan,
   zoom
-}: NavigationControlsProps) => (
-  <div className="absolute bottom-4 right-4 flex flex-col space-y-2 bg-neutral-950 p-2 rounded-lg shadow-lg">
-    <button 
+}) => (
+  <div className="absolute bottom-4 right-4 flex flex-col space-y-2 bg-neutral-800 p-2 rounded-lg shadow-lg">
+    <Button 
+      variant="outline" 
+      size="icon" 
       onClick={onZoomIn} 
       className="border-neutral-600 hover:bg-neutral-700"
     >
