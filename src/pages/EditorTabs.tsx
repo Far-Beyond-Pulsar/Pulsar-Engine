@@ -53,7 +53,7 @@ const EditorTabs: React.FC<EditorTabsProps> = ({ onTabChange }) => {
 
   return (
     <div className="flex flex-col h-screen bg-black text-white">
-      <div className="flex items-center bg-neutral-950 border-b border-neutral-800">
+      <div className="flex items-center bg-black border-b border-neutral-800">
         <div className="flex-1 flex overflow-x-auto">
           {tabs.map(tab => (
             <button

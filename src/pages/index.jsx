@@ -198,62 +198,6 @@ const GameEngineUI = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Keyboard shortcuts
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.ctrlKey) {
-        switch (e.key.toLowerCase()) {
-          case 'n':
-            e.preventDefault();
-            handleMenuAction('new');
-            break;
-          case 's':
-            e.preventDefault();
-            handleMenuAction('save');
-            break;
-          case 'b':
-            e.preventDefault();
-            togglePanel('hierarchy');
-            break;
-          case 'p':
-            e.preventDefault();
-            togglePanel('properties');
-            break;
-          case '`':
-            e.preventDefault();
-            togglePanel('console');
-            break;
-          default:
-            break;
-        }
-      } else {
-        switch (e.key.toLowerCase()) {
-          case 'v':
-            handleToolChange('select');
-            break;
-          case 'w':
-            handleToolChange('move');
-            break;
-          case 'e':
-            handleToolChange('rotate');
-            break;
-          case 'r':
-            handleToolChange('scale');
-            break;
-          case ' ':
-            e.preventDefault();
-            setIsPlaying(prev => !prev);
-            break;
-          default:
-            break;
-        }
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleMenuAction, handleToolChange, togglePanel]);
-
   return (
     <div className={`flex flex-col h-screen bg-black text-white ${isMaximized ? '' : 'rounded-lg'} overscroll-none`}>
       <Titlebar 

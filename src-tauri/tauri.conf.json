@@ -12,7 +12,13 @@
   },
   "tauri": {
     "allowlist": {
-      "all": true
+      "all": true,
+      "fs": {
+        "all": true,
+        "readFile": true,
+        "readDir": true,
+        "scope": ["**"]
+      }
     },
     "bundle": {
       "active": true,
