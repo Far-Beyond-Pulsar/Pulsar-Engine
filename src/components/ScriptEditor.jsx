@@ -1,13 +1,13 @@
-// src/components/CodeEditor.jsx
+'use client';
+
 import React, { useState, useEffect, useRef } from 'react';
-import { invoke } from '@tauri-apps/api/tauri';
 import dynamic from 'next/dynamic';
 import {
   Save, Files, Search, Settings, Plus,
   ChevronRight, ChevronDown,
   FileCode, Folder, FolderOpen,
   X, Check, AlertCircle, Trash2,
-  FileDown, RefreshCw
+  FileDown, RefreshCw, FolderInput
 } from 'lucide-react';
 
 import {
@@ -29,9 +29,24 @@ import {
   AlertDialogTitle,
 } from "./AlertDialog";
 
-// Dynamic import of Monaco Editor
+// Dynamically import Tauri APIs
+let invoke;
+let dialog;
+
+// Initialize Tauri APIs
+const initTauri = async () => {
+  const tauri = await import('@tauri-apps/api/tauri');
+  const tauriDialog = await import('@tauri-apps/api/dialog');
+  invoke = tauri.invoke;
+  dialog = tauriDialog.open;
+};
+
+// Utils for client-side detection
+const isBrowser = typeof window !== 'undefined';
+
+// Dynamic import of Monaco Editor with explicit SSR disabling
 const MonacoEditor = dynamic(
-  () => import('@monaco-editor/react'),
+  () => import('@monaco-editor/react').then((mod) => mod.default),
   {
     ssr: false,
     loading: () => (
@@ -43,6 +58,9 @@ const MonacoEditor = dynamic(
 );
 
 const CodeEditor = () => {
+  // Add client-side only initialization
+  const [isClient, setIsClient] = useState(false);
+
   // Core state
   const [files, setFiles] = useState([]);
   const [openTabs, setOpenTabs] = useState([]);
@@ -52,38 +70,42 @@ const CodeEditor = () => {
   const [cursorPosition, setCursorPosition] = useState({ line: 1, column: 1 });
   const [loadError, setLoadError] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  
+
   // UI state
   const [showNewFileDialog, setShowNewFileDialog] = useState(false);
   const [showNewFolderDialog, setShowNewFolderDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [newItemName, setNewItemName] = useState('');
   const [selectedPath, setSelectedPath] = useState(null);
+  const [currentProjectPath, setCurrentProjectPath] = useState('.');
 
   // Monaco editor instance ref
   const editorRef = useRef(null);
   const monacoRef = useRef(null);
 
   // Load directory structure
-  const loadDirectoryStructure = async () => {
+  const loadDirectoryStructure = async (pathOverride = null) => {
     try {
       setIsLoading(true);
-      const entries = await invoke('get_directory_structure', { path: '.' });
+      const pathToUse = pathOverride || currentProjectPath;
+      console.log('Loading directory structure for path:', pathToUse);
       
+      const entries = await invoke('get_directory_structure', { 
+        path: pathToUse
+      });
+
       const processEntries = (entries) => {
-        // Sort entries to process directories first
         entries.sort((a, b) => {
           if (a.entry_type === 'directory' && b.entry_type !== 'directory') return -1;
           if (a.entry_type !== 'directory' && b.entry_type === 'directory') return 1;
           return 0;
         });
-  
+
         const result = [];
         const pathMap = new Map();
-  
-        // Process all entries
+
         entries.forEach(entry => {
-          const normalizedPath = entry.path.replace(/\\/g, '/'); // Normalize path separators
+          const normalizedPath = entry.path.replace(/\\/g, '/');
           const parts = normalizedPath.split('/');
           const item = {
             name: entry.name,
@@ -92,15 +114,12 @@ const CodeEditor = () => {
             children: entry.entry_type === 'directory' ? [] : undefined,
             open: false
           };
-  
-          // Add to pathMap for later reference
+
           pathMap.set(normalizedPath, item);
-  
+
           if (parts.length === 1) {
-            // Root level items
             result.push(item);
           } else {
-            // Nested items
             const parentPath = parts.slice(0, -1).join('/');
             const parent = pathMap.get(parentPath);
             if (parent && parent.children) {
@@ -108,10 +127,10 @@ const CodeEditor = () => {
             }
           }
         });
-  
+
         return result;
       };
-  
+
       const structuredItems = processEntries(entries);
       setFiles(structuredItems);
       setLoadError(null);
@@ -129,18 +148,48 @@ const CodeEditor = () => {
     }
   };
 
-  // File operations
+  const openProject = async () => {
+    try {
+      const { dialog } = await import('@tauri-apps/api');
+
+      const selected = await dialog.open({
+        directory: true,
+        multiple: false,
+        title: 'Select Project Directory'
+      });
+
+      if (selected) {
+        setCurrentProjectPath(selected);
+        setOpenTabs([]);
+        setActiveTab(null);
+        setFiles([]);
+        await loadDirectoryStructure();
+        setConsoleOutput(prev => [...prev, {
+          type: 'success',
+          message: `Opened project: ${selected}`
+        }]);
+      }
+    } catch (error) {
+      const errorMessage = `Error opening project: ${error}`;
+      console.error(errorMessage);
+      setConsoleOutput(prev => [...prev, {
+        type: 'error',
+        message: errorMessage
+      }]);
+    }
+  };
+
   const openFile = async (file) => {
     try {
       if (!openTabs.some(tab => tab.path === file.path)) {
         const result = await invoke('read_file_content', { path: file.path });
-        
+
         setOpenTabs(prev => [...prev, {
           ...file,
           content: result.content,
           language: result.language
         }]);
-        
+
         setConsoleOutput(prev => [...prev, {
           type: 'info',
           message: `Opened file: ${file.name}`
@@ -160,18 +209,15 @@ const CodeEditor = () => {
   const saveFile = async () => {
     const activeFile = openTabs.find(tab => tab.path === activeTab);
     if (!activeFile || !editorRef.current) return;
-  
+
     try {
-      // Get content directly from the editor instance
       const currentContent = editorRef.current.getValue();
-      
-      // Save to file
+
       await invoke('save_file_content', {
         path: activeFile.path,
         content: currentContent
       });
-      
-      // Update the tab content in state to match
+
       setOpenTabs(prev =>
         prev.map(tab =>
           tab.path === activeTab
@@ -179,7 +225,7 @@ const CodeEditor = () => {
             : tab
         )
       );
-      
+
       setConsoleOutput(prev => [...prev, {
         type: 'success',
         message: `File saved: ${activeFile.name}`
@@ -196,7 +242,7 @@ const CodeEditor = () => {
 
   const createNewFile = async () => {
     if (!newItemName) return;
-    
+
     try {
       const path = `${selectedPath || '.'}/${newItemName}`;
       await invoke('create_file', { path });
@@ -217,7 +263,7 @@ const CodeEditor = () => {
 
   const createNewFolder = async () => {
     if (!newItemName) return;
-    
+
     try {
       const path = `${selectedPath || '.'}/${newItemName}`;
       await invoke('create_directory', { path });
@@ -238,16 +284,15 @@ const CodeEditor = () => {
 
   const deletePath = async () => {
     if (!selectedPath) return;
-    
+
     try {
       await invoke('delete_path', { path: selectedPath });
       await loadDirectoryStructure();
-      
-      // Close tab if open
+
       if (openTabs.some(tab => tab.path === selectedPath)) {
         closeTab(selectedPath);
       }
-      
+
       setShowDeleteDialog(false);
       setSelectedPath(null);
       setConsoleOutput(prev => [...prev, {
@@ -274,7 +319,7 @@ const CodeEditor = () => {
   const handleEditorDidMount = (editor, monaco) => {
     editorRef.current = editor;
     monacoRef.current = monaco;
-    
+
     editor.onDidChangeCursorPosition((e) => {
       setCursorPosition({
         line: e.position.lineNumber,
@@ -336,8 +381,8 @@ const CodeEditor = () => {
                       i.path === item.path
                         ? { ...i, open: !i.open }
                         : i.type === 'directory'
-                        ? { ...i, children: updateItem(i.children || []) }
-                        : i
+                          ? { ...i, children: updateItem(i.children || []) }
+                          : i
                     );
                   return updateItem(prev);
                 });
@@ -375,9 +420,13 @@ const CodeEditor = () => {
     </div>
   );
 
-  // Initial load
   useEffect(() => {
-    loadDirectoryStructure();
+    setIsClient(true);
+    const init = async () => {
+      await initTauri();
+      await loadDirectoryStructure();
+    };
+    init();
   }, []);
 
   useEffect(() => {
@@ -387,19 +436,19 @@ const CodeEditor = () => {
         saveFile();
       }
     };
-  
+
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [saveFile]);
 
-  // Loading state
-  if (isLoading) {
+  // Don't render anything until we're on the client
+  if (!isClient) {
     return (
       <div className="flex flex-col h-full bg-black text-gray-300">
         <div className="flex items-center justify-center h-full">
           <div className="text-gray-400 flex items-center gap-2">
             <RefreshCw size={16} className="animate-spin" />
-            Loading...
+            Initializing editor...
           </div>
         </div>
       </div>
@@ -423,19 +472,28 @@ const CodeEditor = () => {
             <span>EXPLORER</span>
             <div className="flex items-center gap-1">
               <button
+                onClick={openProject}
+                className="p-1 hover:bg-gray-900 rounded"
+                title="Open Project"
+              >
+                <FolderInput size={16} />
+              </button>
+              <button
                 onClick={() => {
                   setNewItemName('');
                   setShowNewFolderDialog(true);
                 }}
                 className="p-1 hover:bg-gray-900 rounded"
+                title="New Folder"
               >
                 <Folder size={16} />
               </button>
               <button
                 onClick={loadDirectoryStructure}
                 className="p-1 hover:bg-gray-900 rounded"
+                title="Refresh"
               >
-                <RefreshCw size={16} />
+                <RefreshCw size={16} className={isLoading ? "animate-spin" : ""} />
               </button>
             </div>
           </div>
@@ -452,7 +510,7 @@ const CodeEditor = () => {
               <div
                 key={tab.path}
                 className={`px-3 py-2 text-sm flex items-center gap-2 cursor-pointer border-r border-gray-800 whitespace-nowrap
-                  ${activeTab === tab.path ? 'bg-gray-950 text-white' : 'hover:bg-gray-950'}`}
+                ${activeTab === tab.path ? 'bg-gray-950 text-white' : 'hover:bg-gray-950'}`}
                 onClick={() => setActiveTab(tab.path)}
               >
                 <FileCode size={14} className="text-blue-400" />
@@ -503,29 +561,7 @@ const CodeEditor = () => {
                   automaticLayout: true,
                   tabSize: 2,
                   rulers: [80],
-                  bracketPairColorization: { enabled: true },
-                  // Add keyboard shortcuts
-                  quickSuggestions: true,
-                  // Add custom keybindings
-                  "editor.action.clipboardCopyAction": {
-                    keybindings: [
-                      {
-                        key: "ctrl+c",
-                        command: "editor.action.clipboardCopyAction",
-                        when: "editorTextFocus"
-                      }
-                    ]
-                  },
-                  // Add save keybinding
-                  'editor.action.formatDocument': {
-                    keybindings: [
-                      {
-                        key: 'shift+alt+f',
-                        command: 'editor.action.formatDocument',
-                        when: 'editorTextFocus'
-                      }
-                    ]
-                  }
+                  bracketPairColorization: { enabled: true }
                 }}
               />
             ) : (
@@ -567,14 +603,14 @@ const CodeEditor = () => {
             <div
               key={index}
               className={`px-4 py-2 flex items-center gap-2 ${
-                output.type === 'error' ? 'text-red-400' : 
-                output.type === 'success' ? 'text-green-400' : 
+                output.type === 'error' ? 'text-red-400' :
+                output.type === 'success' ? 'text-green-400' :
                 'text-blue-400'
               }`}
             >
               {output.type === 'error' ? <AlertCircle size={16} /> :
-               output.type === 'success' ? <Check size={16} /> :
-               <Files size={16} />}
+                output.type === 'success' ? <Check size={16} /> :
+                <Files size={16} />}
               <span>{output.message}</span>
             </div>
           ))}
