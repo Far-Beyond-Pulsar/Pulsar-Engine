@@ -1,11 +1,11 @@
 [package]
-name = "app"
+name = "pulsar-engine"
 version = "0.1.0"
 description = "A Tauri App"
 authors = ["you"]
 license = ""
 repository = ""
-default-run = "app"
+default-run = "pulsar-engine"
 edition = "2021"
 rust-version = "1.66"
 
@@ -19,6 +19,7 @@ serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 tauri = { version = "1.8", features = [ "api-all"] }
 walkdir = "2.5.0"
+base64 = "0.22.1"
 
 [features]
 # by default Tauri runs in production mode

@@ -33,6 +33,52 @@ import {
 let invoke;
 let dialog;
 
+// Add these helper functions
+const isImageFile = (filename) => {
+  const imageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.bmp'];
+  return imageExtensions.some(ext => filename.toLowerCase().endsWith(ext));
+};
+
+const is3DFile = (filename) => {
+  const modelExtensions = ['.glb', '.gltf', '.obj', '.fbx', '.stl'];
+  return modelExtensions.some(ext => filename.toLowerCase().endsWith(ext));
+};
+
+// Create a MediaViewer component
+const MediaViewer = ({ file }) => {
+  if (isImageFile(file.name)) {
+    return (
+      <div className="h-full flex items-center justify-center bg-gray-950">
+        <div className="relative max-w-full max-h-full p-4">
+          <img
+            src={`data:${file.mediaType};base64,${file.content}`}
+            alt={file.name}
+            className="max-w-full max-h-[calc(100vh-12rem)] object-contain"
+          />
+        </div>
+      </div>
+    );
+  }
+
+  if (is3DFile(file.name)) {
+    return (
+      <div className="h-full flex items-center justify-center bg-gray-950">
+        <div className="text-center p-4">
+          <Cube size={48} className="mx-auto mb-4 text-blue-400" />
+          <p className="text-gray-400">
+            3D viewer support coming soon...
+          </p>
+          <p className="text-sm text-gray-500 mt-2">
+            File: {file.name}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return null;
+};
+
 // Initialize Tauri APIs
 const initTauri = async () => {
   const tauri = await import('@tauri-apps/api/tauri');
@@ -183,16 +229,30 @@ const CodeEditor = () => {
     try {
       if (!openTabs.some(tab => tab.path === file.path)) {
         const result = await invoke('read_file_content', { path: file.path });
-
+        
+        // Determine the file type and prepare content accordingly
+        let fileType = 'text';
+        let mediaType = '';
+        
+        if (isImageFile(file.name)) {
+          fileType = 'image';
+          mediaType = `image/${file.name.split('.').pop()}`;
+        } else if (is3DFile(file.name)) {
+          fileType = '3d';
+          mediaType = `model/${file.name.split('.').pop()}`;
+        }
+  
         setOpenTabs(prev => [...prev, {
           ...file,
           content: result.content,
-          language: result.language
+          language: result.language,
+          fileType,
+          mediaType
         }]);
-
+  
         setConsoleOutput(prev => [...prev, {
           type: 'info',
-          message: `Opened file: ${file.name}`
+          message: `Opened ${fileType} file: ${file.name}`
         }]);
       }
       setActiveTab(file.path);
@@ -347,6 +407,7 @@ const CodeEditor = () => {
         { token: 'variable.predefined', foreground: '4FC1FF' },
       ],
       colors: {
+        // Base editor colors
         'editor.background': '#000000',
         'editor.foreground': '#D4D4D4',
         'editor.lineHighlightBackground': '#0F0F0F',
@@ -358,11 +419,133 @@ const CodeEditor = () => {
         'editor.wordHighlightBackground': '#575757B8',
         'editor.wordHighlightStrongBackground': '#004972B8',
         'editorBracketMatch.background': '#0064001A',
-        'editorBracketMatch.border': '#888888'
+        'editorBracketMatch.border': '#888888',
+    
+        // Suggestion widget
+        'editorSuggestWidget.background': '#000000',
+        'editorSuggestWidget.border': '#454545',
+        'editorSuggestWidget.foreground': '#D4D4D4',
+        'editorSuggestWidget.focusHighlightForeground': '#18A3FF',
+        'editorSuggestWidget.highlightForeground': '#18A3FF',
+        'editorSuggestWidget.selectedBackground': '#062F4A',
+        'editorSuggestWidget.selectedForeground': '#FFFFFF',
+        'editorSuggestWidget.selectedIconForeground': '#FFFFFF',
+    
+        // Hover widget
+        'editorHoverWidget.background': '#000000',
+        'editorHoverWidget.border': '#454545',
+        'editorHoverWidget.foreground': '#D4D4D4',
+        'editorHoverWidget.statusBarBackground': '#000000',
+    
+        // Parameter hints
+        'editorParameterHint.background': '#000000',
+        'editorParameterHint.border': '#454545',
+    
+        // Find/replace dialog
+        'editorWidget.background': '#000000',
+        'editorWidget.border': '#454545',
+        'editorWidget.foreground': '#D4D4D4',
+        'editorWidget.resizeBorder': '#454545',
+    
+        // Peek view
+        'peekView.border': '#454545',
+        'peekViewEditor.background': '#000000',
+        'peekViewEditor.matchHighlightBackground': '#264F78',
+        'peekViewResult.background': '#000000',
+        'peekViewResult.fileForeground': '#D4D4D4',
+        'peekViewResult.lineForeground': '#D4D4D4',
+        'peekViewResult.matchHighlightBackground': '#264F78',
+        'peekViewResult.selectionBackground': '#062F4A',
+        'peekViewResult.selectionForeground': '#FFFFFF',
+        'peekViewTitle.background': '#000000',
+        'peekViewTitleDescription.foreground': '#D4D4D4',
+        'peekViewTitleLabel.foreground': '#D4D4D4',
+    
+        // Context menu
+        'menu.background': '#000000',
+        'menu.border': '#454545',
+        'menu.foreground': '#D4D4D4',
+        'menu.selectionBackground': '#062F4A',
+        'menu.selectionBorder': '#454545',
+        'menu.selectionForeground': '#FFFFFF',
+        'menu.separatorBackground': '#454545',
+    
+        // List and tree
+        'list.activeSelectionBackground': '#062F4A',
+        'list.activeSelectionForeground': '#FFFFFF',
+        'list.focusBackground': '#062F4A',
+        'list.focusForeground': '#FFFFFF',
+        'list.highlightForeground': '#18A3FF',
+        'list.hoverBackground': '#2A2D2E',
+        'list.inactiveSelectionBackground': '#37373D',
+        'list.inactiveSelectionForeground': '#D4D4D4',
+    
+        // Scrollbar
+        'scrollbar.shadow': '#000000',
+        'scrollbarSlider.activeBackground': '#707070B3',
+        'scrollbarSlider.background': '#4E4E4E80',
+        'scrollbarSlider.hoverBackground': '#646464B3'
       }
     });
-
+    
     monaco.editor.setTheme('amoled-black');
+  };
+
+  const renderEditorContent = () => {
+    if (!activeTab) {
+      return (
+        <div className="flex items-center justify-center h-full text-gray-500">
+          No file selected
+        </div>
+      );
+    }
+  
+    const activeFile = openTabs.find(tab => tab.path === activeTab);
+    
+    if (!activeFile) return null;
+  
+    if (activeFile.fileType === 'image' || activeFile.fileType === '3d') {
+      return <MediaViewer file={activeFile} />;
+    }
+  
+    return (
+      <MonacoEditor
+        height="100%"
+        defaultLanguage={activeFile.language || 'plaintext'}
+        onMount={handleEditorDidMount}
+        value={activeFile.content || ''}
+        onChange={(value) => {
+          setOpenTabs(prev =>
+            prev.map(tab =>
+              tab.path === activeTab ? { ...tab, content: value } : tab
+            )
+          );
+        }}
+        options={{
+          readOnly: false,
+          minimap: { enabled: minimap },
+          scrollbar: {
+            vertical: 'visible',
+            horizontal: 'visible',
+            useShadows: false,
+            verticalHasArrows: false,
+            horizontalHasArrows: false,
+            verticalScrollbarSize: 10,
+            horizontalScrollbarSize: 10,
+          },
+          colorDecorators: true,
+          fontFamily: 'JetBrains Mono, monospace',
+          fontSize: 14,
+          lineNumbers: 'on',
+          roundedSelection: false,
+          scrollBeyondLastLine: false,
+          automaticLayout: true,
+          tabSize: 2,
+          rulers: [80],
+          bracketPairColorization: { enabled: true }
+        }}
+      />
+    );
   };
 
   // File tree component
@@ -525,50 +708,8 @@ const CodeEditor = () => {
             ))}
           </div>
 
-          {/* Editor */}
           <div className="flex-1 relative">
-            {activeTab ? (
-              <MonacoEditor
-                height="100%"
-                defaultLanguage={openTabs.find(tab => tab.path === activeTab)?.language || 'plaintext'}
-                onMount={handleEditorDidMount}
-                value={openTabs.find(tab => tab.path === activeTab)?.content || ''}
-                onChange={(value) => {
-                  setOpenTabs(prev =>
-                    prev.map(tab =>
-                      tab.path === activeTab ? { ...tab, content: value } : tab
-                    )
-                  );
-                }}
-                options={{
-                  readOnly: false,
-                  minimap: { enabled: minimap },
-                  scrollbar: {
-                    vertical: 'visible',
-                    horizontal: 'visible',
-                    useShadows: false,
-                    verticalHasArrows: false,
-                    horizontalHasArrows: false,
-                    verticalScrollbarSize: 10,
-                    horizontalScrollbarSize: 10,
-                  },
-                  colorDecorators: true,
-                  fontFamily: 'JetBrains Mono, monospace',
-                  fontSize: 14,
-                  lineNumbers: 'on',
-                  roundedSelection: false,
-                  scrollBeyondLastLine: false,
-                  automaticLayout: true,
-                  tabSize: 2,
-                  rulers: [80],
-                  bracketPairColorization: { enabled: true }
-                }}
-              />
-            ) : (
-              <div className="flex items-center justify-center h-full text-gray-500">
-                No file selected
-              </div>
-            )}
+            {renderEditorContent()}
           </div>
         </div>
       </div>

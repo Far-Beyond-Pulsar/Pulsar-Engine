@@ -4,11 +4,12 @@
 )]
 
 use std::time::{SystemTime, UNIX_EPOCH};
-use std::fs;
-use std::path::{Path, PathBuf};
 use serde::{Serialize, Deserialize};
-use tauri::Manager;
+use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
+use std::ffi::OsStr;
+use tauri::Manager;
+use std::fs;
 
 // File system structs
 #[derive(Debug, Serialize, Deserialize)]
@@ -16,10 +17,7 @@ pub struct FileEntry {
     name: String,
     path: String,
     entry_type: String,
-    children: Option<Vec<FileEntry>>,
 }
-
-
 
 #[derive(Debug, Serialize)]
 pub struct FileContent {
@@ -61,46 +59,81 @@ fn on_button_clicked() -> String {
 
 // File system commands
 #[tauri::command]
-async fn get_directory_structure(path: String) -> Result<Vec<FileEntry>, String> {
-    let entries = WalkDir::new(&path)
-        .into_iter()
-        .filter_map(|e| e.ok())
-        .filter(|e| !is_hidden(e.path()));
-
-    let mut file_tree: Vec<FileEntry> = Vec::new();
-    for entry in entries {
-        let path_str = entry.path().to_string_lossy().into_owned();
-        let name = entry.file_name().to_string_lossy().into_owned();
-        
-        let entry_type = if entry.file_type().is_dir() {
-            "directory"
-        } else {
-            "file"
-        };
-
-        let file_entry = FileEntry {
-            name,
-            path: path_str,
-            entry_type: entry_type.to_string(),
-            children: None,
-        };
-
-        file_tree.push(file_entry);
+fn get_directory_structure(path: &str) -> Result<Vec<FileEntry>, String> {
+    let root = Path::new(path);
+    if !root.exists() {
+        return Err(format!("Path does not exist: {}", path));
     }
 
-    Ok(file_tree)
+    let mut entries = Vec::new();
+
+    for entry in WalkDir::new(root).min_depth(1).into_iter().filter_map(|e| e.ok()) {
+        let path = entry.path();
+        let file_name = path.file_name().unwrap_or_default().to_string_lossy();
+
+        // Skip hidden files and directories
+        if file_name.starts_with('.') {
+            continue;
+        }
+
+        let relative_path = path.strip_prefix(root).unwrap_or(path);
+        let entry_type = if path.is_dir() { "directory" } else { "file" };
+
+        entries.push(FileEntry {
+            name: file_name.into_owned(),
+            path: relative_path.to_string_lossy().into_owned(),
+            entry_type: entry_type.to_string(),
+        });
+    }
+
+    Ok(entries)
 }
 
 #[tauri::command]
-async fn read_file_content(path: String) -> Result<FileContent, FileError> {
-    match fs::read_to_string(&path) {
-        Ok(content) => {
-            let language = get_file_language(&path);
-            Ok(FileContent { content, language })
-        }
-        Err(e) => Err(FileError {
-            message: e.to_string(),
-            code: "READ_ERROR".to_string(),
+async fn read_file_content(path: String) -> Result<FileContent, String> {
+    let path = PathBuf::from(path);
+    
+    // Read file extension
+    let extension = path
+        .extension()
+        .and_then(OsStr::to_str)
+        .unwrap_or("")
+        .to_lowercase();
+
+    // Determine if this is a binary file that needs base64 encoding
+    let is_binary = matches!(
+        extension.as_str(),
+        "png" | "jpg" | "jpeg" | "gif" | "webp" | "bmp" |
+        "glb" | "gltf" | "obj" | "fbx" | "stl"
+    );
+
+    if is_binary {
+        // Read binary content and encode as base64
+        let content = fs::read(&path)
+            .map_err(|e| e.to_string())?;
+        let base64_content = base64::encode(content);
+        
+        Ok(FileContent {
+            content: base64_content,
+            language: String::from("binary"),
+        })
+    } else {
+        // Handle text files as before
+        let content = fs::read_to_string(&path)
+            .map_err(|e| e.to_string())?;
+            
+        // Determine language based on extension
+        let language = match extension.as_str() {
+            "js" | "jsx" => "javascript",
+            "ts" | "tsx" => "typescript",
+            "rs" => "rust",
+            // ... add other mappings
+            _ => "plaintext",
+        };
+
+        Ok(FileContent {
+            content,
+            language: String::from(language),
         })
     }
 }

@@ -17,6 +17,9 @@
         "all": true,
         "readFile": true,
         "readDir": true,
+        "writeFile": true,
+        "copyFile": true,
+        "removeFile": true,
         "scope": ["**"]
       }
     },
@@ -38,7 +41,6 @@
       "shortDescription": "",
       "targets": "all",
       "macOS": {
-        "entitlements": null,
         "exceptionDomain": "",
         "frameworks": [],
         "providerShortName": null,
@@ -52,10 +54,9 @@
       "deb": {
         "depends": []
       }
-      
     },
     "security": {
-      "csp": null
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';"
     },
     "updater": {
       "active": false
