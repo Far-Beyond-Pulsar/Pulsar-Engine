@@ -48,7 +48,7 @@ const is3DFile = (filename) => {
 const MediaViewer = ({ file }) => {
   if (isImageFile(file.name)) {
     return (
-      <div className="h-full flex items-center justify-center bg-gray-950">
+      <div className="h-full flex items-center justify-center bg-black">
         <div className="relative max-w-full max-h-full p-4">
           <img
             src={`data:${file.mediaType};base64,${file.content}`}
@@ -693,7 +693,7 @@ const CodeEditor = () => {
               <div
                 key={tab.path}
                 className={`px-3 py-2 text-sm flex items-center gap-2 cursor-pointer border-r border-gray-800 whitespace-nowrap
-                ${activeTab === tab.path ? 'bg-gray-950 text-white' : 'hover:bg-gray-950'}`}
+                  ${activeTab === tab.path ? 'bg-gray-950 text-white border-b-2 border-b-blue-500' : 'hover:bg-gray-950'}`}
                 onClick={() => setActiveTab(tab.path)}
               >
                 <FileCode size={14} className="text-blue-400" />
