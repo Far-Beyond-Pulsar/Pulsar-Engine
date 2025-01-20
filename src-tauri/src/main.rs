@@ -4,8 +4,34 @@
 )]
 
 use std::time::{SystemTime, UNIX_EPOCH};
+use std::fs;
+use std::path::{Path, PathBuf};
+use serde::{Serialize, Deserialize};
 use tauri::Manager;
+use walkdir::WalkDir;
 
+// File system structs
+#[derive(Debug, Serialize, Deserialize)]
+pub struct FileEntry {
+    name: String,
+    path: String,
+    entry_type: String,
+    children: Option<Vec<FileEntry>>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct FileContent {
+    content: String,
+    language: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct FileError {
+    message: String,
+    code: String,
+}
+
+// Existing commands
 #[tauri::command]
 async fn execute_command(command: String) -> Result<String, String> {
     let output = std::process::Command::new("sh")
@@ -31,17 +57,156 @@ fn on_button_clicked() -> String {
     format!("on_button_clicked called from Rust! (timestamp: {since_the_epoch}ms)")
 }
 
+// File system commands
+#[tauri::command]
+async fn get_directory_structure(path: String) -> Result<Vec<FileEntry>, String> {
+    let entries = WalkDir::new(&path)
+        .into_iter()
+        .filter_map(|e| e.ok())
+        .filter(|e| !is_hidden(e.path()));
+
+    let mut file_tree: Vec<FileEntry> = Vec::new();
+    for entry in entries {
+        let path_str = entry.path().to_string_lossy().into_owned();
+        let name = entry.file_name().to_string_lossy().into_owned();
+        
+        let entry_type = if entry.file_type().is_dir() {
+            "directory"
+        } else {
+            "file"
+        };
+
+        let file_entry = FileEntry {
+            name,
+            path: path_str,
+            entry_type: entry_type.to_string(),
+            children: None,
+        };
+
+        file_tree.push(file_entry);
+    }
+
+    Ok(file_tree)
+}
+
+#[tauri::command]
+async fn read_file_content(path: String) -> Result<FileContent, FileError> {
+    match fs::read_to_string(&path) {
+        Ok(content) => {
+            let language = get_file_language(&path);
+            Ok(FileContent { content, language })
+        }
+        Err(e) => Err(FileError {
+            message: e.to_string(),
+            code: "READ_ERROR".to_string(),
+        })
+    }
+}
+
+#[tauri::command]
+async fn save_file_content(path: String, content: String) -> Result<(), FileError> {
+    match fs::write(&path, content) {
+        Ok(_) => Ok(()),
+        Err(e) => Err(FileError {
+            message: e.to_string(),
+            code: "WRITE_ERROR".to_string(),
+        })
+    }
+}
+
+#[tauri::command]
+async fn create_file(path: String) -> Result<(), FileError> {
+    match fs::File::create(&path) {
+        Ok(_) => Ok(()),
+        Err(e) => Err(FileError {
+            message: e.to_string(),
+            code: "CREATE_ERROR".to_string(),
+        })
+    }
+}
+
+#[tauri::command]
+async fn create_directory(path: String) -> Result<(), FileError> {
+    match fs::create_dir_all(&path) {
+        Ok(_) => Ok(()),
+        Err(e) => Err(FileError {
+            message: e.to_string(),
+            code: "CREATE_DIR_ERROR".to_string(),
+        })
+    }
+}
+
+#[tauri::command]
+async fn delete_path(path: String) -> Result<(), FileError> {
+    let path = Path::new(&path);
+    if path.is_dir() {
+        match fs::remove_dir_all(path) {
+            Ok(_) => Ok(()),
+            Err(e) => Err(FileError {
+                message: e.to_string(),
+                code: "DELETE_ERROR".to_string(),
+            })
+        }
+    } else {
+        match fs::remove_file(path) {
+            Ok(_) => Ok(()),
+            Err(e) => Err(FileError {
+                message: e.to_string(),
+                code: "DELETE_ERROR".to_string(),
+            })
+        }
+    }
+}
+
+// Helper functions
+fn get_file_language(path: &str) -> String {
+    let extension = Path::new(path)
+        .extension()
+        .and_then(|ext| ext.to_str())
+        .unwrap_or("");
+
+    match extension.to_lowercase().as_str() {
+        "rs" => "rust",
+        "js" => "javascript",
+        "jsx" => "javascript",
+        "ts" => "typescript",
+        "tsx" => "typescript",
+        "py" => "python",
+        "json" => "json",
+        "md" => "markdown",
+        "css" => "css",
+        "html" => "html",
+        "xml" => "xml",
+        "yaml" | "yml" => "yaml",
+        _ => "plaintext",
+    }.to_string()
+}
+
+fn is_hidden(path: &Path) -> bool {
+    path.file_name()
+        .and_then(|name| name.to_str())
+        .map(|name| name.starts_with('.'))
+        .unwrap_or(false)
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 fn main() {
     tauri::Builder::default()
-        // Add window decorations configuration
         .setup(|app| {
             let window = app.get_window("main").unwrap();
-            // Hide the titlebar
             window.set_decorations(false).unwrap();
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![execute_command])
+        .invoke_handler(tauri::generate_handler![
+            execute_command,
+            on_button_clicked,
+            get_directory_structure,
+            read_file_content,
+            save_file_content,
+            create_file,
+            create_directory,
+            delete_path
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

@@ -1,15 +1,35 @@
-import { readDir, readTextFile, BaseDirectory } from '@tauri-apps/api/fs';
-
+// src/components/CodeEditor.jsx
 import React, { useState, useEffect, useRef } from 'react';
+import { invoke } from '@tauri-apps/api/tauri';
 import dynamic from 'next/dynamic';
 import {
-  Save, Files, Search, Settings,
+  Save, Files, Search, Settings, Plus,
   ChevronRight, ChevronDown,
   FileCode, Folder, FolderOpen,
-  X, Check, AlertCircle
+  X, Check, AlertCircle, Trash2,
+  FileDown, RefreshCw
 } from 'lucide-react';
 
-// Dynamically import Monaco Editor with no SSR
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "./Dialog";
+
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "./AlertDialog";
+
+// Dynamic import of Monaco Editor
 const MonacoEditor = dynamic(
   () => import('@monaco-editor/react'),
   {
@@ -30,47 +50,76 @@ const CodeEditor = () => {
   const [minimap, setMinimap] = useState(true);
   const [consoleOutput, setConsoleOutput] = useState([]);
   const [cursorPosition, setCursorPosition] = useState({ line: 1, column: 1 });
-  const [fsReady, setFsReady] = useState(false);
+  const [loadError, setLoadError] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // UI state
+  const [showNewFileDialog, setShowNewFileDialog] = useState(false);
+  const [showNewFolderDialog, setShowNewFolderDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [newItemName, setNewItemName] = useState('');
+  const [selectedPath, setSelectedPath] = useState(null);
 
   // Monaco editor instance ref
   const editorRef = useRef(null);
   const monacoRef = useRef(null);
 
-  // Load directory contents
+  // Load directory structure
   const loadDirectoryStructure = async () => {
     try {
-      // Use the app's current directory
-      const path = '.';
-      console.log('Starting directory load from:', path);
+      setIsLoading(true);
+      const entries = await invoke('get_directory_structure', { path: '.' });
       
-      const entries = await readDir(path, { 
-        recursive: true,
-        dir: BaseDirectory.App 
-      });
-
       const processEntries = (entries) => {
-        return entries.map(entry => ({
-          name: entry.name,
-          path: entry.path,
-          type: entry.children ? 'directory' : 'file',
-          children: entry.children ? processEntries(entry.children) : undefined,
-          open: false
-        }));
+        const result = [];
+        const pathMap = new Map();
+        
+        // First pass: create all file entries
+        entries.forEach(entry => {
+          const parts = entry.path.split(/[/\\]/);
+          const item = {
+            name: entry.name,
+            path: entry.path,
+            type: entry.entry_type,
+            children: entry.entry_type === 'directory' ? [] : undefined,
+            open: false
+          };
+          pathMap.set(entry.path, item);
+          
+          if (parts.length === 1) {
+            result.push(item);
+          }
+        });
+        
+        // Second pass: build tree structure
+        entries.forEach(entry => {
+          const parts = entry.path.split(/[/\\]/);
+          if (parts.length > 1) {
+            const parentPath = parts.slice(0, -1).join('/');
+            const parent = pathMap.get(parentPath);
+            if (parent && parent.children) {
+              parent.children.push(pathMap.get(entry.path));
+            }
+          }
+        });
+        
+        return result;
       };
-  
+
       const structuredItems = processEntries(entries);
-      console.log('Processed files:', structuredItems);
       setFiles(structuredItems);
-      setFsReady(true);
+      setLoadError(null);
     } catch (error) {
-      console.error('Full error:', error);
+      const errorMessage = `Failed to load directory structure: ${error}`;
+      console.error(errorMessage);
+      setLoadError(errorMessage);
       setConsoleOutput(prev => [...prev, {
         type: 'error',
-        message: `${error.message} (${error.code})`
+        message: errorMessage
       }]);
-      // Initialize with empty file list on error
       setFiles([]);
-      setFsReady(true);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -78,52 +127,126 @@ const CodeEditor = () => {
   const openFile = async (file) => {
     try {
       if (!openTabs.some(tab => tab.path === file.path)) {
-        const content = await readTextFile(file.path);
-        const language = getFileLanguage(file.name);
+        const result = await invoke('read_file_content', { path: file.path });
         
         setOpenTabs(prev => [...prev, {
           ...file,
-          content,
-          language
+          content: result.content,
+          language: result.language
+        }]);
+        
+        setConsoleOutput(prev => [...prev, {
+          type: 'info',
+          message: `Opened file: ${file.name}`
         }]);
       }
       setActiveTab(file.path);
     } catch (error) {
-      console.error('Error opening file:', error);
+      const errorMessage = `Error opening file ${file.name}: ${error}`;
+      console.error(errorMessage);
       setConsoleOutput(prev => [...prev, {
         type: 'error',
-        message: `Error opening file: ${error.message}`
+        message: errorMessage
+      }]);
+    }
+  };
+
+  const saveFile = async () => {
+    const activeFile = openTabs.find(tab => tab.path === activeTab);
+    if (!activeFile) return;
+
+    try {
+      await invoke('save_file_content', {
+        path: activeFile.path,
+        content: activeFile.content
+      });
+      
+      setConsoleOutput(prev => [...prev, {
+        type: 'success',
+        message: `File saved: ${activeFile.name}`
+      }]);
+    } catch (error) {
+      setConsoleOutput(prev => [...prev, {
+        type: 'error',
+        message: `Error saving file: ${error}`
+      }]);
+    }
+  };
+
+  const createNewFile = async () => {
+    if (!newItemName) return;
+    
+    try {
+      const path = `${selectedPath || '.'}/${newItemName}`;
+      await invoke('create_file', { path });
+      await loadDirectoryStructure();
+      setShowNewFileDialog(false);
+      setNewItemName('');
+      setConsoleOutput(prev => [...prev, {
+        type: 'success',
+        message: `Created new file: ${newItemName}`
+      }]);
+    } catch (error) {
+      setConsoleOutput(prev => [...prev, {
+        type: 'error',
+        message: `Error creating file: ${error}`
+      }]);
+    }
+  };
+
+  const createNewFolder = async () => {
+    if (!newItemName) return;
+    
+    try {
+      const path = `${selectedPath || '.'}/${newItemName}`;
+      await invoke('create_directory', { path });
+      await loadDirectoryStructure();
+      setShowNewFolderDialog(false);
+      setNewItemName('');
+      setConsoleOutput(prev => [...prev, {
+        type: 'success',
+        message: `Created new folder: ${newItemName}`
+      }]);
+    } catch (error) {
+      setConsoleOutput(prev => [...prev, {
+        type: 'error',
+        message: `Error creating folder: ${error}`
+      }]);
+    }
+  };
+
+  const deletePath = async () => {
+    if (!selectedPath) return;
+    
+    try {
+      await invoke('delete_path', { path: selectedPath });
+      await loadDirectoryStructure();
+      
+      // Close tab if open
+      if (openTabs.some(tab => tab.path === selectedPath)) {
+        closeTab(selectedPath);
+      }
+      
+      setShowDeleteDialog(false);
+      setSelectedPath(null);
+      setConsoleOutput(prev => [...prev, {
+        type: 'success',
+        message: `Deleted: ${selectedPath}`
+      }]);
+    } catch (error) {
+      setConsoleOutput(prev => [...prev, {
+        type: 'error',
+        message: `Error deleting path: ${error}`
       }]);
     }
   };
 
   const closeTab = (path, e) => {
-    e.stopPropagation();
+    if (e) e.stopPropagation();
     setOpenTabs(prev => prev.filter(tab => tab.path !== path));
     if (activeTab === path) {
       setActiveTab(openTabs[openTabs.length - 2]?.path || null);
     }
-  };
-
-  // Helper function to get file language
-  const getFileLanguage = (filename) => {
-    const ext = filename.split('.').pop().toLowerCase();
-    const languageMap = {
-      'rs': 'rust',
-      'js': 'javascript',
-      'jsx': 'javascript',
-      'ts': 'typescript',
-      'tsx': 'typescript',
-      'py': 'python',
-      'json': 'json',
-      'md': 'markdown',
-      'css': 'css',
-      'html': 'html',
-      'xml': 'xml',
-      'yaml': 'yaml',
-      'yml': 'yaml',
-    };
-    return languageMap[ext] || 'plaintext';
   };
 
   // Handle editor mount
@@ -142,58 +265,86 @@ const CodeEditor = () => {
     monaco.editor.defineTheme('amoled-black', {
       base: 'vs-dark',
       inherit: true,
-      rules: [],
+      rules: [
+        { token: 'comment', foreground: '6A9955' },
+        { token: 'keyword', foreground: '569CD6' },
+        { token: 'string', foreground: 'CE9178' },
+        { token: 'number', foreground: 'B5CEA8' },
+        { token: 'regexp', foreground: 'D16969' },
+        { token: 'type', foreground: '4EC9B0' },
+        { token: 'class', foreground: '4EC9B0' },
+        { token: 'function', foreground: 'DCDCAA' },
+        { token: 'variable', foreground: '9CDCFE' },
+        { token: 'constant', foreground: '4FC1FF' },
+        { token: 'parameter', foreground: '9CDCFE' },
+        { token: 'builtin', foreground: '4EC9B0' },
+        { token: 'variable.predefined', foreground: '4FC1FF' },
+      ],
       colors: {
         'editor.background': '#000000',
+        'editor.foreground': '#D4D4D4',
+        'editor.lineHighlightBackground': '#0F0F0F',
+        'editor.selectionBackground': '#264F78',
+        'editor.inactiveSelectionBackground': '#3A3D41',
+        'editorIndentGuide.background': '#404040',
+        'editorIndentGuide.activeBackground': '#707070',
+        'editor.selectionHighlightBackground': '#ADD6FF26',
+        'editor.wordHighlightBackground': '#575757B8',
+        'editor.wordHighlightStrongBackground': '#004972B8',
+        'editorBracketMatch.background': '#0064001A',
+        'editorBracketMatch.border': '#888888'
       }
     });
   };
 
-  // File tree component with recursive rendering
+  // File tree component
   const FileTree = ({ items }) => (
     <div className="text-sm">
       {items.map((item) => (
         <div key={item.path}>
-          {item.type === 'directory' ? (
-            <div>
-              <div
-                className="flex items-center gap-1 py-1 hover:bg-gray-950 px-2 cursor-pointer"
-                onClick={() => {
-                  setFiles(prev => {
-                    const updateItem = (items) =>
-                      items.map(i =>
-                        i.path === item.path
-                          ? { ...i, open: !i.open }
-                          : i.type === 'directory'
-                          ? { ...i, children: updateItem(i.children || []) }
-                          : i
-                      );
-                    return updateItem(prev);
-                  });
-                }}
-              >
-                {item.open ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                {item.open ? (
-                  <FolderOpen size={16} className="text-blue-400" />
-                ) : (
-                  <Folder size={16} className="text-blue-400" />
-                )}
-                <span>{item.name}</span>
-              </div>
-              {item.open && item.children && (
-                <div className="ml-4">
-                  <FileTree items={item.children} />
-                </div>
-              )}
-            </div>
-          ) : (
-            <div
-              className={`flex items-center gap-1 py-1 hover:bg-gray-950 px-2 cursor-pointer
-                  ${activeTab === item.path ? 'bg-gray-950 text-white' : ''}`}
-              onClick={() => openFile(item)}
-            >
+          <div
+            className={`flex items-center gap-1 py-1 px-2 hover:bg-gray-950 cursor-pointer
+              ${activeTab === item.path ? 'bg-gray-950' : ''}`}
+            onClick={() => {
+              if (item.type === 'directory') {
+                setFiles(prev => {
+                  const updateItem = (items) =>
+                    items.map(i =>
+                      i.path === item.path
+                        ? { ...i, open: !i.open }
+                        : i.type === 'directory'
+                        ? { ...i, children: updateItem(i.children || []) }
+                        : i
+                    );
+                  return updateItem(prev);
+                });
+              } else {
+                openFile(item);
+              }
+            }}
+            onContextMenu={(e) => {
+              e.preventDefault();
+              setSelectedPath(item.path);
+              setShowDeleteDialog(true);
+            }}
+          >
+            {item.type === 'directory' && (
+              item.open ? <ChevronDown size={16} /> : <ChevronRight size={16} />
+            )}
+            {item.type === 'directory' ? (
+              item.open ? (
+                <FolderOpen size={16} className="text-blue-400" />
+              ) : (
+                <Folder size={16} className="text-blue-400" />
+              )
+            ) : (
               <FileCode size={16} className="text-blue-400" />
-              <span>{item.name}</span>
+            )}
+            <span>{item.name}</span>
+          </div>
+          {item.type === 'directory' && item.open && item.children && (
+            <div className="ml-4">
+              <FileTree items={item.children} />
             </div>
           )}
         </div>
@@ -207,27 +358,51 @@ const CodeEditor = () => {
   }, []);
 
   // Loading state
-  if (!fsReady) {
+  if (isLoading) {
     return (
       <div className="flex flex-col h-full bg-black text-gray-300">
         <div className="flex items-center justify-center h-full">
-          <div className="text-gray-400">
-            Initializing file system...
+          <div className="text-gray-400 flex items-center gap-2">
+            <RefreshCw size={16} className="animate-spin" />
+            Loading...
           </div>
         </div>
       </div>
     );
   }
 
-  // Main UI (rest of your UI code remains the same)
   return (
     <div className="flex flex-col h-full bg-black text-gray-300">
+      {loadError && (
+        <div className="p-4 bg-red-900/50 text-red-200 flex items-center gap-2">
+          <AlertCircle size={16} />
+          <span>{loadError}</span>
+        </div>
+      )}
+
       {/* Main Content */}
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
         <div className="w-64 border-r border-gray-800 flex flex-col bg-black">
           <div className="flex items-center justify-between p-2 text-sm font-medium border-b border-gray-800">
             <span>EXPLORER</span>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => {
+                  setNewItemName('');
+                  setShowNewFolderDialog(true);
+                }}
+                className="p-1 hover:bg-gray-900 rounded"
+              >
+                <Folder size={16} />
+              </button>
+              <button
+                onClick={loadDirectoryStructure}
+                className="p-1 hover:bg-gray-900 rounded"
+              >
+                <RefreshCw size={16} />
+              </button>
+            </div>
           </div>
           <div className="flex-1 overflow-auto">
             <FileTree items={files} />
@@ -267,10 +442,11 @@ const CodeEditor = () => {
                 onMount={handleEditorDidMount}
                 value={openTabs.find(tab => tab.path === activeTab)?.content || ''}
                 onChange={(value) => {
-                  const updatedTabs = openTabs.map(tab =>
-                    tab.path === activeTab ? { ...tab, content: value } : tab
+                  setOpenTabs(prev =>
+                    prev.map(tab =>
+                      tab.path === activeTab ? { ...tab, content: value } : tab
+                    )
                   );
-                  setOpenTabs(updatedTabs);
                 }}
                 options={{
                   readOnly: false,
@@ -291,7 +467,7 @@ const CodeEditor = () => {
                   roundedSelection: false,
                   scrollBeyondLastLine: false,
                   automaticLayout: true,
-                  tabSize: 4,
+                  tabSize: 2,
                   rulers: [80],
                   bracketPairColorization: { enabled: true },
                 }}
@@ -303,19 +479,6 @@ const CodeEditor = () => {
             )}
           </div>
         </div>
-
-        {/* Code Area */}
-        <textarea
-          value={code}
-          onChange={handleCodeChange}
-          onKeyDown={handleTab}
-          spellCheck="false"
-          className="flex-1 p-2 bg-black text-white resize-none outline-none leading-6"
-          style={{
-            tabSize: 2,
-            WebkitFontSmoothing: 'antialiased',
-          }}
-        />
       </div>
 
       {/* Status Bar */}
@@ -329,29 +492,136 @@ const CodeEditor = () => {
         <div className="flex-1" />
         <button
           className="p-2 hover:bg-gray-950 rounded transition-colors text-blue-400"
+          onClick={saveFile}
+        >
+          <Save size={16} />
+        </button>
+        <button
+          className="p-2 hover:bg-gray-950 rounded transition-colors text-blue-400"
           onClick={() => setMinimap(prev => !prev)}
         >
           <Settings size={16} />
         </button>
       </div>
 
-      {/* Console Panel for errors */}
+      {/* Console Panel */}
       {consoleOutput.length > 0 && (
         <div className="h-32 border-t border-gray-800 bg-black overflow-auto">
           {consoleOutput.map((output, index) => (
             <div
               key={index}
-              className={`px-4 py-2 ${
-                output.type === 'error' ? 'text-red-400' : 'text-green-400'
+              className={`px-4 py-2 flex items-center gap-2 ${
+                output.type === 'error' ? 'text-red-400' : 
+                output.type === 'success' ? 'text-green-400' : 
+                'text-blue-400'
               }`}
             >
-              {output.message}
+              {output.type === 'error' ? <AlertCircle size={16} /> :
+               output.type === 'success' ? <Check size={16} /> :
+               <Files size={16} />}
+              <span>{output.message}</span>
             </div>
           ))}
         </div>
       )}
+
+      {/* New File Dialog */}
+      <Dialog open={showNewFileDialog} onOpenChange={setShowNewFileDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create New File</DialogTitle>
+            <DialogDescription>
+              Enter the name for your new file
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <input
+              type="text"
+              value={newItemName}
+              onChange={(e) => setNewItemName(e.target.value)}
+              placeholder="filename.ext"
+              className="bg-gray-950 text-white border border-gray-800 rounded px-3 py-2"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') createNewFile();
+              }}
+            />
+          </div>
+          <div className="flex justify-end gap-2">
+            <button
+              className="px-4 py-2 bg-gray-800 rounded hover:bg-gray-700"
+              onClick={() => setShowNewFileDialog(false)}
+            >
+              Cancel
+            </button>
+            <button
+              className="px-4 py-2 bg-blue-600 rounded hover:bg-blue-500"
+              onClick={createNewFile}
+            >
+              Create
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* New Folder Dialog */}
+      <Dialog open={showNewFolderDialog} onOpenChange={setShowNewFolderDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create New Folder</DialogTitle>
+            <DialogDescription>
+              Enter the name for your new folder
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <input
+              type="text"
+              value={newItemName}
+              onChange={(e) => setNewItemName(e.target.value)}
+              placeholder="folder-name"
+              className="bg-gray-950 text-white border border-gray-800 rounded px-3 py-2"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') createNewFolder();
+              }}
+            />
+          </div>
+          <div className="flex justify-end gap-2">
+            <button
+              className="px-4 py-2 bg-gray-800 rounded hover:bg-gray-700"
+              onClick={() => setShowNewFolderDialog(false)}
+            >
+              Cancel
+            </button>
+            <button
+              className="px-4 py-2 bg-blue-600 rounded hover:bg-blue-500"
+              onClick={createNewFolder}
+            >
+              Create
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this item? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setShowDeleteDialog(false)}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={deletePath} className="bg-red-600 hover:bg-red-500">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
 
-export default ScriptEditor;
+export default CodeEditor;

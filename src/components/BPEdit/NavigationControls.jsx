@@ -10,7 +10,7 @@ const NavigationControls = ({
   zoom
 }) => (
   <div className="absolute bottom-4 right-4 flex flex-col space-y-2 bg-neutral-800 p-2 rounded-lg shadow-lg">
-    <Button 
+    <button 
       variant="outline" 
       size="icon" 
       onClick={onZoomIn} 
