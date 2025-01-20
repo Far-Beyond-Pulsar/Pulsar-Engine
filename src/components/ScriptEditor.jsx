@@ -71,41 +71,47 @@ const CodeEditor = () => {
       const entries = await invoke('get_directory_structure', { path: '.' });
       
       const processEntries = (entries) => {
+        // Sort entries to process directories first
+        entries.sort((a, b) => {
+          if (a.entry_type === 'directory' && b.entry_type !== 'directory') return -1;
+          if (a.entry_type !== 'directory' && b.entry_type === 'directory') return 1;
+          return 0;
+        });
+  
         const result = [];
         const pathMap = new Map();
-        
-        // First pass: create all file entries
+  
+        // Process all entries
         entries.forEach(entry => {
-          const parts = entry.path.split(/[/\\]/);
+          const normalizedPath = entry.path.replace(/\\/g, '/'); // Normalize path separators
+          const parts = normalizedPath.split('/');
           const item = {
             name: entry.name,
-            path: entry.path,
+            path: normalizedPath,
             type: entry.entry_type,
             children: entry.entry_type === 'directory' ? [] : undefined,
             open: false
           };
-          pathMap.set(entry.path, item);
-          
+  
+          // Add to pathMap for later reference
+          pathMap.set(normalizedPath, item);
+  
           if (parts.length === 1) {
+            // Root level items
             result.push(item);
-          }
-        });
-        
-        // Second pass: build tree structure
-        entries.forEach(entry => {
-          const parts = entry.path.split(/[/\\]/);
-          if (parts.length > 1) {
+          } else {
+            // Nested items
             const parentPath = parts.slice(0, -1).join('/');
             const parent = pathMap.get(parentPath);
             if (parent && parent.children) {
-              parent.children.push(pathMap.get(entry.path));
+              parent.children.push(item);
             }
           }
         });
-        
+  
         return result;
       };
-
+  
       const structuredItems = processEntries(entries);
       setFiles(structuredItems);
       setLoadError(null);
@@ -153,22 +159,37 @@ const CodeEditor = () => {
 
   const saveFile = async () => {
     const activeFile = openTabs.find(tab => tab.path === activeTab);
-    if (!activeFile) return;
-
+    if (!activeFile || !editorRef.current) return;
+  
     try {
+      // Get content directly from the editor instance
+      const currentContent = editorRef.current.getValue();
+      
+      // Save to file
       await invoke('save_file_content', {
         path: activeFile.path,
-        content: activeFile.content
+        content: currentContent
       });
+      
+      // Update the tab content in state to match
+      setOpenTabs(prev =>
+        prev.map(tab =>
+          tab.path === activeTab
+            ? { ...tab, content: currentContent }
+            : tab
+        )
+      );
       
       setConsoleOutput(prev => [...prev, {
         type: 'success',
         message: `File saved: ${activeFile.name}`
       }]);
     } catch (error) {
+      const errorMessage = `Error saving file: ${error}`;
+      console.error(errorMessage);
       setConsoleOutput(prev => [...prev, {
         type: 'error',
-        message: `Error saving file: ${error}`
+        message: errorMessage
       }]);
     }
   };
@@ -295,6 +316,8 @@ const CodeEditor = () => {
         'editorBracketMatch.border': '#888888'
       }
     });
+
+    monaco.editor.setTheme('amoled-black');
   };
 
   // File tree component
@@ -356,6 +379,18 @@ const CodeEditor = () => {
   useEffect(() => {
     loadDirectoryStructure();
   }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        saveFile();
+      }
+    };
+  
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [saveFile]);
 
   // Loading state
   if (isLoading) {
@@ -438,7 +473,6 @@ const CodeEditor = () => {
               <MonacoEditor
                 height="100%"
                 defaultLanguage={openTabs.find(tab => tab.path === activeTab)?.language || 'plaintext'}
-                theme="amoled-black"
                 onMount={handleEditorDidMount}
                 value={openTabs.find(tab => tab.path === activeTab)?.content || ''}
                 onChange={(value) => {
@@ -470,6 +504,28 @@ const CodeEditor = () => {
                   tabSize: 2,
                   rulers: [80],
                   bracketPairColorization: { enabled: true },
+                  // Add keyboard shortcuts
+                  quickSuggestions: true,
+                  // Add custom keybindings
+                  "editor.action.clipboardCopyAction": {
+                    keybindings: [
+                      {
+                        key: "ctrl+c",
+                        command: "editor.action.clipboardCopyAction",
+                        when: "editorTextFocus"
+                      }
+                    ]
+                  },
+                  // Add save keybinding
+                  'editor.action.formatDocument': {
+                    keybindings: [
+                      {
+                        key: 'shift+alt+f',
+                        command: 'editor.action.formatDocument',
+                        when: 'editorTextFocus'
+                      }
+                    ]
+                  }
                 }}
               />
             ) : (

@@ -19,6 +19,8 @@ pub struct FileEntry {
     children: Option<Vec<FileEntry>>,
 }
 
+
+
 #[derive(Debug, Serialize)]
 pub struct FileContent {
     content: String,
