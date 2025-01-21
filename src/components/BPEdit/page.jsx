@@ -364,7 +364,7 @@ const BlueprintEditor = () => {
   ), [draggingNode, selectedNode, handleNodeMouseDown, handlePortMouseDown, handlePortMouseUp]);
 
   return (
-    <div className="w-full h-screen bg-zinc-950 relative overflow-hidden">
+    <div className="w-full h-screen bg-black relative overflow-hidden">
       {/* Toolbar */}
       <div className="absolute top-0 left-0 right-0 h-12 bg-black border-b border-zinc-800 px-4 flex items-center justify-between z-10">
         <div className="flex items-center space-x-2">
