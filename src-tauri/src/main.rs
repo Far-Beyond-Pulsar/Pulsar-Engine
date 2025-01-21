@@ -3,15 +3,17 @@
     windows_subsystem = "windows"
 )]
 
-use std::time::{SystemTime, UNIX_EPOCH};
 use serde::{Serialize, Deserialize};
-use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
-use std::ffi::OsStr;
+use std::{ffi::OsStr, path::{Path, PathBuf}, time::{SystemTime, UNIX_EPOCH}};
 use tauri::Manager;
 use std::fs;
+use std::sync::Arc;
+use tokio::sync::Mutex;
+use tron::{TronTemplate, TronRef, TronAssembler};
+use std::collections::HashMap;
 
-// File system structs
+// Existing file system structs
 #[derive(Debug, Serialize, Deserialize)]
 pub struct FileEntry {
     name: String,
@@ -29,6 +31,42 @@ pub struct FileContent {
 pub struct FileError {
     message: String,
     code: String,
+}
+
+// Blueprint structs
+#[derive(Debug, Serialize, Deserialize)]
+pub struct NodeType {
+    pub type_name: String,
+    pub title: String,
+    pub color: String,
+    pub inputs: Vec<String>,
+    pub outputs: Vec<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Node {
+    pub id: String,
+    pub node_type: String,
+    pub x: f64,
+    pub y: f64,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Connection {
+    pub id: String,
+    pub source_id: String,
+    pub source_port: String,
+    pub target_id: String,
+    pub target_port: String,
+}
+
+// Blueprint runtime structure
+#[derive(Debug)]
+pub struct Blueprint {
+    nodes: HashMap<String, Node>,
+    connections: HashMap<String, Connection>,
+    templates: HashMap<String, TronRef>,
+    output_path: PathBuf,
 }
 
 // Existing commands
@@ -224,15 +262,395 @@ fn is_hidden(path: &Path) -> bool {
         .unwrap_or(false)
 }
 
+impl Blueprint {
+    pub fn new(output_path: PathBuf) -> Self {
+        let mut bp = Blueprint {
+            nodes: HashMap::new(),
+            connections: HashMap::new(),
+            templates: HashMap::new(),
+            output_path,
+        };
+        bp.initialize_templates();
+        bp
+    }
+
+    fn initialize_templates(&mut self) {
+        // Event template
+        let event_template = TronTemplate::new(r#"
+            #[tauri::command]
+            pub async fn @[event_name]@(state: tauri::State<'_, BlueprintState>) -> Result<(), String> {
+                @[next_node]@
+                Ok(())
+            }
+        "#).unwrap();
+        self.templates.insert("EVENT".to_string(), TronRef::new(event_template));
+
+        // Branch template
+        let branch_template = TronTemplate::new(r#"
+            if @[condition]@ {
+                @[true_branch]@
+            } else {
+                @[false_branch]@
+            }
+        "#).unwrap();
+        self.templates.insert("BRANCH".to_string(), TronRef::new(branch_template));
+
+        // Print template
+        let print_template = TronTemplate::new(r#"
+            println!("{}", @[message]@);
+            @[next_node]@
+        "#).unwrap();
+        self.templates.insert("PRINT".to_string(), TronRef::new(print_template));
+
+        // Variable template
+        let variable_template = TronTemplate::new(r#"
+            state.variables.lock().await.get("@[variable_name]@").cloned().unwrap_or_default()
+        "#).unwrap();
+        self.templates.insert("VARIABLE".to_string(), TronRef::new(variable_template));
+
+        // Math template
+        let math_template = TronTemplate::new(r#"
+            (@[operand_a]@ @[operator]@ @[operand_b]@)
+        "#).unwrap();
+        self.templates.insert("MATH".to_string(), TronRef::new(math_template));
+
+        // Delay template
+        let delay_template = TronTemplate::new(r#"
+            tokio::time::sleep(tokio::time::Duration::from_secs_f64(@[duration]@)).await;
+            @[next_node]@
+        "#).unwrap();
+        self.templates.insert("DELAY".to_string(), TronRef::new(delay_template));
+    }
+
+    pub fn add_node(&mut self, node: Node) {
+        self.nodes.insert(node.id.clone(), node);
+    }
+
+    pub fn add_connection(&mut self, connection: Connection) {
+        self.connections.insert(connection.id.clone(), connection);
+    }
+
+    pub fn generate_code(&self) -> Result<String, Box<dyn std::error::Error>> {
+        let mut assembler = TronAssembler::new();
+        
+        // Generate imports and state structure
+        // Generate the complete module structure with imports and state management
+        let imports_template = TronTemplate::new(r#"
+            use tauri;
+            use tokio;
+            use serde::{Serialize, Deserialize};
+            use std::sync::Arc;
+            use tokio::sync::Mutex;
+            use std::collections::HashMap;
+            use std::time::Duration;
+
+            // State management for blueprint execution
+            #[derive(Debug, Clone, Serialize, Deserialize)]
+            pub struct Variable {
+                name: String,
+                value: String,
+                var_type: String,
+            }
+
+            pub struct BlueprintState {
+                variables: Arc<Mutex<HashMap<String, Variable>>>,
+                execution_context: Arc<Mutex<ExecutionContext>>,
+            }
+
+            pub struct ExecutionContext {
+                running: bool,
+                paused: bool,
+                current_node: Option<String>,
+                error: Option<String>,
+            }
+
+            impl ExecutionContext {
+                pub fn new() -> Self {
+                    Self {
+                        running: false,
+                        paused: false,
+                        current_node: None,
+                        error: None,
+                    }
+                }
+
+                pub fn start(&mut self) {
+                    self.running = true;
+                    self.paused = false;
+                    self.error = None;
+                }
+
+                pub fn pause(&mut self) {
+                    self.paused = true;
+                }
+
+                pub fn resume(&mut self) {
+                    self.paused = false;
+                }
+
+                pub fn stop(&mut self) {
+                    self.running = false;
+                    self.paused = false;
+                    self.current_node = None;
+                }
+
+                pub fn set_error(&mut self, error: String) {
+                    self.error = Some(error);
+                    self.stop();
+                }
+            }
+
+            impl BlueprintState {
+                pub fn new() -> Self {
+                    Self {
+                        variables: Arc::new(Mutex::new(HashMap::new())),
+                        execution_context: Arc::new(Mutex::new(ExecutionContext::new())),
+                    }
+                }
+
+                pub async fn set_variable(&self, name: &str, value: Variable) {
+                    let mut vars = self.variables.lock().await;
+                    vars.insert(name.to_string(), value);
+                }
+
+                pub async fn get_variable(&self, name: &str) -> Option<Variable> {
+                    let vars = self.variables.lock().await;
+                    vars.get(name).cloned()
+                }
+
+                pub async fn start_execution(&self) -> Result<(), String> {
+                    let mut context = self.execution_context.lock().await;
+                    context.start();
+                    Ok(())
+                }
+
+                pub async fn pause_execution(&self) -> Result<(), String> {
+                    let mut context = self.execution_context.lock().await;
+                    context.pause();
+                    Ok(())
+                }
+
+                pub async fn stop_execution(&self) -> Result<(), String> {
+                    let mut context = self.execution_context.lock().await;
+                    context.stop();
+                    Ok(())
+                }
+            }
+
+            // Error handling for blueprint execution
+            #[derive(Debug, Serialize)]
+            pub struct BlueprintError {
+                message: String,
+                node_id: Option<String>,
+                error_type: String,
+            }
+
+            impl BlueprintError {
+                pub fn new(message: &str, node_id: Option<String>, error_type: &str) -> Self {
+                    Self {
+                        message: message.to_string(),
+                        node_id,
+                        error_type: error_type.to_string(),
+                    }
+                }
+            }
+        "#)?;
+        assembler.add_template(TronRef::new(imports_template));
+
+        // Generate code for each node
+        for (node_id, node) in &self.nodes {
+            let template = self.templates.get(&node.node_type).ok_or("Unknown node type")?;
+            let mut node_ref = template.clone();
+
+            match node.node_type.as_str() {
+                "EVENT" => {
+                    node_ref.set("event_name", &format!("event_{}", node_id))?;
+                    if let Some(next_node) = self.find_connected_node(node_id, "Exec") {
+                        node_ref.set("next_node", &self.generate_node_code(&next_node)?)?;
+                    }
+                }
+                "BRANCH" => {
+                    if let Some(condition_node) = self.find_input_node(node_id, "Condition") {
+                        node_ref.set("condition", &self.generate_node_code(&condition_node)?)?;
+                    }
+                    if let Some(true_node) = self.find_connected_node(node_id, "True") {
+                        node_ref.set("true_branch", &self.generate_node_code(&true_node)?)?;
+                    }
+                    if let Some(false_node) = self.find_connected_node(node_id, "False") {
+                        node_ref.set("false_branch", &self.generate_node_code(&false_node)?)?;
+                    }
+                }
+                "PRINT" => {
+                    let mut node_ref = template.clone();
+                    if let Some(message_node) = self.find_input_node(node_id, "String") {
+                        node_ref.set("message", &self.generate_node_code(&message_node)?)?;
+                    }
+                    if let Some(next_node) = self.find_connected_node(node_id, "Exec") {
+                        node_ref.set("next_node", &self.generate_node_code(&next_node)?)?;
+                    }
+                },
+                "VARIABLE" => {
+                    let mut node_ref = template.clone();
+                    node_ref.set("variable_name", &format!("var_{}", node_id))?;
+                },
+                "MATH" => {
+                    let mut node_ref = template.clone();
+                    if let Some(a_node) = self.find_input_node(node_id, "A") {
+                        node_ref.set("operand_a", &self.generate_node_code(&a_node)?)?;
+                    }
+                    if let Some(b_node) = self.find_input_node(node_id, "B") {
+                        node_ref.set("operand_b", &self.generate_node_code(&b_node)?)?;
+                    }
+                    node_ref.set("operator", "+")?;
+                },
+                "DELAY" => {
+                    let mut node_ref = template.clone();
+                    if let Some(duration_node) = self.find_input_node(node_id, "Duration") {
+                        node_ref.set("duration", &self.generate_node_code(&duration_node)?)?;
+                    }
+                    if let Some(next_node) = self.find_connected_node(node_id, "Exec") {
+                        node_ref.set("next_node", &self.generate_node_code(&next_node)?)?;
+                    }
+                },
+                _ => {}
+            }
+
+            assembler.add_template(node_ref);
+        }
+
+        Ok(assembler.render_all()?)
+    }
+
+    fn find_connected_node(&self, node_id: &str, port: &str) -> Option<String> {
+        self.connections.values()
+            .find(|conn| conn.source_id == node_id && conn.source_port == port)
+            .map(|conn| conn.target_id.clone())
+    }
+
+    fn find_input_node(&self, node_id: &str, port: &str) -> Option<String> {
+        self.connections.values()
+            .find(|conn| conn.target_id == node_id && conn.target_port == port)
+            .map(|conn| conn.source_id.clone())
+    }
+
+    fn generate_node_code(&self, node_id: &str) -> Result<String, Box<dyn std::error::Error>> {
+        let node = self.nodes.get(node_id).ok_or("Node not found")?;
+        let template = self.templates.get(&node.node_type).ok_or("Template not found")?;
+        
+        match node.node_type.as_str() {
+            "PRINT" => {
+                let mut node_ref = template.clone();
+                if let Some(message_node) = self.find_input_node(node_id, "String") {
+                    node_ref.set("message", &self.generate_node_code(&message_node)?)?;
+                }
+                if let Some(next_node) = self.find_connected_node(node_id, "Exec") {
+                    node_ref.set("next_node", &self.generate_node_code(&next_node)?)?;
+                }
+                Ok(node_ref.render()?)
+            }
+            "VARIABLE" => {
+                let mut node_ref = template.clone();
+                node_ref.set("variable_name", &format!("var_{}", node_id))?;
+                Ok(node_ref.render()?)
+            }
+            "MATH" => {
+                let mut node_ref = template.clone();
+                let mut expression = String::new();
+                
+                if let Some(a_node) = self.find_input_node(node_id, "A") {
+                    expression.push_str(&self.generate_node_code(&a_node)?);
+                } else {
+                    expression.push_str("0.0");
+                }
+                
+                expression.push_str(" + "); // Default to addition
+                
+                if let Some(b_node) = self.find_input_node(node_id, "B") {
+                    expression.push_str(&self.generate_node_code(&b_node)?);
+                } else {
+                    expression.push_str("0.0");
+                }
+                
+                node_ref.set("expression", &expression)?;
+                Ok(node_ref.render()?)
+            }
+            "DELAY" => {
+                let mut node_ref = template.clone();
+                if let Some(duration_node) = self.find_input_node(node_id, "Duration") {
+                    node_ref.set("duration", &self.generate_node_code(&duration_node)?)?;
+                } else {
+                    node_ref.set("duration", "1.0")?; // Default delay of 1 second
+                }
+                if let Some(next_node) = self.find_connected_node(node_id, "Exec") {
+                    node_ref.set("next_node", &self.generate_node_code(&next_node)?)?;
+                }
+                Ok(node_ref.render()?)
+            }
+            _ => Ok(String::new())
+        }
+    }
+
+    pub fn save_generated_code(&self) -> Result<(), Box<dyn std::error::Error>> {
+        let code = self.generate_code()?;
+        fs::write(&self.output_path, code)?;
+        Ok(())
+    }
+}
+
+// Blueprint state management
+pub struct BlueprintState {
+    blueprint: Arc<Mutex<Blueprint>>,
+}
+
+// Blueprint commands
+#[tauri::command]
+async fn create_blueprint(state: tauri::State<'_, BlueprintState>, output_path: String) -> Result<(), String> {
+    let mut blueprint = Blueprint::new(PathBuf::from(output_path));
+    *state.blueprint.lock().await = blueprint;
+    Ok(())
+}
+
+#[tauri::command]
+async fn add_blueprint_node(state: tauri::State<'_, BlueprintState>, node: Node) -> Result<(), String> {
+    state.blueprint.lock().await.add_node(node);
+    Ok(())
+}
+
+#[tauri::command]
+async fn add_blueprint_connection(state: tauri::State<'_, BlueprintState>, connection: Connection) -> Result<(), String> {
+    state.blueprint.lock().await.add_connection(connection);
+    Ok(())
+}
+
+#[tauri::command]
+async fn generate_blueprint_code(state: tauri::State<'_, BlueprintState>) -> Result<String, String> {
+    state.blueprint.lock().await
+        .generate_code()
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn save_blueprint(state: tauri::State<'_, BlueprintState>) -> Result<(), String> {
+    state.blueprint.lock().await
+        .save_generated_code()
+        .map_err(|e| e.to_string())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 fn main() {
+    let blueprint_state = BlueprintState {
+        blueprint: Arc::new(Mutex::new(Blueprint::new(PathBuf::from("output.rs")))),
+    };
+
     tauri::Builder::default()
         .setup(|app| {
             let window = app.get_window("main").unwrap();
             window.set_decorations(false).unwrap();
             Ok(())
         })
+        .manage(blueprint_state)
         .invoke_handler(tauri::generate_handler![
+            // Existing commands
             execute_command,
             on_button_clicked,
             get_directory_structure,
@@ -240,7 +658,13 @@ fn main() {
             save_file_content,
             create_file,
             create_directory,
-            delete_path
+            delete_path,
+            // Blueprint commands
+            create_blueprint,
+            add_blueprint_node,
+            add_blueprint_connection,
+            generate_blueprint_code,
+            save_blueprint
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
