@@ -164,8 +164,7 @@ async fn read_file_content(path: String) -> Result<FileContent, String> {
         let language = match extension.as_str() {
             "js" | "jsx" => "javascript",
             "ts" | "tsx" => "typescript",
-            "rs" => "rust",
-            // ... add other mappings
+            "rs"         => "rust",
             _ => "plaintext",
         };
 
@@ -239,19 +238,19 @@ fn get_file_language(path: &str) -> String {
         .unwrap_or("");
 
     match extension.to_lowercase().as_str() {
-        "rs" => "rust",
-        "js" => "javascript",
-        "jsx" => "javascript",
-        "ts" => "typescript",
-        "tsx" => "typescript",
-        "py" => "python",
-        "json" => "json",
-        "md" => "markdown",
-        "css" => "css",
-        "html" => "html",
-        "xml" => "xml",
+        "md"           => "markdown",
+        "rs"           => "rust",
+        "py"           => "python",
+        "js"           => "javascript",
+        "ts"           => "typescript",
+        "jsx"          => "javascript",
+        "tsx"          => "typescript",
+        "css"          => "css",
+        "xml"          => "xml",
+        "html"         => "html",
+        "json"         => "json",
         "yaml" | "yml" => "yaml",
-        _ => "plaintext",
+        _              => "plaintext",
     }.to_string()
 }
 
