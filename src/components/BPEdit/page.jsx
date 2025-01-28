@@ -587,8 +587,8 @@ const BlueprintEditor = () => {
                 <path
                   d="M 20 0 L 0 0 0 20"
                   fill="none"
-                  stroke="rgba(255,255,255,0.1)"
-                  strokeWidth="0.5"
+                  stroke="rgba(150,150,255,0.2)"
+                  strokeWidth="1"
                 />
               </pattern>
             </defs>

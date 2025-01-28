@@ -165,7 +165,7 @@ async fn read_file_content(path: String) -> Result<FileContent, String> {
             "js" | "jsx" => "javascript",
             "ts" | "tsx" => "typescript",
             "rs"         => "rust",
-            _ => "plaintext",
+            _            => "plaintext",
         };
 
         Ok(FileContent {
