@@ -1,130 +1,164 @@
-import React, { useState } from 'react';
-import { Mountain, Brush, Eraser, Layers, ChevronDown } from 'lucide-react';
+import React, { useState, useRef, useEffect } from "react";
+import { Canvas, useFrame } from "@react-three/fiber";
+import { OrbitControls, Plane } from "@react-three/drei";
+import * as THREE from "three";
 
-const TerrainEditor = () => {
-  const [activeTool, setActiveTool] = useState('sculpt');
-  const [brushSize, setBrushSize] = useState(50);
-  
+export default function TerrainEditor() {
+  const [heightMap, setHeightMap] = useState([]);
+  const [tool, setTool] = useState("raise");
+  const [strength, setStrength] = useState(0.1);
+  const [brushSize, setBrushSize] = useState(1);
+  const [hoverPoint, setHoverPoint] = useState(null);
+  const canvasRef = useRef(null);
+
+  const handleExport = () => {
+    const size = 256;
+    const renderTarget = new THREE.WebGLRenderTarget(size, size);
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      preserveDrawingBuffer: true,
+    });
+
+    renderer.setRenderTarget(renderTarget);
+    renderer.render(canvasRef.current.scene, canvasRef.current.camera);
+
+    const pixels = new Uint8Array(size * size * 4);
+    renderer.readRenderTargetPixels(renderTarget, 0, 0, size, size, pixels);
+
+    const heightMapData = [];
+    for (let y = 0; y < size; y++) {
+      heightMapData[y] = [];
+      for (let x = 0; x < size; x++) {
+        const i = (y * size + x) * 4;
+        heightMapData[y][x] = pixels[i] / 255;
+      }
+    }
+
+    setHeightMap(heightMapData);
+    downloadHeightMap(heightMapData);
+  };
+
+  const downloadHeightMap = (data) => {
+    const blob = new Blob([JSON.stringify(data)], { type: "application/json" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "heightmap.json";
+    link.click();
+  };
+
+  const modifyTerrain = (terrain, tool, strength, brushSize, point) => {
+    const positions = terrain.attributes.position.array;
+    const size = Math.sqrt(positions.length / 3);
+    const radius = brushSize * size / 10;
+
+    for (let i = 0; i < positions.length; i += 3) {
+      const x = positions[i];
+      const y = positions[i + 1];
+      const z = positions[i + 2];
+
+      const distance = Math.sqrt((x - point.x) ** 2 + (y - point.y) ** 2);
+
+      if (distance <= radius) {
+        const factor = 1 - distance / radius;
+
+        if (tool === "raise") {
+          positions[i + 2] += strength * factor;
+        } else if (tool === "lower") {
+          positions[i + 2] -= strength * factor;
+        } else if (tool === "smooth") {
+          positions[i + 2] += (strength * factor) * 0.5;
+        }
+      }
+    }
+
+    terrain.attributes.position.needsUpdate = true;
+  };
+
   return (
-    <div className="flex h-full bg-black text-white">
-      {/* Left Toolbar */}
-      <div className="w-12 border-r border-neutral-800 flex flex-col">
-        <button 
-          className={`p-3 hover:bg-neutral-800 ${activeTool === 'sculpt' ? 'bg-neutral-800' : ''}`}
-          onClick={() => setActiveTool('sculpt')}
-        >
-          <Mountain size={18} />
-        </button>
-        <button 
-          className={`p-3 hover:bg-neutral-800 ${activeTool === 'paint' ? 'bg-neutral-800' : ''}`}
-          onClick={() => setActiveTool('paint')}
-        >
-          <Brush size={18} />
-        </button>
-        <button 
-          className={`p-3 hover:bg-neutral-800 ${activeTool === 'smooth' ? 'bg-neutral-800' : ''}`}
-          onClick={() => setActiveTool('smooth')}
-        >
-          <Eraser size={18} />
-        </button>
-      </div>
-
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col">
-        {/* Toolbar */}
-        <div className="h-10 border-b border-neutral-800 flex items-center px-4 justify-between">
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
-              <label className="text-sm text-neutral-400">Brush Size:</label>
-              <input 
-                type="range" 
-                min="1" 
-                max="100" 
-                value={brushSize}
-                onChange={(e) => setBrushSize(parseInt(e.target.value))}
-                className="w-32 bg-neutral-800" 
-              />
-              <span className="text-sm w-8">{brushSize}</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <label className="text-sm text-neutral-400">Strength:</label>
-              <input 
-                type="range" 
-                min="1" 
-                max="100" 
-                className="w-32 bg-neutral-800" 
-              />
-            </div>
-          </div>
-          <button className="flex items-center space-x-1 px-2 py-1 hover:bg-neutral-800 rounded text-sm">
-            <span>Height Map</span>
-            <ChevronDown size={14} />
+    <div className="h-screen w-full flex bg-black text-blue-500">
+      <div className="w-64 p-4 flex flex-col bg-neutral-950 space-y-4 border-white">
+        <h2 className="text-lg font-bold text-white">Terrain Tools</h2>
+        <div>
+          <button
+            onClick={() => setTool("raise")}
+            className={`px-4 py-2 rounded ${tool === "raise" ? "bg-blue-700 text-white" : "bg-gray-800 text-blue-500"} hover:bg-blue-600`}
+          >
+            Raise
+          </button>
+          <button
+            onClick={() => setTool("lower")}
+            className={`px-4 py-2 rounded mt-2 ${tool === "lower" ? "bg-blue-700 text-white" : "bg-gray-800 text-blue-500"} hover:bg-blue-600`}
+          >
+            Lower
+          </button>
+          <button
+            onClick={() => setTool("smooth")}
+            className={`px-4 py-2 rounded mt-2 ${tool === "smooth" ? "bg-blue-700 text-white" : "bg-gray-800 text-blue-500"} hover:bg-blue-600`}
+          >
+            Smooth
           </button>
         </div>
-
-        {/* Main Viewport */}
-        <div className="flex-1 flex">
-          <div className="flex-1 relative">
-            {/* Grid Background */}
-            <div className="absolute inset-0" style={{
-              backgroundImage: 'linear-gradient(to right, #1a1a1a 1px, transparent 1px), linear-gradient(to bottom, #1a1a1a 1px, transparent 1px)',
-              backgroundSize: '20px 20px'
-            }}></div>
-            {/* Terrain Preview */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-sm text-neutral-500">Terrain Viewport</div>
-            </div>
-          </div>
-
-          {/* Properties Panel */}
-          <div className="w-80 border-l border-neutral-800">
-            <div className="h-8 border-b border-neutral-800 px-4 flex items-center">
-              <span className="text-sm text-neutral-400">Terrain Layers</span>
-            </div>
-            <div className="p-4">
-              <div className="space-y-2">
-                <div className="p-2 bg-neutral-900 rounded border border-neutral-800">
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="h-16 bg-green-900 rounded"></div>
-                    <div className="space-y-2">
-                      <input type="range" className="w-full bg-neutral-800" />
-                      <input type="range" className="w-full bg-neutral-800" />
-                    </div>
-                  </div>
-                </div>
-                <div className="p-2 bg-neutral-900 rounded border border-neutral-800">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm">Rock</span>
-                    <Layers size={14} className="text-neutral-400" />
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="h-16 bg-stone-700 rounded"></div>
-                    <div className="space-y-2">
-                      <input type="range" className="w-full bg-neutral-800" />
-                      <input type="range" className="w-full bg-neutral-800" />
-                    </div>
-                  </div>
-                </div>
-                <div className="p-2 bg-neutral-900 rounded border border-neutral-800">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm">Sand</span>
-                    <Layers size={14} className="text-neutral-400" />
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="h-16 bg-yellow-700 rounded"></div>
-                    <div className="space-y-2">
-                      <input type="range" className="w-full bg-neutral-800" />
-                      <input type="range" className="w-full bg-neutral-800" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+        <div>
+          <label className="block mt-4 mb-2 text-white">Strength:</label>
+          <input
+            type="range"
+            min="0.01"
+            max="1"
+            step="0.01"
+            value={strength}
+            onChange={(e) => setStrength(parseFloat(e.target.value))}
+            className="w-full"
+          />
         </div>
+        <div>
+          <label className="block mt-4 mb-2 text-white">Brush Size:</label>
+          <input
+            type="range"
+            min="1"
+            max="5"
+            step="0.1"
+            value={brushSize}
+            onChange={(e) => setBrushSize(parseFloat(e.target.value))}
+            className="w-full"
+          />
+        </div>
+        <button
+          onClick={handleExport}
+          className="bg-blue-600 px-4 py-2 rounded text-white hover:bg-blue-500 mt-4"
+        >
+          Export Heightmap
+        </button>
+      </div>
+      <div className="flex-grow">
+        <Canvas
+          className="h-full"
+          ref={canvasRef}
+          style={{ background: "#000" }}
+          shadows
+          camera={{ position: [5, 5, 5], fov: 50 }}
+        >
+          <ambientLight intensity={0.5} />
+          <directionalLight position={[10, 10, 10]} intensity={1} />
+          <OrbitControls />
+          <Plane
+            args={[10, 10, 64, 64]}
+            onPointerMove={(e) => {
+              if (e.buttons === 1) {
+                const point = {
+                  x: e.point.x,
+                  y: e.point.y,
+                };
+                modifyTerrain(e.object.geometry, tool, strength, brushSize, point);
+              }
+            }}
+            receiveShadow
+            castShadow
+            rotation={[-Math.PI / 2, 0, 0]}
+          >
+            <meshStandardMaterial color="#999" wireframe />
+          </Plane>
+        </Canvas>
       </div>
     </div>
   );
-};
-
-export default TerrainEditor;
+}

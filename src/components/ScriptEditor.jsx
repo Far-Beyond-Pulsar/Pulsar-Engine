@@ -267,8 +267,17 @@ const Quasar = () => {
     if (!newItemName) return;
 
     try {
-      const parentHandle = selectedPath ? fileHandles.get(selectedPath) : await window.showDirectoryPicker();
-      
+      const parentHandle = selectedPath ? fileHandles.get(selectedPath) : (await window.showDirectoryPicker().catch(error => {
+        console.error('Failed to open directory picker:', error);
+        // You can add custom fallback behavior here
+        return null;
+      }));
+
+      // Add a check for the null case
+      if (!parentHandle) {
+          // Handle the case where directory selection failed
+          throw new Error('Unable to get directory handle. Please try again or select a different location.');
+      }      
       if (!parentHandle) throw new Error('No directory selected');
       
       const fileHandle = await parentHandle.getFileHandle(newItemName, { create: true });
@@ -309,8 +318,18 @@ const Quasar = () => {
     if (!newItemName) return;
 
     try {
-      const parentHandle = selectedPath ? fileHandles.get(selectedPath) : await window.showDirectoryPicker();
-      
+      const parentHandle = selectedPath ? fileHandles.get(selectedPath) : (await window.showDirectoryPicker().catch(error => {
+          console.error('Failed to open directory picker:', error);
+          // You can add custom fallback behavior here
+          return null;
+      }));
+
+      // Add a check for the null case
+      if (!parentHandle) {
+          // Handle the case where directory selection failed
+          throw new Error('Unable to get directory handle. Please try again or select a different location.');
+      }
+
       if (!parentHandle) throw new Error('No directory selected');
       
       const folderHandle = await parentHandle.getDirectoryHandle(newItemName, { create: true });
@@ -415,8 +434,15 @@ const Quasar = () => {
   const loadDirectoryStructure = async () => {
     try {
       setIsLoading(true);
-      const dirHandle = await window.showDirectoryPicker();
+      const dirHandle = await window.showDirectoryPicker().catch(error => {
+        console.error('Failed to open directory picker:', error);
+          // You can add custom fallback behavior here
+          return null;
+      });
       
+      if (!dirHandle) {
+          throw new Error('Unable to get directory handle. Please try again or select a different location.');
+      }      
       // Process directory with lazy loading
       const processDirectory = async (handle, path = '', depth = 0) => {
         const entries = [];
