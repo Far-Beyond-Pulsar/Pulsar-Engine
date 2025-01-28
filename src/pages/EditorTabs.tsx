@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Plus, X, ChevronDown } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Plus, X, ChevronDown, Search } from 'lucide-react';
 import LevelEditor from '../components/LevelEditor';
 import ScriptEditor from '../components/ScriptEditor';
 import BPEdit from '../components/BPEdit/page';
@@ -39,12 +39,35 @@ const EditorTabs: React.FC<EditorTabsProps> = ({ onTabChange }) => {
   ]);
   const [activeTab, setActiveTab] = useState(tabs[0].id);
   const [showNewTabMenu, setShowNewTabMenu] = useState(false);
-
+  const [searchTerm, setSearchTerm] = useState('');
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  
   interface Tab {
     id: number;
     title: string;
     type: string;
   }
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowNewTabMenu(false);
+      }
+      // Handle Alt+N for new tab
+      if (e.key === 'n' && e.altKey) {
+        e.preventDefault(); // Prevent default browser behavior
+        setShowNewTabMenu(true);
+        setTimeout(() => searchInputRef.current?.focus(), 0);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  const filteredEditors = EDITOR_TYPES.filter(editor =>
+    editor.title.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const addNewTab = (editorType: string) => {
     const newId = Math.max(...tabs.map(t => t.id)) + 1;
@@ -58,6 +81,7 @@ const EditorTabs: React.FC<EditorTabsProps> = ({ onTabChange }) => {
     setTabs([...tabs, newTab]);
     setActiveTab(newId);
     setShowNewTabMenu(false);
+    setSearchTerm('');
   };
 
   const removeTab = (tabId: number, e: React.MouseEvent<SVGElement, MouseEvent>) => {
@@ -101,7 +125,10 @@ const EditorTabs: React.FC<EditorTabsProps> = ({ onTabChange }) => {
         </div>
         <div className="relative">
           <button
-            onClick={() => setShowNewTabMenu(!showNewTabMenu)}
+            onClick={() => {
+              setShowNewTabMenu(true);
+              setTimeout(() => searchInputRef.current?.focus(), 0);
+            }}
             className="p-2 text-neutral-400 hover:text-white hover:bg-neutral-950 transition-colors flex items-center gap-1"
           >
             <Plus size={20} />
@@ -109,16 +136,46 @@ const EditorTabs: React.FC<EditorTabsProps> = ({ onTabChange }) => {
           </button>
           
           {showNewTabMenu && (
-            <div className="absolute right-0 top-full mt-1 bg-neutral-950 rounded shadow-lg py-1 z-10 max-h-96 overflow-y-auto">
-              {EDITOR_TYPES.map(editor => (
-                <button
-                  key={editor.type}
-                  onClick={() => addNewTab(editor.type)}
-                  className="w-full px-4 py-2 text-left text-sm text-neutral-200 hover:bg-neutral-700 transition-colors"
-                >
-                  {editor.title}
-                </button>
-              ))}
+            <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center">
+              <div className="bg-neutral-900 rounded-lg shadow-xl w-full max-w-xl overflow-hidden m-4">
+                <div className="p-4 border-b border-neutral-800">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-2.5 text-neutral-400" size={20} />
+                    <input
+                      ref={searchInputRef}
+                      type="text"
+                      placeholder="Search Editors..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full bg-neutral-800 text-white pl-10 pr-4 py-2 rounded-md outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+                <div className="max-h-96 overflow-y-auto">
+                  {filteredEditors.map((editor, index) => (
+                    <button
+                      key={editor.type}
+                      onClick={() => addNewTab(editor.type)}
+                      className="w-full px-4 py-3 text-left hover:bg-neutral-800 transition-colors flex items-center gap-3"
+                    >
+                      <div className="p-1 rounded bg-neutral-700">
+                        <Plus size={16} />
+                      </div>
+                      <div>
+                        <div className="text-sm text-white">{editor.title}</div>
+                        <div className="text-xs text-neutral-400">Open a new {editor.title.toLowerCase()}</div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+                <div className="p-2 border-t border-neutral-800 bg-neutral-900 text-xs text-neutral-400 flex justify-between items-center">
+                  <div className="flex gap-4">
+                    <span>↑↓ to navigate</span>
+                    <span>ctrl + n to open</span>
+                  </div>
+                  <span>esc to close</span>
+                </div>
+              </div>
             </div>
           )}
         </div>
@@ -126,12 +183,12 @@ const EditorTabs: React.FC<EditorTabsProps> = ({ onTabChange }) => {
 
       <div className="relative flex-1 overflow-hidden">
         {tabs.map(tab => (
-            <div
+          <div
             key={tab.id}
             className={`absolute inset-0 transition-opacity ${
               activeTab === tab.id ? 'opacity-100' : 'opacity-0 pointer-events-none'
             }`}
-            >
+          >
             {tab.type === 'level' && <LevelEditor />}
             {tab.type === 'script' && <ScriptEditor />}
             {tab.type === 'blueprint' && <BPEdit />}
@@ -144,7 +201,7 @@ const EditorTabs: React.FC<EditorTabsProps> = ({ onTabChange }) => {
             {tab.type === 'navmesh' && <NavMeshEditor />}
             {tab.type === 'physics' && <PhysicsDebug />}
             {tab.type === 'prefab' && <PrefabEditor />}
-            </div>
+          </div>
         ))}
       </div>
     </div>
