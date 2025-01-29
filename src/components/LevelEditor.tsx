@@ -327,7 +327,7 @@ const LevelEditor: React.FC = () => {
             >
               <div className="w-full h-full bg-black">
                 <Viewport
-                  activeTool={activeTool}
+                  initialTool={activeTool}
                   isPlaying={isPlaying}
                   fps={fps}
                   onToolChange={handleToolChange}

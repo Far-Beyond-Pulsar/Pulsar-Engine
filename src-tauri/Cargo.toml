@@ -22,6 +22,8 @@ walkdir = "2.5.0"
 base64 = "0.22.1"
 tokio = "1.38.1"
 tron = "1.0.0"
+parking_lot = "0.12.3"
+# bevy = "0.15.1"
 
 [features]
 # by default Tauri runs in production mode

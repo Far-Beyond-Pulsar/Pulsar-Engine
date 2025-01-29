@@ -56,7 +56,7 @@
       }
     },
     "security": {
-      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';"
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; cross-origin-embedder-policy 'require-corp'; cross-origin-opener-policy 'same-origin'"
     },
     "updater": {
       "active": false

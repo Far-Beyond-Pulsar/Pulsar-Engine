@@ -202,15 +202,15 @@ const GameEngineUI = () => {
     <div className={`flex flex-col h-screen bg-black text-white ${isMaximized ? '' : 'rounded-lg'} overscroll-none`}>
       <Titlebar 
         isMaximized={isMaximized}
-        onMinimize={handleMinimize}
-        onMaximize={handleMaximize}
-        onClose={handleClose}
+        onMinimize= {handleMinimize}
+        onMaximize= {handleMaximize}
+        onClose=    {handleClose}
       />
       <Menubar 
         menus={menus}
-        activeMenu={activeMenu}
-        onMenuClick={handleMenuClick}
         onMenuAction={handleMenuAction}
+        onMenuClick= {handleMenuClick}
+        activeMenu=  {activeMenu}
       />
       
       <EditorTabs onTabChange={(type) => {

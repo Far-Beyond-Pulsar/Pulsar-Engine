@@ -2,7 +2,7 @@
     all(not(debug_assertions), target_os = "windows"),
     windows_subsystem = "windows"
 )]
-
+mod renderer;
 use serde::{Serialize, Deserialize};
 use walkdir::WalkDir;
 use std::{ffi::OsStr, path::{Path, PathBuf}, time::{SystemTime, UNIX_EPOCH}};
