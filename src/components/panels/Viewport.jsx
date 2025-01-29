@@ -409,10 +409,6 @@ const Viewport = ({
         case 'w': setActiveTool(TOOLS.PAN); break;
         case 'e': setActiveTool(TOOLS.ORBIT); break;
         case 'r': setActiveTool(TOOLS.ZOOM); break;
-        case ' ': 
-          e.preventDefault();
-          setIsPlaying(prev => !prev); 
-          break;
         case 'g': setShowGrid(g => !g); break;
         case 'v': setShowGizmos(g => !g); break;
         case 'f': handleResetView(); break;

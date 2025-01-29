@@ -240,60 +240,56 @@ const LevelEditor: React.FC = () => {
   }, []);
 
   // Keyboard shortcuts
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
-        return;
-      }
+  // useEffect(() => {
+  //   const handleKeyDown = (e: KeyboardEvent) => {
+  //     if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+  //       return;
+  //     }
 
-      if (e.ctrlKey || e.metaKey) {
-        switch (e.key.toLowerCase()) {
-          case 'n':
-            e.preventDefault();
-            handleMenuAction('new');
-            break;
-          case 's':
-            e.preventDefault();
-            handleMenuAction('save');
-            break;
-          case 'b':
-            e.preventDefault();
-            togglePanel('hierarchy');
-            break;
-          case 'p':
-            e.preventDefault();
-            togglePanel('properties');
-            break;
-          case '`':
-            e.preventDefault();
-            togglePanel('console');
-            break;
-        }
-      } else {
-        switch (e.key.toLowerCase()) {
-          case 'v':
-            handleToolChange('select');
-            break;
-          case 'w':
-            handleToolChange('move');
-            break;
-          case 'e':
-            handleToolChange('rotate');
-            break;
-          case 'r':
-            handleToolChange('scale');
-            break;
-          case ' ':
-            e.preventDefault();
-            setIsPlaying(prev => !prev);
-            break;
-        }
-      }
-    };
+  //     if (e.ctrlKey || e.metaKey) {
+  //       switch (e.key.toLowerCase()) {
+  //         case 'n':
+  //           e.preventDefault();
+  //           handleMenuAction('new');
+  //           break;
+  //         case 's':
+  //           e.preventDefault();
+  //           handleMenuAction('save');
+  //           break;
+  //         case 'b':
+  //           e.preventDefault();
+  //           togglePanel('hierarchy');
+  //           break;
+  //         case 'p':
+  //           e.preventDefault();
+  //           togglePanel('properties');
+  //           break;
+  //         case '`':
+  //           e.preventDefault();
+  //           togglePanel('console');
+  //           break;
+  //       }
+  //     } else {
+  //       switch (e.key.toLowerCase()) {
+  //         case 'v':
+  //           handleToolChange('select');
+  //           break;
+  //         case 'w':
+  //           handleToolChange('move');
+  //           break;
+  //         case 'e':
+  //           handleToolChange('rotate');
+  //           break;
+  //         case 'r':
+  //           handleToolChange('scale');
+  //           break;
+  //       }
+  //     }
+  //   };
 
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [handleMenuAction, handleToolChange, togglePanel]);
+  //   document.addEventListener('keydown', handleKeyDown);
+  //   return () => document.removeEventListener('keydown', handleKeyDown);
+  // }, [handleMenuAction, handleToolChange, togglePanel]);
 
   return (
     <div ref={containerRef} className="w-full h-full flex flex-col bg-gray-900 text-white">
@@ -354,7 +350,7 @@ const LevelEditor: React.FC = () => {
           </DockablePanel>
         </div>
 
-        <div className="absolute inset-x-0 bottom-0">
+        {/* <div className="absolute inset-x-0 bottom-0">
           <DockablePanel
             id="console"
             title="Console"
@@ -371,7 +367,7 @@ const LevelEditor: React.FC = () => {
               onHide={() => togglePanel('console')}
             />
           </DockablePanel>
-        </div>
+        </div> */}
       </div>
     </div>
   );
