@@ -323,13 +323,7 @@ const LevelEditor: React.FC = () => {
             >
               <div className="w-full h-full bg-black">
                 <Viewport
-                  initialTool={activeTool}
-                  isPlaying={isPlaying}
-                  fps={fps}
-                  onToolChange={handleToolChange}
-                  onPlayToggle={setIsPlaying}
-                  logMessage={logMessage}
-                />
+                  initialTool={activeTool} onObjectSelect={undefined} onObjectHover={undefined} onViewportReady={undefined}                />
               </div>
             </DockablePanel>
           </div>

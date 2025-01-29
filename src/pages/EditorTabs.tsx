@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback, memo, Suspense } from 'react';
-import { Plus, X, ChevronDown, Search } from 'lucide-react';
+import { Plus, X, ChevronDown, Search, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ErrorBoundary } from 'react-error-boundary';
 
@@ -163,7 +163,7 @@ const Editor = memo(({ type, isActive }: { type: string; isActive: boolean }) =>
   // Wrap the editor component in its own error boundary
   return (
     <ErrorBoundary
-      fallback={<TabErrorBoundary />}
+      fallback={<TabErrorBoundary children={undefined} />}
       onError={(error, errorInfo) => {
         // Log error to your error tracking service
         console.error('Editor Error:', error, errorInfo);
