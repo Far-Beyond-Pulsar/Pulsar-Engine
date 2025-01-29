@@ -12,6 +12,9 @@ import TerrainEditor from '../components/editors/TerrainEditor';
 import NavMeshEditor from '../components/editors/NavMeshEditor';
 import PhysicsDebug from '../components/editors/PhysicsDebug';
 import PrefabEditor from '../components/editors/PrefabEditor';
+import SkeletonEditor from '../components/editors/SkeletonEditor';
+import BehaviorTreeEditor from '../components/editors/BehaviorTree';
+import FoliageEditor from '../components/editors/FoliageEditor';
 
 const EDITOR_TYPES = [
   { type: 'level', title: 'Level Editor' },
@@ -25,7 +28,10 @@ const EDITOR_TYPES = [
   { type: 'terrain', title: 'Terrain Editor' },
   { type: 'navmesh', title: 'Navigation Mesh' },
   { type: 'physics', title: 'Physics Debug' },
-  { type: 'prefab', title: 'Prefab Editor' }
+  { type: 'prefab', title: 'Prefab Editor' },
+  { type: 'skeleton', title: 'Skeleton Editor' },
+  { type: 'behavior', title: 'Behavior Tree Editor' },
+  { type: 'foliage', title: 'Foliage Editor' }
 ];
 
 interface EditorTabsProps {
@@ -201,6 +207,9 @@ const EditorTabs: React.FC<EditorTabsProps> = ({ onTabChange }) => {
             {tab.type === 'navmesh' && <NavMeshEditor />}
             {tab.type === 'physics' && <PhysicsDebug />}
             {tab.type === 'prefab' && <PrefabEditor />}
+            {tab.type === 'skeleton' && <SkeletonEditor />}
+            {tab.type === 'behavior' && <BehaviorTreeEditor />}
+            {tab.type === 'foliage' && <FoliageEditor />}
           </div>
         ))}
       </div>

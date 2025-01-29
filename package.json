@@ -42,6 +42,7 @@
     "react-resizable": "^3.0.5",
     "reactflow": "^11.11.4",
     "style-loader": "^4.0.0",
+    "tailwind-merge": "^2.6.0",
     "three": "^0.171.0",
     "wavesurfer-react": "^3.0.4"
   },
