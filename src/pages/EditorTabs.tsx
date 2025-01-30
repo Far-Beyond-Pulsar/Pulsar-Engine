@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useCallback, memo, Suspense } from 
 import { Plus, X, ChevronDown, Search, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ErrorBoundary } from 'react-error-boundary';
+import FileExplorer from '../components/FileExplorer';
 
 // Lazy load all editor components with error handling
 const createErrorHandledLazyComponent = (importFn: () => Promise<any>, componentName: string) => {
@@ -463,6 +464,9 @@ const EditorTabs: React.FC<EditorTabsProps> = ({
       <div className="h-6 bg-black border-t border-neutral-800 px-2 flex items-center text-xs text-neutral-400">
         <div className="flex-1">
           {tabs.length} tab{tabs.length !== 1 ? 's' : ''} open
+          <FileExplorer isOpen={false} onClose={function (): void {
+            console.log('onClose');
+          } } />
         </div>
         <div className="flex items-center gap-4">
             <div className={`transition-colors ${showNewTabMenu ? 'text-blue-500' : ''}`}>Alt+N: New Tab</div>
