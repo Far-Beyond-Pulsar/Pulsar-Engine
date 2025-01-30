@@ -1,4 +1,4 @@
-'use client';
+
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Editor } from '@monaco-editor/react';
@@ -17,7 +17,9 @@ import ReactFlow, {
   NodeProps,
   EdgeProps,
   Connection,
-  ConnectionLineType
+  ConnectionLineType,
+  NodeChange,
+  EdgeChange
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import styled from 'styled-components';
@@ -77,7 +79,7 @@ const StyledNode = styled.div`
   
   .node-type {
     font-weight: bold;
-    color: #00ff00;  // Hacker green
+    color: #3B82F6;  // Hacker green
     margin-bottom: 5px;
     text-transform: uppercase;
   }
@@ -92,13 +94,13 @@ const StyledNode = styled.div`
     display: flex;
     justify-content: space-between;
     margin-top: 10px;
-    color: #00ff00;  // Hacker green
+    color: #3B82F6;  // Hacker green
   }
 `;
 
 // AMOLED-style edge
 const StyledEdge = styled.path`
-  stroke: #00ff00;  // Hacker green
+  stroke: #3B82F6;  // Hacker green
   stroke-width: 2;
   fill: none;
 `;
@@ -205,7 +207,7 @@ export function AMOLEDRetoolEditor() {
   const [edges, setEdges] = useState<Edge[]>([]);
   const { show } = useContextMenu({ id: 'node-menu' });
   const canvasRef = useRef(null);
-  const editorRef = useRef(null);
+  const editorRef = useRef<monaco.IStandaloneCodeEditor | null>(null);
 
   // Regenerate Rust code whenever nodes or edges change
   useEffect(() => {
@@ -244,13 +246,13 @@ export function AMOLEDRetoolEditor() {
 
   // Node change handler
   const onNodesChange = useCallback(
-    (changes) => setNodes((nds) => applyNodeChanges(changes, nds)),
+    (changes: NodeChange[]) => setNodes((nds) => applyNodeChanges(changes, nds)),
     []
   );
 
   // Edge change handler
   const onEdgesChange = useCallback(
-    (changes) => setEdges((eds) => applyEdgeChanges(changes, eds)),
+    (changes: EdgeChange[]) => setEdges((eds) => applyEdgeChanges(changes, eds)),
     []
   );
 
@@ -258,7 +260,11 @@ export function AMOLEDRetoolEditor() {
   const onConnect = useCallback(
     (connection: Connection) => {
       const newEdge: Edge = {
-        ...connection,
+        id: `edge_${edges.length + 1}`,
+        source: connection.source || '',
+        target: connection.target || '',
+        sourceHandle: connection.sourceHandle,
+        targetHandle: connection.targetHandle,
         type: 'unrealEdge',
       };
       setEdges((eds) => addEdge(newEdge, eds));
@@ -268,8 +274,8 @@ export function AMOLEDRetoolEditor() {
   
   const options = {
     theme: 'vs-dark',
-    minimap: { enabled: false },
-    padding: { top: 10 }
+    minimap: { enabled: true },
+    padding: { top: 5, bottom: 0, left: 5, right: 5 }
   };
 
   return (
@@ -278,7 +284,7 @@ export function AMOLEDRetoolEditor() {
         <Editor
           language="rust"
           value={rustCode}
-          onChange={setCode}
+          onChange={(value) => setCode(value || '')}
           options={options}
           onMount={(editor) => {
             editorRef.current = editor;
