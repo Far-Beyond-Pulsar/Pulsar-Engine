@@ -19,7 +19,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "./Dialog";
+} from "@/components/Dialog";
 
 import {
   AlertDialog,
@@ -30,7 +30,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "./AlertDialog";
+} from "@/components/AlertDialog";
 
 import {
   DropdownMenu,
@@ -39,7 +39,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "./dropdown-menu";
+} from "@/components/DropdownMenu";
 
 // Dynamic imports for better performance
 const MonacoEditor = dynamic(
@@ -267,17 +267,8 @@ const Quasar = () => {
     if (!newItemName) return;
 
     try {
-      const parentHandle = selectedPath ? fileHandles.get(selectedPath) : (await window.showDirectoryPicker().catch(error => {
-        console.error('Failed to open directory picker:', error);
-        // You can add custom fallback behavior here
-        return null;
-      }));
-
-      // Add a check for the null case
-      if (!parentHandle) {
-          // Handle the case where directory selection failed
-          throw new Error('Unable to get directory handle. Please try again or select a different location.');
-      }      
+      const parentHandle = selectedPath ? fileHandles.get(selectedPath) : await window.showDirectoryPicker();
+      
       if (!parentHandle) throw new Error('No directory selected');
       
       const fileHandle = await parentHandle.getFileHandle(newItemName, { create: true });
@@ -318,18 +309,8 @@ const Quasar = () => {
     if (!newItemName) return;
 
     try {
-      const parentHandle = selectedPath ? fileHandles.get(selectedPath) : (await window.showDirectoryPicker().catch(error => {
-          console.error('Failed to open directory picker:', error);
-          // You can add custom fallback behavior here
-          return null;
-      }));
-
-      // Add a check for the null case
-      if (!parentHandle) {
-          // Handle the case where directory selection failed
-          throw new Error('Unable to get directory handle. Please try again or select a different location.');
-      }
-
+      const parentHandle = selectedPath ? fileHandles.get(selectedPath) : await window.showDirectoryPicker();
+      
       if (!parentHandle) throw new Error('No directory selected');
       
       const folderHandle = await parentHandle.getDirectoryHandle(newItemName, { create: true });
@@ -434,15 +415,8 @@ const Quasar = () => {
   const loadDirectoryStructure = async () => {
     try {
       setIsLoading(true);
-      const dirHandle = await window.showDirectoryPicker().catch(error => {
-        console.error('Failed to open directory picker:', error);
-          // You can add custom fallback behavior here
-          return null;
-      });
+      const dirHandle = await window.showDirectoryPicker();
       
-      if (!dirHandle) {
-          throw new Error('Unable to get directory handle. Please try again or select a different location.');
-      }      
       // Process directory with lazy loading
       const processDirectory = async (handle, path = '', depth = 0) => {
         const entries = [];
@@ -911,6 +885,8 @@ const Quasar = () => {
 
   return (
     <div className="h-screen flex flex-col bg-black text-gray-300 overflow-hidden overscroll-none touch-none">
+
+
       {/* Error Banner */}
       {loadError && (
         <div className="p-4 bg-red-900/50 text-red-200 flex items-center gap-2">

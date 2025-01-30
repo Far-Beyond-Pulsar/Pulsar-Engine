@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect, useCallback, memo, Suspense } from 
 import { Plus, X, ChevronDown, Search, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ErrorBoundary } from 'react-error-boundary';
-import FileExplorer from '../components/FileExplorer';
 
 // Lazy load all editor components with error handling
 const createErrorHandledLazyComponent = (importFn: () => Promise<any>, componentName: string) => {
@@ -153,7 +152,6 @@ const LoadingEditor = () => (
 
 // Memoized Editor component with error handling
 const Editor = memo(({ type, isActive }: { type: string; isActive: boolean }) => {
-
   const EditorComponent = EDITOR_TYPES.find(e => e.type === type)?.component;
   
   // Handle missing editor components gracefully
@@ -191,8 +189,11 @@ const EditorTabs: React.FC<EditorTabsProps> = ({
   const [activeTab, setActiveTab] = useState<number>(defaultTabs[0].id);
   const [showNewTabMenu, setShowNewTabMenu] = useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState<string>('');
+  const [selectedEditorIndex, setSelectedEditorIndex] = useState<number>(0);
+  
   const searchInputRef = useRef<HTMLInputElement>(null);
   const newTabMenuRef = useRef<HTMLDivElement>(null);
+  const editorListRef = useRef<(HTMLButtonElement | null)[]>([]);
 
   // Tab management
   const updateTabs = useCallback((newTabs: Tab[]) => {
@@ -215,6 +216,7 @@ const EditorTabs: React.FC<EditorTabsProps> = ({
     setActiveTab(newId);
     setShowNewTabMenu(false);
     setSearchTerm('');
+    setSelectedEditorIndex(0);
   }, [tabs, updateTabs]);
 
   const removeTab = useCallback((tabId: number, e?: React.MouseEvent) => {
@@ -230,20 +232,77 @@ const EditorTabs: React.FC<EditorTabsProps> = ({
     }
   }, [tabs, activeTab, updateTabs, onTabChange]);
 
-  // Keyboard shortcuts and focus management
+  // Filter editors based on search
+  const filteredEditors = EDITOR_TYPES.filter(editor =>
+    editor.title.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Ensure selected index stays within bounds of filtered editors
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Only handle shortcuts if we're not in an input
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+    setSelectedEditorIndex(0);
+  }, [searchTerm, showNewTabMenu]);
+
+  // Keyboard navigation for new tab menu
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      const modifierKey = e.ctrlKey || e.metaKey;
+
+      // Handle new tab menu keyboard navigation when open
+      if (showNewTabMenu) {
+        // Arrow key navigation
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          setSelectedEditorIndex((prevIndex) => 
+            Math.min(prevIndex + 1, filteredEditors.length - 1)
+          );
+          
+          // Scroll selected item into view
+          setTimeout(() => {
+            const selectedElement = editorListRef.current[selectedEditorIndex + 1];
+            if (selectedElement) {
+              selectedElement.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'nearest' 
+              });
+            }
+          }, 0);
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          setSelectedEditorIndex((prevIndex) => 
+            Math.max(prevIndex - 1, 0)
+          );
+          
+          // Scroll selected item into view
+          setTimeout(() => {
+            const selectedElement = editorListRef.current[selectedEditorIndex - 1];
+            if (selectedElement) {
+              selectedElement.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'nearest' 
+              });
+            }
+          }, 0);
+        } 
+        
+        // Enter key to select highlighted editor
+        else if (e.key === 'Enter') {
+          e.preventDefault();
+          const selectedEditor = filteredEditors[selectedEditorIndex];
+          if (selectedEditor) {
+            addNewTab(selectedEditor.type);
+          }
+        }
+        
+        // Escape key to close menu
+        else if (e.key === 'Escape') {
+          e.preventDefault();
+          setShowNewTabMenu(false);
+        }
+
         return;
       }
 
-      if (e.key === 'Escape' && showNewTabMenu) {
-        setShowNewTabMenu(false);
-        return;
-      }
-
-      // Alt+N for new tab
+      // Existing global shortcuts
       if (e.key === 'n' && e.altKey) {
         e.preventDefault();
         setShowNewTabMenu(true);
@@ -251,15 +310,13 @@ const EditorTabs: React.FC<EditorTabsProps> = ({
         return;
       }
 
-      // Ctrl+W or Cmd+W to close current tab
       if (e.key === 'w' && e.altKey) {
         e.preventDefault();
         removeTab(activeTab);
         return;
       }
 
-      // Ctrl+Tab or Cmd+Tab to switch tabs
-      if ((e.ctrlKey || e.metaKey) && e.key === 'Tab') {
+      if (modifierKey && e.key === 'Tab') {
         e.preventDefault();
         const currentIndex = tabs.findIndex(t => t.id === activeTab);
         const nextIndex = (currentIndex + 1) % tabs.length;
@@ -268,10 +325,20 @@ const EditorTabs: React.FC<EditorTabsProps> = ({
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [activeTab, showNewTabMenu, tabs, removeTab, onTabChange]);
-
+    // Add event listener to the entire document
+    document.addEventListener('keydown', handleGlobalKeyDown, true);
+    return () => document.removeEventListener('keydown', handleGlobalKeyDown, true);
+  }, [
+    activeTab, 
+    tabs, 
+    removeTab, 
+    onTabChange, 
+    showNewTabMenu, 
+    filteredEditors, 
+    selectedEditorIndex, 
+    addNewTab
+  ]);
+  
   // Click outside handler for new tab menu
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -285,11 +352,6 @@ const EditorTabs: React.FC<EditorTabsProps> = ({
       return () => document.removeEventListener('mousedown', handleClickOutside);
     }
   }, [showNewTabMenu]);
-
-  // Filter editors based on search
-  const filteredEditors = EDITOR_TYPES.filter(editor =>
-    editor.title.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   return (
     <div className="flex flex-col h-screen bg-black text-white">
@@ -369,10 +431,19 @@ const EditorTabs: React.FC<EditorTabsProps> = ({
 
                   <div className="max-h-96 overflow-y-auto">
                     {filteredEditors.map((editor, index) => (
-                      <button
+                      <motion.button
+                        ref={(el) => { editorListRef.current[index] = el; }}
                         key={editor.type}
                         onClick={() => addNewTab(editor.type)}
-                        className="w-full px-4 py-3 text-left hover:bg-neutral-800 transition-colors flex items-center gap-3"
+                        initial={false}
+                        animate={{
+                          backgroundColor: 
+                            index === selectedEditorIndex 
+                              ? 'rgba(64, 64, 64, 0.5)' 
+                              : 'rgba(64, 64, 64, 0)'
+                        }}
+                        transition={{ duration: 0.1 }}
+                        className="w-full px-4 py-3 text-left transition-colors flex items-center gap-3 focus:outline-none"
                       >
                         <div className="p-1 rounded bg-neutral-700">
                           {editor.icon || <Plus size={16} />}
@@ -383,7 +454,7 @@ const EditorTabs: React.FC<EditorTabsProps> = ({
                             Open a new {editor.title.toLowerCase()}
                           </div>
                         </div>
-                      </button>
+                      </motion.button>
                     ))}
                   </div>
 

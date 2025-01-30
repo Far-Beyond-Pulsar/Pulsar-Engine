@@ -594,7 +594,7 @@ export function AMOLEDRetoolEditor() {
           snapToGrid={true}
           snapGrid={[15, 15]}
         >
-          <Background color="#333" variant="dots" />
+          <Background color="#333" />
           <Controls />
           <MiniMap />
         </ReactFlow>

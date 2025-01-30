@@ -56,7 +56,7 @@
       }
     },
     "security": {
-      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; cross-origin-embedder-policy 'require-corp'; cross-origin-opener-policy 'same-origin'"
+      "csp": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdn.tailwindcss.com; style-src-elem 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdn.tailwindcss.com; cross-origin-embedder-policy 'require-corp'; cross-origin-opener-policy 'same-origin'"
     },
     "updater": {
       "active": false
