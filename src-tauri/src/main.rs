@@ -1,21 +1,20 @@
-use tauri::{State, Runtime};
+use tauri::{State, Runtime, Manager};
 use serde::{Serialize, Deserialize};
-use log::{info, warn, error, debug};
-use env_logger;
+use log::{info, debug, error};
 use std::sync::{Arc, Mutex};
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
+struct ViewportConfig {
+    width: u32,
+    height: u32,
+    device_pixel_ratio: f64,
+}
+
+#[derive(Debug, Serialize, Clone)]
 struct ViewportStatus {
     width: u32,
     height: u32,
     buffer_size: usize,
-    device_pixel_ratio: f64,
-}
-
-#[derive(Debug, Deserialize)]
-struct ViewportConfig {
-    width: u32,
-    height: u32,
     device_pixel_ratio: f64,
 }
 
@@ -57,6 +56,12 @@ struct ViewportState {
     height: u32,
     buffer: Vec<u8>,
     device_pixel_ratio: f64,
+    shared_buffer_ptr: usize,
+    camera_position: (f64, f64, f64),
+    grid_visible: bool,
+    gizmos_visible: bool,
+    objects: Vec<String>,
+    playing: bool,
 }
 
 impl ViewportState {
@@ -66,6 +71,12 @@ impl ViewportState {
             height: 0,
             buffer: Vec::new(),
             device_pixel_ratio: 1.0,
+            shared_buffer_ptr: 0,
+            camera_position: (0.0, 0.0, 10.0),
+            grid_visible: true,
+            gizmos_visible: true,
+            objects: Vec::new(),
+            playing: true,
         }
     }
 
@@ -78,26 +89,25 @@ impl ViewportState {
         }
     }
 
-    fn fill_buffer_red(&mut self) {
-        for i in (0..self.buffer.len()).step_by(4) {
-            self.buffer[i] = 255;     // R
-            self.buffer[i + 1] = 0;   // G
-            self.buffer[i + 2] = 0;   // B
-            self.buffer[i + 3] = 255; // A
+    fn fill_buffer(&mut self, color: [u8; 4]) {
+        for chunk in self.buffer.chunks_mut(4) {
+            chunk.copy_from_slice(&color);
         }
     }
 
-    fn resize(&mut self, width: u32, height: u32) {
+    fn resize(&mut self, width: u32, height: u32, device_pixel_ratio: f64) {
         let buffer_size = (width * height * 4) as usize;
         self.width = width;
         self.height = height;
-        self.buffer.resize(buffer_size, 0);
-        self.fill_buffer_red();
+        self.device_pixel_ratio = device_pixel_ratio;
+        
+        // Preallocate buffer with a default color (dark gray)
+        self.buffer = vec![30, 30, 30, 255].repeat(buffer_size / 4);
     }
 }
 
 #[tauri::command]
-async fn initialize_viewport(
+fn initialize_viewport(
     config: ViewportConfig,
     state: State<'_, Arc<Mutex<ViewportState>>>,
 ) -> Result<ViewportStatus, String> {
@@ -109,65 +119,72 @@ async fn initialize_viewport(
         return Err("Invalid viewport dimensions: width and height must be greater than 0".to_string());
     }
     
-    viewport.device_pixel_ratio = config.device_pixel_ratio;
-    viewport.resize(config.width, config.height);
-    
-    debug!("Buffer initialized: size={}, first_pixels={:?}", 
-        viewport.buffer.len(),
-        viewport.buffer.chunks(4).take(4).collect::<Vec<_>>()
-    );
+    viewport.resize(config.width, config.height, config.device_pixel_ratio);
     
     Ok(viewport.get_status())
 }
 
 #[tauri::command]
-async fn get_frame_data(
-    state: State<'_, Arc<Mutex<ViewportState>>>,
-) -> Result<(Vec<u8>, ViewportStatus), String> {
-    let viewport = state.lock().map_err(|e| format!("Failed to lock state: {}", e))?;
-    
-    debug!("Sending frame data: buffer_size={}", viewport.buffer.len());
-    
-    Ok((viewport.buffer.clone(), viewport.get_status()))
-}
-
-#[tauri::command]
-async fn update_scene_state(
-    delta_time: f32,
-    state: State<'_, Arc<Mutex<ViewportState>>>,
-) -> Result<ViewportStatus, String> {
-    let viewport = state.lock().map_err(|e| format!("Failed to lock state: {}", e))?;
-    debug!("Updating scene state: dt={}", delta_time);
-    Ok(viewport.get_status())
-}
-
-#[tauri::command]
-async fn resize_viewport(
+fn setup_shared_memory(
+    window: tauri::Window,
     config: ViewportConfig,
+    state: State<'_, Arc<Mutex<ViewportState>>>,
+) -> Result<usize, String> {
+    let mut viewport = state.lock().map_err(|e| format!("Failed to lock state: {}", e))?;
+    
+    // Ensure viewport is initialized
+    if config.width == 0 || config.height == 0 {
+        return Err("Invalid viewport dimensions: width and height must be greater than 0".to_string());
+    }
+    
+    // Resize viewport
+    viewport.resize(config.width, config.height, config.device_pixel_ratio);
+    
+    // Get raw pointer to buffer
+    let buffer_ptr = viewport.buffer.as_ptr() as usize;
+    viewport.shared_buffer_ptr = buffer_ptr;
+    
+    // Notify frontend about shared memory setup
+    window.emit("shared-memory-ready", buffer_ptr)
+        .map_err(|e| format!("Failed to emit shared memory event: {}", e))?;
+    
+    Ok(buffer_ptr)
+}
+
+#[tauri::command]
+fn update_viewport(
     state: State<'_, Arc<Mutex<ViewportState>>>,
 ) -> Result<ViewportStatus, String> {
     let mut viewport = state.lock().map_err(|e| format!("Failed to lock state: {}", e))?;
     
-    if config.width == 0 || config.height == 0 {
-        return Err("Invalid resize dimensions: width and height must be greater than 0".to_string());
+    // Simulate scene update or rendering logic
+    if viewport.playing {
+        // Update buffer or scene state here
+        // For now, just maintain the current state
     }
-    
-    info!("Resizing viewport to: {}x{}", config.width, config.height);
-    viewport.resize(config.width, config.height);
     
     Ok(viewport.get_status())
 }
 
 #[tauri::command]
-async fn handle_viewport_event(
+fn handle_viewport_event(
     event: ViewportEvent,
     state: State<'_, Arc<Mutex<ViewportState>>>,
 ) -> Result<HitTestResult, String> {
-    let viewport = state.lock().map_err(|e| format!("Failed to lock state: {}", e))?;
+    let mut viewport = state.lock().map_err(|e| format!("Failed to lock state: {}", e))?;
+    
     debug!("Handling viewport event: {:?}", event.event_type);
     
     match event.event_type.as_str() {
-        "mouseDown" | "mouseMove" | "drag" | "zoom" => {
+        "mouseDown" | "mouseMove" | "drag" => {
+            // Simulate hit testing or object interaction
+            Ok(HitTestResult {
+                hit: false,
+                object_id: None,
+            })
+        },
+        "zoom" => {
+            // Simulate zoom interaction
             Ok(HitTestResult {
                 hit: false,
                 object_id: None,
@@ -178,42 +195,77 @@ async fn handle_viewport_event(
 }
 
 #[tauri::command]
-async fn get_viewport_status(
+fn get_scene_stats(
     state: State<'_, Arc<Mutex<ViewportState>>>,
-) -> Result<ViewportStatus, String> {
+) -> Result<SceneStats, String> {
     let viewport = state.lock().map_err(|e| format!("Failed to lock state: {}", e))?;
-    Ok(viewport.get_status())
-}
-
-#[tauri::command]
-async fn get_scene_stats() -> Result<SceneStats, String> {
+    
     Ok(SceneStats {
-        object_count: 0,
+        object_count: viewport.objects.len() as u32,
     })
 }
 
 #[tauri::command]
-async fn reset_viewport_camera(
+fn reset_viewport_camera(
     state: State<'_, Arc<Mutex<ViewportState>>>,
 ) -> Result<ViewportStatus, String> {
-    let viewport = state.lock().map_err(|e| format!("Failed to lock state: {}", e))?;
-    debug!("Resetting viewport camera");
+    let mut viewport = state.lock().map_err(|e| format!("Failed to lock state: {}", e))?;
+    
+    // Reset camera to default position
+    viewport.camera_position = (0.0, 0.0, 10.0);
+    
     Ok(viewport.get_status())
 }
 
 #[tauri::command]
-async fn delete_object(
+fn delete_object(
     id: String,
     state: State<'_, Arc<Mutex<ViewportState>>>,
 ) -> Result<ViewportStatus, String> {
-    let viewport = state.lock().map_err(|e| format!("Failed to lock state: {}", e))?;
-    debug!("Deleting object: {}", id);
+    let mut viewport = state.lock().map_err(|e| format!("Failed to lock state: {}", e))?;
+    
+    // Remove object from the list
+    viewport.objects.retain(|obj_id| *obj_id != id);
+    
     Ok(viewport.get_status())
+}
+
+#[tauri::command]
+fn toggle_grid(
+    state: State<'_, Arc<Mutex<ViewportState>>>,
+) -> Result<bool, String> {
+    let mut viewport = state.lock().map_err(|e| format!("Failed to lock state: {}", e))?;
+    
+    viewport.grid_visible = !viewport.grid_visible;
+    
+    Ok(viewport.grid_visible)
+}
+
+#[tauri::command]
+fn toggle_gizmos(
+    state: State<'_, Arc<Mutex<ViewportState>>>,
+) -> Result<bool, String> {
+    let mut viewport = state.lock().map_err(|e| format!("Failed to lock state: {}", e))?;
+    
+    viewport.gizmos_visible = !viewport.gizmos_visible;
+    
+    Ok(viewport.gizmos_visible)
+}
+
+#[tauri::command]
+fn toggle_play(
+    state: State<'_, Arc<Mutex<ViewportState>>>,
+) -> Result<bool, String> {
+    let mut viewport = state.lock().map_err(|e| format!("Failed to lock state: {}", e))?;
+    
+    viewport.playing = !viewport.playing;
+    
+    Ok(viewport.playing)
 }
 
 fn main() {
     env_logger::init();
-    info!("Starting viewport application");
+    info!("Starting shared memory viewport application");
     
     let viewport_state = Arc::new(Mutex::new(ViewportState::new()));
 
@@ -221,14 +273,15 @@ fn main() {
         .manage(viewport_state)
         .invoke_handler(tauri::generate_handler![
             initialize_viewport,
+            setup_shared_memory,
+            update_viewport,
             handle_viewport_event,
-            get_frame_data,
-            get_viewport_status,
-            update_scene_state,
-            resize_viewport,
-            reset_viewport_camera,
             get_scene_stats,
+            reset_viewport_camera,
             delete_object,
+            toggle_grid,
+            toggle_gizmos,
+            toggle_play,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
