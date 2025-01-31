@@ -3063,8 +3063,6 @@ dependencies = [
  "tokio",
  "tron",
  "walkdir",
- "wasm-bindgen",
- "web-sys",
 ]
 
 [[package]]
