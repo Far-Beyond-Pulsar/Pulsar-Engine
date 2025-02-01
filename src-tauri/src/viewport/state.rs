@@ -1,4 +1,5 @@
 use serde::{Serialize, Deserialize};
+use tao::window::Window;
 use std::{
     sync::{Arc, atomic::{AtomicBool, Ordering}},
     thread::JoinHandle,
@@ -29,7 +30,7 @@ pub struct VulkanHandle {
 }
 
 impl VulkanHandle {
-    pub fn new<W: HasRawWindowHandle>(window: &W) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn new(window: &Window) -> Result<Self, Box<dyn std::error::Error>> {
         let raw_handle = window.raw_window_handle();
         
         Ok(match raw_handle {
@@ -61,12 +62,12 @@ pub enum ViewportCommand {
 }
 
 pub struct ViewportState {
-    config: RwLock<ViewportConfig>,
-    vulkan_handle: RwLock<Option<VulkanHandle>>,
-    render_thread: RwLock<Option<JoinHandle<()>>>,
-    running: Arc<AtomicBool>,
-    command_sender: Sender<ViewportCommand>,
-    command_receiver: Receiver<ViewportCommand>,
+    pub config: RwLock<ViewportConfig>,
+    pub vulkan_handle: RwLock<Option<VulkanHandle>>,
+    pub render_thread: RwLock<Option<JoinHandle<()>>>,
+    pub running: Arc<AtomicBool>,
+    pub command_sender: Sender<ViewportCommand>,
+    pub command_receiver: Receiver<ViewportCommand>,
 }
 
 impl ViewportState {

@@ -32,6 +32,7 @@ ash = "0.37.3+1.3.251"
 ash-window = "0.12.0"
 raw-window-handle = "0.5.2"
 crossbeam-channel = "0.5.6"
+tao = "0.16.10"
 # bevy = "0.15.1"
 
 [features]
