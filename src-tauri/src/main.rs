@@ -1,340 +1,101 @@
-use tauri::{State, Runtime, Manager};
-use serde::{Serialize, Deserialize};
-use log::{info, debug, error};
-use std::{
-    sync::{Arc, Mutex, atomic::{AtomicBool, Ordering}},
-    thread::{self, JoinHandle},
-    time::{Duration, Instant},
+use tauri::{
+    State, 
+    Manager,
+    window::WindowBuilder,
+    http::{Request, Response, header::HeaderValue},
 };
 use parking_lot::RwLock;
-use crossbeam_channel::{bounded, Sender, Receiver};
+use std::sync::Arc;
+use std::slice;
 
-const TARGET_FPS: u64 = 60;
-const FRAME_TIME: Duration = Duration::from_nanos(1_000_000_000 / TARGET_FPS);
-const BUFFER_UPDATE_CHANNEL_SIZE: usize = 2;
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Clone, serde::Serialize, serde::Deserialize, Debug)]
 pub struct ViewportConfig {
     width: u32,
     height: u32,
     device_pixel_ratio: f64,
 }
 
-#[derive(Debug, Clone, Serialize)]
-pub struct ViewportStatus {
-    width: u32,
-    height: u32,
-    buffer_size_bytes: usize,
-    device_pixel_ratio: f64,
-    fps: f64,
-    frame_time: f64,
-}
-
 #[derive(Debug)]
-pub struct ViewportState {
+struct VideoBuffer {
+    buffer: Vec<u8>,
     width: u32,
     height: u32,
-    buffer: Arc<RwLock<Vec<u8>>>,
-    device_pixel_ratio: f64,
-    shared_buffer_ptr: usize,
-    playing: Arc<AtomicBool>,
-    last_frame_time: Arc<RwLock<Instant>>,
-    frame_times: Arc<RwLock<Vec<Duration>>>,
-    render_thread: Option<JoinHandle<()>>,
-    update_sender: Option<Sender<UpdateCommand>>,
-}
-
-enum UpdateCommand {
-    UpdateFrame,
-    Stop,
-}
-
-impl ViewportState {
-    fn new() -> Self {
-        Self {
-            width: 0,
-            height: 0,
-            buffer: Arc::new(RwLock::new(Vec::new())),
-            device_pixel_ratio: 1.0,
-            shared_buffer_ptr: 0,
-            playing: Arc::new(AtomicBool::new(true)),
-            last_frame_time: Arc::new(RwLock::new(Instant::now())),
-            frame_times: Arc::new(RwLock::new(Vec::with_capacity(120))),
-            render_thread: None,
-            update_sender: None,
-        }
-    }
-
-    fn get_status(&self) -> ViewportStatus {
-        ViewportStatus {
-            width: self.width,
-            height: self.height,
-            buffer_size_bytes: self.buffer.read().len(),
-            device_pixel_ratio: self.device_pixel_ratio,
-            fps: self.calculate_fps(),
-            frame_time: self.calculate_average_frame_time(),
-        }
-    }
-
-    fn calculate_fps(&self) -> f64 {
-        let frame_times = self.frame_times.read();
-        if frame_times.is_empty() {
-            return 0.0;
-        }
-        let avg_frame_time = frame_times.iter().sum::<Duration>() / frame_times.len() as u32;
-        1.0 / avg_frame_time.as_secs_f64()
-    }
-
-    fn calculate_average_frame_time(&self) -> f64 {
-        let frame_times = self.frame_times.read();
-        if frame_times.is_empty() {
-            return 0.0;
-        }
-        let avg_frame_time = frame_times.iter().sum::<Duration>() / frame_times.len() as u32;
-        avg_frame_time.as_secs_f64() * 1000.0
-    }
-
-    fn resize(&mut self, width: u32, height: u32, device_pixel_ratio: f64) {
-        info!("Starting resize: {}x{} ({}x DPR)", width, height, device_pixel_ratio);
-        
-        let buffer_size = (width * height * 4) as usize;
-        self.width = width;
-        self.height = height;
-        self.device_pixel_ratio = device_pixel_ratio;
-        
-        // Create buffer directly using Vec
-        let mut buffer = vec![0u8; buffer_size];
-        
-        // Fill with a test pattern - bright red/white checkerboard
-        for y in 0..height {
-            for x in 0..width {
-                let i = ((y * width + x) * 4) as usize;
-                let is_white = ((x / 32 + y / 32) % 2) == 0;
-                buffer[i] = 0; // R
-                buffer[i + 1] = 0; // G
-                buffer[i + 2] = 0; // B
-                buffer[i + 3] = 255;  // A
-            }
-        }
-
-        info!("Buffer initialized: size={}, first_bytes={:?}", 
-            buffer_size, 
-            &buffer[0..16]);
-        
-        // Write the buffer
-        *self.buffer.write() = buffer;
-        
-        // Store raw pointer
-        self.shared_buffer_ptr = self.buffer.read().as_ptr() as usize;
-        
-        info!("Buffer ready: ptr={:?}", self.shared_buffer_ptr);
-    }
-
-    fn update_frame(&self, frame_count: u64) {
-        let mut buffer = self.buffer.write();
-        let width = self.width;
-        let height = self.height;
-        
-        // Fill with an animated gradient
-        for y in 0..height {
-            for x in 0..width {
-                let i = ((y * width + x) * 4) as usize;
-                let time = (frame_count % 255) as u8;
-                buffer[i] = 40;        // R
-                buffer[i + 1] = 255;   // G
-                buffer[i + 2] = 255;   // B
-                buffer[i + 3] = 255;   // A
-            }
-        }
-
-        if frame_count % 60 == 0 {
-            info!("Frame {} updated: first_bytes={:?}", frame_count, &buffer[0..16]);
-        }
-    }
-
-    fn stop_render_thread(&mut self) {
-        if let Some(sender) = self.update_sender.take() {
-            let _ = sender.send(UpdateCommand::Stop);
-        }
-        if let Some(handle) = self.render_thread.take() {
-            let _ = handle.join();
-        }
-    }
-}
-
-impl Drop for ViewportState {
-    fn drop(&mut self) {
-        self.stop_render_thread();
-    }
-}
-
-#[tauri::command]
-async fn initialize_viewport(
     config: ViewportConfig,
-    state: State<'_, Arc<Mutex<ViewportState>>>,
-) -> Result<ViewportStatus, String> {
-    let mut viewport = state.lock().map_err(|e| format!("Failed to lock state: {}", e))?;
+}
+
+struct SharedVideoBuffer(Arc<RwLock<VideoBuffer>>);
+
+#[tauri::command]
+fn get_shared_memory_info(state: State<SharedVideoBuffer>) -> Result<Vec<u8>, String> {
+    let buffer = state.0.read();
     
-    info!("Initializing viewport with config: {:?}", config);
+    // Return a reference to the raw buffer data
+    println!("Shared Memory Info Request:");
+    println!("  Buffer Length: {}", buffer.buffer.len());
+    println!("  First Bytes: {:?}", &buffer.buffer[0..16]);
     
-    if config.width == 0 || config.height == 0 {
-        return Err("Invalid viewport dimensions".to_string());
-    }
-    
-    viewport.resize(config.width, config.height, config.device_pixel_ratio);
-    Ok(viewport.get_status())
+    Ok(buffer.buffer.clone())
 }
 
 #[tauri::command]
-async fn setup_shared_memory(
-    window: tauri::Window,
-    config: ViewportConfig,
-    state: State<'_, Arc<Mutex<ViewportState>>>,
-) -> Result<usize, String> {
-    info!("Setting up shared memory for {}x{}", config.width, config.height);
-    let mut viewport = state.lock().map_err(|e| format!("Failed to lock state: {}", e))?;
+fn draw_test_pattern(state: State<SharedVideoBuffer>) -> Result<(), String> {
+    let mut buffer = state.0.write();
     
-    viewport.resize(config.width, config.height, config.device_pixel_ratio);
+    println!("Drawing test pattern. Buffer size: {}", buffer.buffer.len());
     
-    {
-        let buffer = viewport.buffer.read();
-        info!("Setup complete: buffer_len={}, ptr={}, first_bytes={:?}", 
-              buffer.len(), viewport.shared_buffer_ptr, &buffer[0..16]);
-    }
-    
-    Ok(viewport.shared_buffer_ptr)
-}
-
-#[tauri::command]
-async fn start_frame_updates(
-    window: tauri::Window,
-    state: State<'_, Arc<Mutex<ViewportState>>>,
-) -> Result<(), String> {
-    info!("Starting frame updates");
-    let state_clone = Arc::clone(&state.inner());
-    let window_clone = window.clone();
-    
-    let mut viewport = state.lock().map_err(|e| format!("Failed to lock state: {}", e))?;
-    
-    let (tx, rx) = bounded(BUFFER_UPDATE_CHANNEL_SIZE);
-    viewport.update_sender = Some(tx.clone());
-    
-    let buffer = Arc::clone(&viewport.buffer);
-    let frame_times = Arc::clone(&viewport.frame_times);
-    let playing = viewport.playing.clone();
-
-    let render_thread = thread::spawn(move || {
-        let mut frame_count = 0u64;
-        let mut last_frame_time = Instant::now();
-        info!("Render thread started");
-
-        while let Ok(UpdateCommand::UpdateFrame) = rx.recv() {
-            println!("Received update frame command");
-
-            if !playing.load(Ordering::Relaxed) {
-                continue;
-            }
-
-            let now = Instant::now();
-            let frame_duration = now - last_frame_time;
-
-            if frame_duration < FRAME_TIME {
-                thread::sleep(FRAME_TIME - frame_duration);
-                continue;
-            }
-
-            {
-                let mut frame_times = frame_times.write();
-                frame_times.push(frame_duration);
-                if frame_times.len() > 120 {
-                    frame_times.remove(0);
-                }
-            }
-
-            // Update frame content
-            if let Ok(viewport) = state_clone.lock() {
-                viewport.update_frame(frame_count);
-            }
-
-            // Get buffer pointer and notify frontend
-            let ptr = buffer.read().as_ptr() as usize;
-            
-            if frame_count % 60 == 0 {
-                info!("Emitting update with ptr: {}", ptr);
-            }
-
-            if let Err(e) = window_clone.emit("shared-memory-update", ptr) {
-                error!("Failed to emit update: {}", e);
-                break;
-            }
-
-            frame_count = frame_count.wrapping_add(1);
-            last_frame_time = now;
+    for i in (0..buffer.buffer.len()).step_by(4) {
+        if i + 3 < buffer.buffer.len() {
+            buffer.buffer[i]     = ((i * 1103515245 + 12345) >> 16) as u8;   // R
+            buffer.buffer[i + 1] = ((i * 1103515245 + 12345) >> 16) as u8;   // G
+            buffer.buffer[i + 2] = ((i * 1103515245 + 12345) >> 16) as u8;   // B
+            buffer.buffer[i + 3] = 255;   // A
         }
-        info!("Render thread exiting");
-    });
-
-    viewport.render_thread = Some(render_thread);
+    }
+    
+    println!("Test pattern first bytes: {:?}", &buffer.buffer[0..16]);
+    
     Ok(())
 }
 
 #[tauri::command]
-async fn toggle_play(
-    state: State<'_, Arc<Mutex<ViewportState>>>,
-) -> Result<bool, String> {
-    let viewport = state.lock().map_err(|e| format!("Failed to lock state: {}", e))?;
-    let new_state = !viewport.playing.load(Ordering::Relaxed);
-    viewport.playing.store(new_state, Ordering::Relaxed);
-    Ok(new_state)
-}
+fn initialize_viewport(
+    state: State<SharedVideoBuffer>,
+    config: ViewportConfig
+) -> Result<(), String> {
+    println!("Initializing Viewport: {}x{}", config.width, config.height);
+    
+    let size = (config.width * config.height * 4) as usize;
+    let mut buffer = state.0.write();
+    
+    buffer.buffer = vec![0; size];
+    buffer.width = config.width;
+    buffer.height = config.height;
+    buffer.config = config;
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct ResizeConfig {
-    width: u32,
-    height: u32,
-    device_pixel_ratio: f64,
-}
-
-#[tauri::command]
-async fn resize_viewport(
-    window: tauri::Window,
-    config: ResizeConfig,
-    state: State<'_, Arc<Mutex<ViewportState>>>,
-) -> Result<ViewportStatus, String> {
-    let mut viewport = state.lock().map_err(|e| format!("Failed to lock state: {}", e))?;
+    println!("Viewport initialized. Buffer size: {}", size);
     
-    if config.width == 0 || config.height == 0 {
-        return Err("Invalid viewport dimensions".to_string());
-    }
-    
-    info!("Resizing viewport to {}x{} with DPR {}", 
-          config.width, config.height, config.device_pixel_ratio);
-    
-    viewport.resize(config.width, config.height, config.device_pixel_ratio);
-    
-    if let Err(e) = window.emit("shared-memory-update", viewport.shared_buffer_ptr) {
-        error!("Failed to emit shared-memory-update event: {}", e);
-        return Err("Failed to notify frontend of resize".to_string());
-    }
-    
-    Ok(viewport.get_status())
+    Ok(())
 }
 
 fn main() {
-    env_logger::init();
-    info!("Starting viewport application");
-    
-    let viewport_state = Arc::new(Mutex::new(ViewportState::new()));
+    let shared_buffer = SharedVideoBuffer(Arc::new(RwLock::new(VideoBuffer {
+        buffer: Vec::new(),
+        width: 0,
+        height: 0,
+        config: ViewportConfig {
+            width: 0,
+            height: 0,
+            device_pixel_ratio: 1.0,
+        },
+    })));
 
     tauri::Builder::default()
-        .manage(viewport_state)
+        .manage(shared_buffer)
         .invoke_handler(tauri::generate_handler![
+            get_shared_memory_info,
             initialize_viewport,
-            setup_shared_memory,
-            start_frame_updates,
-            toggle_play,
-            resize_viewport,
+            draw_test_pattern
         ])
         .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .expect("Error running Tauri application");
 }

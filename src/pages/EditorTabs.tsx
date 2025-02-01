@@ -414,7 +414,7 @@ const EditorTabs: React.FC<EditorTabsProps> = ({
                 transition={{ duration: 0.1 }}
                 className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center"
               >
-                <div className="bg-neutral-900 rounded-lg shadow-xl w-full max-w-xl overflow-hidden m-4">
+                <div className="bg-black rounded-lg shadow-xl w-full max-w-xl overflow-hidden m-4">
                   <div className="p-4 border-b border-neutral-800">
                     <div className="relative">
                       <Search className="absolute left-3 top-2.5 text-neutral-400" size={20} />
@@ -424,7 +424,7 @@ const EditorTabs: React.FC<EditorTabsProps> = ({
                         placeholder="Search Editors..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full bg-neutral-800 text-white pl-10 pr-4 py-2 rounded-md outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full bg-neutral-950 text-white pl-10 pr-4 py-2 rounded-md outline-none focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
                   </div>
@@ -439,7 +439,7 @@ const EditorTabs: React.FC<EditorTabsProps> = ({
                         animate={{
                           backgroundColor: 
                             index === selectedEditorIndex 
-                              ? 'rgba(64, 64, 64, 0.5)' 
+                              ? 'rgba(20, 20, 20, 0.5)' 
                               : 'rgba(64, 64, 64, 0)'
                         }}
                         transition={{ duration: 0.1 }}
@@ -458,7 +458,7 @@ const EditorTabs: React.FC<EditorTabsProps> = ({
                     ))}
                   </div>
 
-                  <div className="p-2 border-t border-neutral-800 bg-neutral-900 text-xs text-neutral-400 flex justify-between items-center">
+                  <div className="p-2 border-t border-neutral-800 bg-neutral-950 text-xs text-neutral-400 flex justify-between items-center">
                     <div className="flex gap-4">
                       <span>↑↓ to navigate</span>
                       <span>alt + n to open</span>
