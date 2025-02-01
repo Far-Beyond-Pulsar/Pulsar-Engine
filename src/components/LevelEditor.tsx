@@ -322,8 +322,7 @@ const LevelEditor: React.FC = () => {
               onMove={(pos) => handlePanelMove('viewport', pos)}
             >
               <div className="w-full h-full bg-black">
-                <Viewport
-                  initialTool={activeTool} onObjectSelect={undefined} onObjectHover={undefined} onViewportReady={undefined}                />
+                <Viewport></Viewport>
               </div>
             </DockablePanel>
           </div>

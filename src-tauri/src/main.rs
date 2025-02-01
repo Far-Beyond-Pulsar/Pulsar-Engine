@@ -24,7 +24,7 @@ pub struct ViewportConfig {
 pub struct ViewportStatus {
     width: u32,
     height: u32,
-    buffer_size: usize,
+    buffer_size_bytes: usize,
     device_pixel_ratio: f64,
     fps: f64,
     frame_time: f64,
@@ -37,7 +37,7 @@ pub struct ViewportState {
     buffer: Arc<RwLock<Vec<u8>>>,
     device_pixel_ratio: f64,
     shared_buffer_ptr: usize,
-    playing: Arc<AtomicBool>,  // Wrapped in Arc
+    playing: Arc<AtomicBool>,
     last_frame_time: Arc<RwLock<Instant>>,
     frame_times: Arc<RwLock<Vec<Duration>>>,
     render_thread: Option<JoinHandle<()>>,
@@ -57,7 +57,7 @@ impl ViewportState {
             buffer: Arc::new(RwLock::new(Vec::new())),
             device_pixel_ratio: 1.0,
             shared_buffer_ptr: 0,
-            playing: Arc::new(AtomicBool::new(true)),  // Initialize with Arc
+            playing: Arc::new(AtomicBool::new(true)),
             last_frame_time: Arc::new(RwLock::new(Instant::now())),
             frame_times: Arc::new(RwLock::new(Vec::with_capacity(120))),
             render_thread: None,
@@ -69,7 +69,7 @@ impl ViewportState {
         ViewportStatus {
             width: self.width,
             height: self.height,
-            buffer_size: self.buffer.read().len(),
+            buffer_size_bytes: self.buffer.read().len(),
             device_pixel_ratio: self.device_pixel_ratio,
             fps: self.calculate_fps(),
             frame_time: self.calculate_average_frame_time(),
@@ -81,7 +81,6 @@ impl ViewportState {
         if frame_times.is_empty() {
             return 0.0;
         }
-        
         let avg_frame_time = frame_times.iter().sum::<Duration>() / frame_times.len() as u32;
         1.0 / avg_frame_time.as_secs_f64()
     }
@@ -91,38 +90,72 @@ impl ViewportState {
         if frame_times.is_empty() {
             return 0.0;
         }
-        
         let avg_frame_time = frame_times.iter().sum::<Duration>() / frame_times.len() as u32;
-        avg_frame_time.as_secs_f64() * 1000.0 // Convert to milliseconds
-    }
-
-    fn fill_buffer(&self, color: [u8; 4]) {
-        let mut buffer = self.buffer.write();
-        for chunk in buffer.chunks_mut(4) {
-            chunk.copy_from_slice(&color);
-        }
+        avg_frame_time.as_secs_f64() * 1000.0
     }
 
     fn resize(&mut self, width: u32, height: u32, device_pixel_ratio: f64) {
+        info!("Starting resize: {}x{} ({}x DPR)", width, height, device_pixel_ratio);
+        
         let buffer_size = (width * height * 4) as usize;
         self.width = width;
         self.height = height;
         self.device_pixel_ratio = device_pixel_ratio;
         
-        // Initialize buffer
-        let mut buffer = Vec::with_capacity(buffer_size);
-        buffer.resize(buffer_size, 0);
-        *self.buffer.write() = buffer;
+        // Create buffer directly using Vec
+        let mut buffer = vec![0u8; buffer_size];
+        
+        // Fill with a test pattern - bright red/white checkerboard
+        for y in 0..height {
+            for x in 0..width {
+                let i = ((y * width + x) * 4) as usize;
+                let is_white = ((x / 32 + y / 32) % 2) == 0;
+                buffer[i] = 0; // R
+                buffer[i + 1] = 0; // G
+                buffer[i + 2] = 0; // B
+                buffer[i + 3] = 255;  // A
+            }
+        }
 
-        // Store buffer pointer for shared memory
+        info!("Buffer initialized: size={}, first_bytes={:?}", 
+            buffer_size, 
+            &buffer[0..16]);
+        
+        // Write the buffer
+        *self.buffer.write() = buffer;
+        
+        // Store raw pointer
         self.shared_buffer_ptr = self.buffer.read().as_ptr() as usize;
+        
+        info!("Buffer ready: ptr={:?}", self.shared_buffer_ptr);
+    }
+
+    fn update_frame(&self, frame_count: u64) {
+        let mut buffer = self.buffer.write();
+        let width = self.width;
+        let height = self.height;
+        
+        // Fill with an animated gradient
+        for y in 0..height {
+            for x in 0..width {
+                let i = ((y * width + x) * 4) as usize;
+                let time = (frame_count % 255) as u8;
+                buffer[i] = 40;        // R
+                buffer[i + 1] = 255;   // G
+                buffer[i + 2] = 255;   // B
+                buffer[i + 3] = 255;   // A
+            }
+        }
+
+        if frame_count % 60 == 0 {
+            info!("Frame {} updated: first_bytes={:?}", frame_count, &buffer[0..16]);
+        }
     }
 
     fn stop_render_thread(&mut self) {
         if let Some(sender) = self.update_sender.take() {
             let _ = sender.send(UpdateCommand::Stop);
         }
-        
         if let Some(handle) = self.render_thread.take() {
             let _ = handle.join();
         }
@@ -149,7 +182,6 @@ async fn initialize_viewport(
     }
     
     viewport.resize(config.width, config.height, config.device_pixel_ratio);
-    
     Ok(viewport.get_status())
 }
 
@@ -159,8 +191,17 @@ async fn setup_shared_memory(
     config: ViewportConfig,
     state: State<'_, Arc<Mutex<ViewportState>>>,
 ) -> Result<usize, String> {
+    info!("Setting up shared memory for {}x{}", config.width, config.height);
     let mut viewport = state.lock().map_err(|e| format!("Failed to lock state: {}", e))?;
+    
     viewport.resize(config.width, config.height, config.device_pixel_ratio);
+    
+    {
+        let buffer = viewport.buffer.read();
+        info!("Setup complete: buffer_len={}, ptr={}, first_bytes={:?}", 
+              buffer.len(), viewport.shared_buffer_ptr, &buffer[0..16]);
+    }
+    
     Ok(viewport.shared_buffer_ptr)
 }
 
@@ -169,27 +210,27 @@ async fn start_frame_updates(
     window: tauri::Window,
     state: State<'_, Arc<Mutex<ViewportState>>>,
 ) -> Result<(), String> {
-    // Clone the Arc to move into the thread
+    info!("Starting frame updates");
     let state_clone = Arc::clone(&state.inner());
     let window_clone = window.clone();
     
-    // Get viewport to set up channels and initial state
     let mut viewport = state.lock().map_err(|e| format!("Failed to lock state: {}", e))?;
     
     let (tx, rx) = bounded(BUFFER_UPDATE_CHANNEL_SIZE);
     viewport.update_sender = Some(tx.clone());
     
-    // Clone necessary Arc references
     let buffer = Arc::clone(&viewport.buffer);
     let frame_times = Arc::clone(&viewport.frame_times);
     let playing = viewport.playing.clone();
 
-    // Start render thread
     let render_thread = thread::spawn(move || {
         let mut frame_count = 0u64;
         let mut last_frame_time = Instant::now();
+        info!("Render thread started");
 
         while let Ok(UpdateCommand::UpdateFrame) = rx.recv() {
+            println!("Received update frame command");
+
             if !playing.load(Ordering::Relaxed) {
                 continue;
             }
@@ -197,13 +238,11 @@ async fn start_frame_updates(
             let now = Instant::now();
             let frame_duration = now - last_frame_time;
 
-            // Maintain target frame rate
             if frame_duration < FRAME_TIME {
                 thread::sleep(FRAME_TIME - frame_duration);
                 continue;
             }
 
-            // Update frame timing statistics
             {
                 let mut frame_times = frame_times.write();
                 frame_times.push(frame_duration);
@@ -212,49 +251,30 @@ async fn start_frame_updates(
                 }
             }
 
-            // Create a color that changes over time
-            let color = [
-                255,
-                255,
-                255,
-                0,
-            ];
-            
-            // Update buffer with new color
-            {
-                let mut buffer = buffer.write();
-                for chunk in buffer.chunks_mut(4) {
-                    chunk.copy_from_slice(&color);
-                }
+            // Update frame content
+            if let Ok(viewport) = state_clone.lock() {
+                viewport.update_frame(frame_count);
             }
 
-            // Notify frontend
-            if let Err(e) = window_clone.emit(
-                "shared-memory-update",
-                buffer.read().as_ptr() as usize
-            ) {
-                error!("Failed to emit shared-memory-update event: {}", e);
+            // Get buffer pointer and notify frontend
+            let ptr = buffer.read().as_ptr() as usize;
+            
+            if frame_count % 60 == 0 {
+                info!("Emitting update with ptr: {}", ptr);
+            }
+
+            if let Err(e) = window_clone.emit("shared-memory-update", ptr) {
+                error!("Failed to emit update: {}", e);
                 break;
             }
 
             frame_count = frame_count.wrapping_add(1);
             last_frame_time = now;
         }
+        info!("Render thread exiting");
     });
 
-    // Start update loop in a separate thread
-    let _update_loop = thread::spawn(move || {
-        loop {
-            if let Err(_) = tx.send(UpdateCommand::UpdateFrame) {
-                break;
-            }
-            thread::sleep(Duration::from_millis(8)); // ~60 FPS
-        }
-    });
-
-    // Store render thread
     viewport.render_thread = Some(render_thread);
-
     Ok(())
 }
 
@@ -281,10 +301,8 @@ async fn resize_viewport(
     config: ResizeConfig,
     state: State<'_, Arc<Mutex<ViewportState>>>,
 ) -> Result<ViewportStatus, String> {
-    // Get lock on viewport state
     let mut viewport = state.lock().map_err(|e| format!("Failed to lock state: {}", e))?;
     
-    // Validate dimensions
     if config.width == 0 || config.height == 0 {
         return Err("Invalid viewport dimensions".to_string());
     }
@@ -292,19 +310,13 @@ async fn resize_viewport(
     info!("Resizing viewport to {}x{} with DPR {}", 
           config.width, config.height, config.device_pixel_ratio);
     
-    // Perform resize
     viewport.resize(config.width, config.height, config.device_pixel_ratio);
     
-    // Emit event to frontend with new buffer pointer
-    if let Err(e) = window.emit(
-        "shared-memory-update",
-        viewport.shared_buffer_ptr
-    ) {
+    if let Err(e) = window.emit("shared-memory-update", viewport.shared_buffer_ptr) {
         error!("Failed to emit shared-memory-update event: {}", e);
         return Err("Failed to notify frontend of resize".to_string());
     }
     
-    // Return new viewport status
     Ok(viewport.get_status())
 }
 
