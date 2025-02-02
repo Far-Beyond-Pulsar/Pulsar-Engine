@@ -33,27 +33,27 @@ const createErrorHandledLazyComponent = (importFn: () => Promise<any>, component
   );
 };
 
-const LevelEditor = createErrorHandledLazyComponent(() => import('../components/LevelEditor'), 'LevelEditor');
-const ScriptEditor = createErrorHandledLazyComponent(() => import('../components/ScriptEditor'), 'ScriptEditor');
-const BPEdit = createErrorHandledLazyComponent(() => import('../components/BPEdit/page'), 'BlueprintEditor');
-const MaterialEditor = createErrorHandledLazyComponent(() => import('../components/editors/MaterialEditor'), 'MaterialEditor');
-const AnimationEditor = createErrorHandledLazyComponent(() => import('../components/editors/AnimationEditor'), 'AnimationEditor');
-const ParticleSystem = createErrorHandledLazyComponent(() => import('../components/editors/ParticleEditor'), 'ParticleEditor');
-const SoundEditor = createErrorHandledLazyComponent(() => import('../components/editors/SoundEditor'), 'SoundEditor');
-const UIEditor = createErrorHandledLazyComponent(() => import('../components/editors/UIEditor'), 'UIEditor');
-const TerrainEditor = createErrorHandledLazyComponent(() => import('../components/editors/TerrainEditor'), 'TerrainEditor');
-const NavMeshEditor = createErrorHandledLazyComponent(() => import('../components/editors/NavMeshEditor'), 'NavMeshEditor');
-const PhysicsDebug = createErrorHandledLazyComponent(() => import('../components/editors/PhysicsDebug'), 'PhysicsDebug');
-const PrefabEditor = createErrorHandledLazyComponent(() => import('../components/editors/PrefabEditor'), 'PrefabEditor');
-const SkeletonEditor = createErrorHandledLazyComponent(() => import('../components/editors/SkeletonEditor'), 'SkeletonEditor');
-const BehaviorTreeEditor = createErrorHandledLazyComponent(() => import('../components/editors/BehaviorTree'), 'BehaviorTreeEditor');
-const FoliageEditor = createErrorHandledLazyComponent(() => import('../components/editors/FoliageEditor'), 'FoliageEditor');
+const LevelEditor =        createErrorHandledLazyComponent(() => import('../components/editors/Level/page'),        'LevelEditor');
+const ScriptEditor =       createErrorHandledLazyComponent(() => import('../components/ScriptEditor'),              'ScriptEditor');
+const BPEdit =             createErrorHandledLazyComponent(() => import('../components/BPEdit/page'),               'BlueprintEditor');
+const MaterialEditor =     createErrorHandledLazyComponent(() => import('../components/editors/Material/page'),     'MaterialEditor');
+const AnimationEditor =    createErrorHandledLazyComponent(() => import('../components/editors/Animation/page'),    'AnimationEditor');
+const ParticleSystem =     createErrorHandledLazyComponent(() => import('../components/editors/Particle/page'),     'ParticleEditor');
+const SoundEditor =        createErrorHandledLazyComponent(() => import('../components/editors/Sound/page'),        'SoundEditor');
+const UIEditor =           createErrorHandledLazyComponent(() => import('../components/editors/UI/page'),           'UIEditor');
+const TerrainEditor =      createErrorHandledLazyComponent(() => import('../components/editors/Terrain/page'),      'TerrainEditor');
+const NavMeshEditor =      createErrorHandledLazyComponent(() => import('../components/editors/NavMesh/page'),      'NavMeshEditor');
+const PhysicsDebug =       createErrorHandledLazyComponent(() => import('../components/editors/Physics/page'),      'PhysicsDebug');
+const PrefabEditor =       createErrorHandledLazyComponent(() => import('../components/editors/Prefab/page'),       'PrefabEditor');
+const SkeletonEditor =     createErrorHandledLazyComponent(() => import('../components/editors/Skeleton/page'),     'SkeletonEditor');
+const BehaviorTreeEditor = createErrorHandledLazyComponent(() => import('../components/editors/BehaviorTree/page'), 'BehaviorTreeEditor');
+const FoliageEditor =      createErrorHandledLazyComponent(() => import('../components/editors/Foliage/page'),      'FoliageEditor');
 
 interface EditorType {
-  type: string;
-  title: string;
   component: React.LazyExoticComponent<React.ComponentType<any>>;
-  icon?: React.ReactNode;
+  title:     string;
+  icon?:     React.ReactNode;
+  type:      string;
 }
 
 const EDITOR_TYPES: EditorType[] = [
