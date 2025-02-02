@@ -20,7 +20,20 @@ async fn main() {
 
     tauri::Builder::default()
         .setup(|app| {
-            let window = app.get_window("main").unwrap();
+            // Create the main window (for UI)
+            let main_window = app.get_window("main").unwrap();
+            
+            // Create a second window for rendering
+            let render_window = tauri::WindowBuilder::new(
+                app,
+                "render", // unique window label
+                tauri::WindowUrl::External(tauri::Url::parse("about:blank").unwrap()) // empty page
+            )
+            .title("Render Window")
+            .inner_size(800.0, 600.0)
+            .build()
+            .expect("Failed to create render window");
+
             let handle = app.handle();
             
             // Spawn the render thread
@@ -28,17 +41,16 @@ async fn main() {
                 let handle = handle.clone();
                 let runtime = tokio::runtime::Runtime::new().unwrap();
                 runtime.block_on(async {
-                    match WgpuContext::new(window.clone()).await {
+                    match WgpuContext::new(render_window.clone()).await {
                         Ok(ctx) => {
-                            // Create RenderState with named field
                             let handle = Box::leak(Box::new(handle));
                             handle.manage(RenderState {
                                 context: Arc::new(RwLock::new(Some(ctx)))
                             });
                             
-                            // Set up window handlers
+                            // Set up window handlers for the render window
                             let state = handle.state::<RenderState>();
-                            let window_clone = window.clone();
+                            let window_clone = render_window.clone();
                             window_clone.on_window_event(move |event| {
                                 if let tauri::WindowEvent::Resized(size) = event {
                                     if let Some(ctx) = state.context.write().as_mut() {
@@ -49,7 +61,7 @@ async fn main() {
 
                             // Set up render loop with fixed timestep
                             let state = handle.state::<RenderState>();
-                            let mut interval = interval(Duration::from_millis(16)); // ~60 FPS
+                            let mut interval = interval(Duration::from_millis(16));
                             
                             loop {
                                 interval.tick().await;
