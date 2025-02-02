@@ -1,17 +1,17 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
-import PropertiesPanel       from '@/components/panels/PropertiesPanel';
 import {DockablePanel}       from '@/components/DockablePanel/index';
-import Viewport              from '@/components/panels/Viewport';
 import {initialSceneObjects} from '@/components/types';
 import useCanvas             from '@/hooks/useCanvas';
+import PropertiesPanel       from './PropertiesPanel';
 import SceneHierarchy        from './SceneHierarchy';
+import Viewport              from './Viewport';
 
 interface PanelVisibility {
-  hierarchy: boolean;
-  properties: boolean;
-  console: boolean;
-  viewport: boolean;
+  properties:    boolean;
+  hierarchy:     boolean;
+  viewport:      boolean;
+  console:       boolean;
   [key: string]: boolean;
 }
 
@@ -21,26 +21,26 @@ interface PanelPosition {
 }
 
 interface PanelPositions {
-  hierarchy: PanelPosition;
-  properties: PanelPosition;
-  console: PanelPosition;
-  viewport: PanelPosition;
+  hierarchy:     PanelPosition;
+  properties:    PanelPosition;
+  console:       PanelPosition;
+  viewport:      PanelPosition;
   [key: string]: PanelPosition;
 }
 
 interface SceneObject {
-  id: string;
-  name: string;
-  type: string;
-  position: { x: number; y: number; z: number };
-  rotation: { x: number; y: number; z: number };
-  scale: { x: number; y: number; z: number };
+  id:            string;
+  name:          string;
+  type:          string;
+  position:      { x: number; y: number; z: number };
+  rotation:      { x: number; y: number; z: number };
+  scale:         { x: number; y: number; z: number };
   [key: string]: any;
 }
 
 interface ConsoleMessage {
-  type: string;
-  message: string;
+  type:      string;
+  message:   string;
   timestamp: string;
 }
 
@@ -50,14 +50,14 @@ const LevelEditor: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   
   // Core state management
-  const [sceneObjects, setSceneObjects] = useState<SceneObject[]>(initialSceneObjects);
-  const [selectedObject, setSelectedObject] = useState<SceneObject | null>(null);
-  const [activeTool, setActiveTool] = useState<string>('select');
-  const [isPlaying, setIsPlaying] = useState<boolean>(false);
-  const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [consoleMessages, setConsoleMessages] = useState<ConsoleMessage[]>([]);
-  const [fps, setFps] = useState<number>(1024);
-  const [isMaximized, setIsMaximized] = useState<boolean>(false);
+  const [selectedObject, setSelectedObject] =   useState<SceneObject | null>(null);
+  const [sceneObjects, setSceneObjects] =       useState<SceneObject[]>(initialSceneObjects);
+  const [isMaximized, setIsMaximized] =         useState<boolean>(false);
+  const [activeTool, setActiveTool] =           useState<string>('select');
+  const [activeMenu, setActiveMenu] =           useState<string | null>(null);
+  const [isPlaying] =                           useState<boolean>(false);
+  const [fps, setFps] =                         useState<number>(1024);
   
   // Panel visibility state
   const [visiblePanels, setVisiblePanels] = useState<PanelVisibility>({
@@ -69,10 +69,10 @@ const LevelEditor: React.FC = () => {
 
   // Panel positions state with percentage-based positioning
   const [panelPositions, setPanelPositions] = useState<PanelPositions>({
-    hierarchy: { x: 0, y: 40 },
+    hierarchy:  { x: 0, y: 40 },
     properties: { x: 0, y: 40 },
-    console: { x: 0, y: 40 },
-    viewport: { x: 250, y: 40 }
+    console:    { x: 0, y: 40 },
+    viewport:   { x: 250, y: 40 }
   });
   
   const { lastFrameTimeRef, renderScene } = useCanvas(sceneObjects, selectedObject);
@@ -237,58 +237,6 @@ const LevelEditor: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Keyboard shortcuts
-  // useEffect(() => {
-  //   const handleKeyDown = (e: KeyboardEvent) => {
-  //     if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
-  //       return;
-  //     }
-
-  //     if (e.ctrlKey || e.metaKey) {
-  //       switch (e.key.toLowerCase()) {
-  //         case 'n':
-  //           e.preventDefault();
-  //           handleMenuAction('new');
-  //           break;
-  //         case 's':
-  //           e.preventDefault();
-  //           handleMenuAction('save');
-  //           break;
-  //         case 'b':
-  //           e.preventDefault();
-  //           togglePanel('hierarchy');
-  //           break;
-  //         case 'p':
-  //           e.preventDefault();
-  //           togglePanel('properties');
-  //           break;
-  //         case '`':
-  //           e.preventDefault();
-  //           togglePanel('console');
-  //           break;
-  //       }
-  //     } else {
-  //       switch (e.key.toLowerCase()) {
-  //         case 'v':
-  //           handleToolChange('select');
-  //           break;
-  //         case 'w':
-  //           handleToolChange('move');
-  //           break;
-  //         case 'e':
-  //           handleToolChange('rotate');
-  //           break;
-  //         case 'r':
-  //           handleToolChange('scale');
-  //           break;
-  //       }
-  //     }
-  //   };
-
-  //   document.addEventListener('keydown', handleKeyDown);
-  //   return () => document.removeEventListener('keydown', handleKeyDown);
-  // }, [handleMenuAction, handleToolChange, togglePanel]);
-
   return (
     <div ref={containerRef} className="w-full h-full flex flex-col bg-gray-900 text-white">
       <div className="relative flex-1">
@@ -320,8 +268,7 @@ const LevelEditor: React.FC = () => {
               onMove={(pos) => handlePanelMove('viewport', pos)}
             >
               <div className="w-full h-full bg-black">
-                <Viewport
-                  initialTool={activeTool} onObjectSelect={undefined} onObjectHover={undefined} onViewportReady={undefined}                />
+                <Viewport/>
               </div>
             </DockablePanel>
           </div>
@@ -341,25 +288,6 @@ const LevelEditor: React.FC = () => {
             />
           </DockablePanel>
         </div>
-
-        {/* <div className="absolute inset-x-0 bottom-0">
-          <DockablePanel
-            id="console"
-            title="Console"
-            isVisible={visiblePanels.console}
-            onClose={() => togglePanel('console')}
-            defaultDock="bottom"
-            defaultSize={{ width: '100%', height: 200 }}
-            onMove={(pos) => handlePanelMove('console', pos)}
-          >
-            <Console
-              isVisible={visiblePanels.console}
-              messages={consoleMessages}
-              onClear={() => setConsoleMessages([])}
-              onHide={() => togglePanel('console')}
-            />
-          </DockablePanel>
-        </div> */}
       </div>
     </div>
   );

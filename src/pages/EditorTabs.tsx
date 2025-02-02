@@ -33,21 +33,21 @@ const createErrorHandledLazyComponent = (importFn: () => Promise<any>, component
   );
 };
 
-const LevelEditor =        createErrorHandledLazyComponent(() => import('../components/editors/Level/page'),        'LevelEditor');
-const ScriptEditor =       createErrorHandledLazyComponent(() => import('../components/editors/Script/page'),       'ScriptEditor');
-const BPEdit =             createErrorHandledLazyComponent(() => import('../components/BPEdit/page'),               'BlueprintEditor');
-const MaterialEditor =     createErrorHandledLazyComponent(() => import('../components/editors/Material/page'),     'MaterialEditor');
+const BehaviorTreeEditor = createErrorHandledLazyComponent(() => import('../components/editors/BehaviorTree/page'), 'BehaviorTreeEditor');
+const BPEdit =             createErrorHandledLazyComponent(() => import('../components/editors/Blueprint/page'),    'BlueprintEditor');
 const AnimationEditor =    createErrorHandledLazyComponent(() => import('../components/editors/Animation/page'),    'AnimationEditor');
 const ParticleSystem =     createErrorHandledLazyComponent(() => import('../components/editors/Particle/page'),     'ParticleEditor');
-const SoundEditor =        createErrorHandledLazyComponent(() => import('../components/editors/Sound/page'),        'SoundEditor');
-const UIEditor =           createErrorHandledLazyComponent(() => import('../components/editors/UI/page'),           'UIEditor');
+const MaterialEditor =     createErrorHandledLazyComponent(() => import('../components/editors/Material/page'),     'MaterialEditor');
+const SkeletonEditor =     createErrorHandledLazyComponent(() => import('../components/editors/Skeleton/page'),     'SkeletonEditor');
 const TerrainEditor =      createErrorHandledLazyComponent(() => import('../components/editors/Terrain/page'),      'TerrainEditor');
 const NavMeshEditor =      createErrorHandledLazyComponent(() => import('../components/editors/NavMesh/page'),      'NavMeshEditor');
 const PhysicsDebug =       createErrorHandledLazyComponent(() => import('../components/editors/Physics/page'),      'PhysicsDebug');
-const PrefabEditor =       createErrorHandledLazyComponent(() => import('../components/editors/Prefab/page'),       'PrefabEditor');
-const SkeletonEditor =     createErrorHandledLazyComponent(() => import('../components/editors/Skeleton/page'),     'SkeletonEditor');
-const BehaviorTreeEditor = createErrorHandledLazyComponent(() => import('../components/editors/BehaviorTree/page'), 'BehaviorTreeEditor');
 const FoliageEditor =      createErrorHandledLazyComponent(() => import('../components/editors/Foliage/page'),      'FoliageEditor');
+const PrefabEditor =       createErrorHandledLazyComponent(() => import('../components/editors/Prefab/page'),       'PrefabEditor');
+const ScriptEditor =       createErrorHandledLazyComponent(() => import('../components/editors/Script/page'),       'ScriptEditor');
+const SoundEditor =        createErrorHandledLazyComponent(() => import('../components/editors/Sound/page'),        'SoundEditor');
+const LevelEditor =        createErrorHandledLazyComponent(() => import('../components/editors/Level/page'),        'LevelEditor');
+const UIEditor =           createErrorHandledLazyComponent(() => import('../components/editors/UI/page'),           'UIEditor');
 
 interface EditorType {
   component: React.LazyExoticComponent<React.ComponentType<any>>;
@@ -57,21 +57,21 @@ interface EditorType {
 }
 
 const EDITOR_TYPES: EditorType[] = [
-  { type: 'level', title: 'Level Editor', component: LevelEditor },
-  { type: 'script', title: 'Script Editor', component: ScriptEditor },
-  { type: 'blueprint', title: 'Blueprint Editor', component: BPEdit },
-  { type: 'material', title: 'Material Editor', component: MaterialEditor },
-  { type: 'animation', title: 'Animation Editor', component: AnimationEditor },
-  { type: 'particle', title: 'Particle System', component: ParticleSystem },
-  { type: 'sound', title: 'Sound Editor', component: SoundEditor },
-  { type: 'ui', title: 'UI Editor', component: UIEditor },
-  { type: 'terrain', title: 'Terrain Editor', component: TerrainEditor },
-  { type: 'navmesh', title: 'Navigation Mesh', component: NavMeshEditor },
-  { type: 'physics', title: 'Physics Debug', component: PhysicsDebug },
-  { type: 'prefab', title: 'Prefab Editor', component: PrefabEditor },
-  { type: 'skeleton', title: 'Skeleton Editor', component: SkeletonEditor },
-  { type: 'behavior', title: 'Behavior Tree Editor', component: BehaviorTreeEditor },
-  { type: 'foliage', title: 'Foliage Editor', component: FoliageEditor }
+  { type: 'level',     title: 'Level Editor',         component: LevelEditor },
+  { type: 'script',    title: 'Script Editor',        component: ScriptEditor },
+  { type: 'blueprint', title: 'Blueprint Editor',     component: BPEdit },
+  { type: 'material',  title: 'Material Editor',      component: MaterialEditor },
+  { type: 'animation', title: 'Animation Editor',     component: AnimationEditor },
+  { type: 'particle',  title: 'Particle System',      component: ParticleSystem },
+  { type: 'sound',     title: 'Sound Editor',         component: SoundEditor },
+  { type: 'terrain',   title: 'Terrain Editor',       component: TerrainEditor },
+  { type: 'navmesh',   title: 'Navigation Mesh',      component: NavMeshEditor },
+  { type: 'physics',   title: 'Physics Debug',        component: PhysicsDebug },
+  { type: 'prefab',    title: 'Prefab Editor',        component: PrefabEditor },
+  { type: 'skeleton',  title: 'Skeleton Editor',      component: SkeletonEditor },
+  { type: 'behavior',  title: 'Behavior Tree Editor', component: BehaviorTreeEditor },
+  { type: 'foliage',   title: 'Foliage Editor',       component: FoliageEditor },
+  { type: 'ui',        title: 'UI Editor',            component: UIEditor }
 ];
 
 interface Tab {
