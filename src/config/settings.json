@@ -1,0 +1,687 @@
+{
+    "categories": [
+      { "id": "display", "icon": "Monitor", "label": "Display" },
+      { "id": "graphics", "icon": "Palette", "label": "Graphics" },
+      { "id": "performance", "icon": "Cpu", "label": "Performance" },
+      { "id": "audio", "icon": "Volume2", "label": "Audio" },
+      { "id": "input", "icon": "Keyboard", "label": "Input" },
+      { "id": "game", "icon": "Gamepad", "label": "Game" },
+      { "id": "accessibility", "icon": "Accessibility", "label": "Accessibility" },
+      { "id": "language", "icon": "Globe", "label": "Language" },
+      { "id": "network", "icon": "Network", "label": "Network" },
+      { "id": "storage", "icon": "Database", "label": "Storage" },
+      { "id": "debug", "icon": "Terminal", "label": "Debug" }
+    ],
+    "settings": {
+      "display": {
+        "sections": [
+          {
+            "title": "Display Settings",
+            "settings": [
+              {
+                "type": "select",
+                "id": "resolution",
+                "label": "Resolution",
+                "defaultValue": "1920x1080",
+                "options": [
+                  { "value": "1280x720", "label": "1280x720" },
+                  { "value": "1366x768", "label": "1366x768" },
+                  { "value": "1600x900", "label": "1600x900" },
+                  { "value": "1920x1080", "label": "1920x1080" },
+                  { "value": "2560x1440", "label": "2560x1440" },
+                  { "value": "3440x1440", "label": "3440x1440" },
+                  { "value": "3840x2160", "label": "3840x2160" }
+                ]
+              },
+              {
+                "type": "select",
+                "id": "displayMode",
+                "label": "Display Mode",
+                "defaultValue": "fullscreen",
+                "options": [
+                  { "value": "windowed", "label": "Windowed" },
+                  { "value": "borderless", "label": "Borderless Windowed" },
+                  { "value": "fullscreen", "label": "Fullscreen" }
+                ]
+              },
+              {
+                "type": "select",
+                "id": "refreshRate",
+                "label": "Refresh Rate",
+                "defaultValue": "auto",
+                "options": [
+                  { "value": "auto", "label": "Automatic" },
+                  { "value": "60", "label": "60 Hz" },
+                  { "value": "75", "label": "75 Hz" },
+                  { "value": "120", "label": "120 Hz" },
+                  { "value": "144", "label": "144 Hz" },
+                  { "value": "165", "label": "165 Hz" },
+                  { "value": "240", "label": "240 Hz" }
+                ]
+              },
+              {
+                "type": "select",
+                "id": "monitor",
+                "label": "Display Output",
+                "defaultValue": "primary",
+                "options": [
+                  { "value": "primary", "label": "Primary Monitor" },
+                  { "value": "secondary", "label": "Secondary Monitor" }
+                ]
+              }
+            ]
+          },
+          {
+            "title": "HDR Settings",
+            "settings": [
+              {
+                "type": "switch",
+                "id": "hdrEnabled",
+                "label": "Enable HDR",
+                "defaultValue": false
+              },
+              {
+                "type": "slider",
+                "id": "hdrBrightness",
+                "label": "Peak Brightness",
+                "defaultValue": 1000,
+                "min": 100,
+                "max": 4000,
+                "step": 100,
+                "formatValue": "{value} nits"
+              },
+              {
+                "type": "slider",
+                "id": "hdrSaturation",
+                "label": "HDR Saturation",
+                "defaultValue": 50,
+                "min": 0,
+                "max": 100,
+                "step": 1
+              }
+            ]
+          }
+        ]
+      },
+      "graphics": {
+        "sections": [
+          {
+            "title": "Quality Presets",
+            "settings": [
+              {
+                "type": "select",
+                "id": "qualityPreset",
+                "label": "Quality Preset",
+                "defaultValue": "high",
+                "options": [
+                  { "value": "low", "label": "Low" },
+                  { "value": "medium", "label": "Medium" },
+                  { "value": "high", "label": "High" },
+                  { "value": "ultra", "label": "Ultra" },
+                  { "value": "custom", "label": "Custom" }
+                ]
+              },
+              {
+                "type": "switch",
+                "id": "dlss",
+                "label": "NVIDIA DLSS",
+                "defaultValue": true
+              },
+              {
+                "type": "select",
+                "id": "dlssMode",
+                "label": "DLSS Mode",
+                "defaultValue": "balanced",
+                "options": [
+                  { "value": "ultra-performance", "label": "Ultra Performance" },
+                  { "value": "performance", "label": "Performance" },
+                  { "value": "balanced", "label": "Balanced" },
+                  { "value": "quality", "label": "Quality" }
+                ]
+              },
+              {
+                "type": "switch",
+                "id": "fsr",
+                "label": "AMD FSR",
+                "defaultValue": false
+              }
+            ]
+          },
+          {
+            "title": "Post Processing",
+            "settings": [
+              {
+                "type": "select",
+                "id": "antiAliasing",
+                "label": "Anti-Aliasing",
+                "defaultValue": "taa",
+                "options": [
+                  { "value": "none", "label": "None" },
+                  { "value": "fxaa", "label": "FXAA" },
+                  { "value": "smaa", "label": "SMAA" },
+                  { "value": "taa", "label": "TAA" }
+                ]
+              },
+              {
+                "type": "select",
+                "id": "ambientOcclusion",
+                "label": "Ambient Occlusion",
+                "defaultValue": "ssao",
+                "options": [
+                  { "value": "none", "label": "None" },
+                  { "value": "ssao", "label": "SSAO" },
+                  { "value": "hbao", "label": "HBAO+" },
+                  { "value": "rtao", "label": "Ray Traced AO" }
+                ]
+              },
+              {
+                "type": "slider",
+                "id": "bloomIntensity",
+                "label": "Bloom Intensity",
+                "defaultValue": 50,
+                "min": 0,
+                "max": 100,
+                "step": 1
+              },
+              {
+                "type": "slider",
+                "id": "chromaticAberration",
+                "label": "Chromatic Aberration",
+                "defaultValue": 0,
+                "min": 0,
+                "max": 100,
+                "step": 1
+              },
+              {
+                "type": "switch",
+                "id": "motionBlur",
+                "label": "Motion Blur",
+                "defaultValue": true
+              },
+              {
+                "type": "slider",
+                "id": "motionBlurStrength",
+                "label": "Motion Blur Strength",
+                "defaultValue": 50,
+                "min": 0,
+                "max": 100,
+                "step": 1
+              }
+            ]
+          },
+          {
+            "title": "Ray Tracing",
+            "settings": [
+              {
+                "type": "switch",
+                "id": "rayTracingEnabled",
+                "label": "Enable Ray Tracing",
+                "defaultValue": false
+              },
+              {
+                "type": "select",
+                "id": "rayTracedShadows",
+                "label": "RT Shadows",
+                "defaultValue": "high",
+                "options": [
+                  { "value": "off", "label": "Off" },
+                  { "value": "medium", "label": "Medium" },
+                  { "value": "high", "label": "High" },
+                  { "value": "ultra", "label": "Ultra" }
+                ]
+              },
+              {
+                "type": "select",
+                "id": "rayTracedReflections",
+                "label": "RT Reflections",
+                "defaultValue": "high",
+                "options": [
+                  { "value": "off", "label": "Off" },
+                  { "value": "medium", "label": "Medium" },
+                  { "value": "high", "label": "High" },
+                  { "value": "ultra", "label": "Ultra" }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "performance": {
+        "sections": [
+          {
+            "title": "Frame Rate",
+            "settings": [
+              {
+                "type": "switch",
+                "id": "vsync",
+                "label": "V-Sync",
+                "defaultValue": false
+              },
+              {
+                "type": "switch",
+                "id": "adaptiveSync",
+                "label": "Adaptive Sync",
+                "defaultValue": true
+              },
+              {
+                "type": "select",
+                "id": "fpsLimit",
+                "label": "FPS Limit",
+                "defaultValue": "unlimited",
+                "options": [
+                  { "value": "30", "label": "30 FPS" },
+                  { "value": "60", "label": "60 FPS" },
+                  { "value": "120", "label": "120 FPS" },
+                  { "value": "144", "label": "144 FPS" },
+                  { "value": "240", "label": "240 FPS" },
+                  { "value": "unlimited", "label": "Unlimited" }
+                ]
+              }
+            ]
+          },
+          {
+            "title": "CPU",
+            "settings": [
+              {
+                "type": "select",
+                "id": "threadCount",
+                "label": "Thread Count",
+                "defaultValue": "auto",
+                "options": [
+                  { "value": "auto", "label": "Automatic" },
+                  { "value": "2", "label": "2 Threads" },
+                  { "value": "4", "label": "4 Threads" },
+                  { "value": "8", "label": "8 Threads" },
+                  { "value": "16", "label": "16 Threads" }
+                ]
+              },
+              {
+                "type": "switch",
+                "id": "asyncCompute",
+                "label": "Async Compute",
+                "defaultValue": true
+              }
+            ]
+          },
+          {
+            "title": "Memory",
+            "settings": [
+              {
+                "type": "select",
+                "id": "textureQuality",
+                "label": "Texture Quality",
+                "defaultValue": "high",
+                "options": [
+                  { "value": "low", "label": "Low" },
+                  { "value": "medium", "label": "Medium" },
+                  { "value": "high", "label": "High" },
+                  { "value": "ultra", "label": "Ultra" }
+                ]
+              },
+              {
+                "type": "slider",
+                "id": "textureStreamingBudget",
+                "label": "Texture Streaming Budget",
+                "defaultValue": 3000,
+                "min": 500,
+                "max": 8000,
+                "step": 500,
+                "unit": "MB"
+              }
+            ]
+          }
+        ]
+      },
+      "audio": {
+        "sections": [
+          {
+            "title": "Output",
+            "settings": [
+              {
+                "type": "select",
+                "id": "audioDevice",
+                "label": "Audio Device",
+                "defaultValue": "default",
+                "options": [
+                  { "value": "default", "label": "System Default" },
+                  { "value": "speakers", "label": "Speakers" },
+                  { "value": "headphones", "label": "Headphones" }
+                ]
+              },
+              {
+                "type": "select",
+                "id": "audioAPI",
+                "label": "Audio API",
+                "defaultValue": "auto",
+                "options": [
+                  { "value": "auto", "label": "Automatic" },
+                  { "value": "wasapi", "label": "WASAPI" },
+                  { "value": "directsound", "label": "DirectSound" },
+                  { "value": "openal", "label": "OpenAL" }
+                ]
+              }
+            ]
+          },
+          {
+            "title": "Volume Mixer",
+            "settings": [
+              {
+                "type": "slider",
+                "id": "masterVolume",
+                "label": "Master Volume",
+                "defaultValue": 100,
+                "min": 0,
+                "max": 100,
+                "step": 1
+              },
+              {
+                "type": "slider",
+                "id": "musicVolume",
+                "label": "Music Volume",
+                "defaultValue": 80,
+                "min": 0,
+                "max": 100,
+                "step": 1
+              },
+              {
+                "type": "slider",
+                "id": "sfxVolume",
+                "label": "Sound Effects",
+                "defaultValue": 90,
+                "min": 0,
+                "max": 100,
+                "step": 1
+              },
+              {
+                "type": "slider",
+                "id": "voiceVolume",
+                "label": "Voice Volume",
+                "defaultValue": 100,
+                "min": 0,
+                "max": 100,
+                "step": 1
+              }
+            ]
+          },
+          {
+            "title": "Advanced Audio",
+            "settings": [
+              {
+                "type": "switch",
+                "id": "spatialAudio",
+                "label": "Spatial Audio",
+                "defaultValue": true
+              },
+              {
+                "type": "select",
+                "id": "audioQuality",
+                "label": "Audio Quality",
+                "defaultValue": "high",
+                "options": [
+                  { "value": "low", "label": "Low (32kHz)" },
+                  { "value": "medium", "label": "Medium (44.1kHz)" },
+                  { "value": "high", "label": "High (48kHz)" },
+                  { "value": "ultra", "label": "Ultra (96kHz)" }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "input": {
+        "sections": [
+          {
+            "title": "Mouse Settings",
+            "settings": [
+              {
+                "type": "slider",
+                "id": "mouseSensitivity",
+                "label": "Mouse Sensitivity",
+                "defaultValue": 50,
+                "min": 1,
+                "max": 100,
+                "step": 1
+              },
+              {
+                "type": "select",
+                "id": "mousePollingRate",
+                "label": "Polling Rate",
+                "defaultValue": "1000",
+                "options": [
+                  { "value": "125", "label": "125 Hz" },
+                  { "value": "500", "label": "500 Hz" },
+                  { "value": "1000", "label": "1000 Hz" },
+                  { "value": "2000", "label": "2000 Hz" },
+                  { "value": "4000", "label": "4000 Hz" },
+                  { "value": "8000", "label": "8000 Hz" }
+                ]
+              },
+              {
+                "type": "switch",
+                "id": "rawInput",
+                "label": "Raw Input",
+                "defaultValue": true
+              },
+              {
+                "type": "switch",
+                "id": "mouseAcceleration",
+                "label": "Mouse Acceleration",
+                "defaultValue": false
+              }
+            ]
+          },
+          {
+            "title": "Keyboard Settings",
+            "settings": [
+              {
+                "type": "select",
+                "id": "keyboardLayout",
+                "label": "Keyboard Layout",
+                "defaultValue": "qwerty",
+                "options": [
+                  { "value": "qwerty", "label": "QWERTY" },
+                  { "value": "azerty", "label": "AZERTY" },
+                  { "value": "qwertz", "label": "QWERTZ" },
+                  { "value": "dvorak", "label": "Dvorak" }
+                ]
+              },
+              {
+                "type": "switch",
+                "id": "gamepadUI",
+                "label": "Show Gamepad UI",
+                "defaultValue": true
+              }
+            ]
+          },
+          {
+            "title": "Controller Settings",
+            "settings": [
+              {
+                "type": "select",
+                "id": "controllerLayout",
+                "label": "Controller Layout",
+                "defaultValue": "default",
+                "options": [
+                  { "value": "default", "label": "Default" },
+                  { "value": "alternate", "label": "Alternate" },
+                  { "value": "legacy", "label": "Legacy" },
+                  { "value": "custom", "label": "Custom" }
+                ]
+              },
+              {
+                "type": "slider",
+                "id": "controllerDeadzone",
+                "label": "Stick Deadzone",
+                "defaultValue": 20,
+                "min": 0,
+                "max": 50,
+                "step": 1
+              },
+              {
+                "type": "slider",
+                "id": "triggerDeadzone",
+                "label": "Trigger Deadzone",
+                "defaultValue": 10,
+                "min": 0,
+                "max": 50,
+                "step": 1
+              },
+              {
+                "type": "slider",
+                "id": "vibrationIntensity",
+                "label": "Vibration Intensity",
+                "defaultValue": 100,
+                "min": 0,
+                "max": 100,
+                "step": 5
+              }
+            ]
+          }
+        ]
+      },
+      "accessibility": {
+        "sections": [
+          {
+            "title": "Visual Assistance",
+            "settings": [
+              {
+                "type": "switch",
+                "id": "colorblindMode",
+                "label": "Colorblind Mode",
+                "defaultValue": false
+              },
+              {
+                "type": "select",
+                "id": "colorblindType",
+                "label": "Colorblind Type",
+                "defaultValue": "deuteranopia",
+                "options": [
+                  { "value": "protanopia", "label": "Protanopia" },
+                  { "value": "deuteranopia", "label": "Deuteranopia" },
+                  { "value": "tritanopia", "label": "Tritanopia" }
+                ]
+              },
+              {
+                "type": "slider",
+                "id": "subtitleSize",
+                "label": "Subtitle Size",
+                "defaultValue": 100,
+                "min": 50,
+                "max": 200,
+                "step": 10
+              },
+              {
+                "type": "select",
+                "id": "subtitleBackground",
+                "label": "Subtitle Background",
+                "defaultValue": "semi",
+                "options": [
+                  { "value": "none", "label": "None" },
+                  { "value": "semi", "label": "Semi-Transparent" },
+                  { "value": "full", "label": "Full" }
+                ]
+              }
+            ]
+          },
+          {
+            "title": "Audio Assistance",
+            "settings": [
+              {
+                "type": "switch",
+                "id": "monoAudio",
+                "label": "Mono Audio",
+                "defaultValue": false
+              },
+              {
+                "type": "switch",
+                "id": "visualAudioCues",
+                "label": "Visual Audio Cues",
+                "defaultValue": false
+              }
+            ]
+          },
+          {
+            "title": "Gameplay Assistance",
+            "settings": [
+              {
+                "type": "switch",
+                "id": "autoAim",
+                "label": "Auto Aim",
+                "defaultValue": false
+              },
+              {
+                "type": "switch",
+                "id": "holdButtonPrompts",
+                "label": "Hold Button Prompts",
+                "defaultValue": true
+              },
+              {
+                "type": "switch",
+                "id": "gameSpeed",
+                "label": "Adjustable Game Speed",
+                "defaultValue": false
+              }
+            ]
+          }
+        ]
+      },
+      "debug": {
+        "sections": [
+          {
+            "title": "Developer Tools",
+            "settings": [
+              {
+                "type": "switch",
+                "id": "showFps",
+                "label": "Show FPS Counter",
+                "defaultValue": false
+              },
+              {
+                "type": "switch",
+                "id": "showFrametime",
+                "label": "Show Frame Time",
+                "defaultValue": false
+              },
+              {
+                "type": "switch",
+                "id": "showGpuStats",
+                "label": "Show GPU Stats",
+                "defaultValue": false
+              },
+              {
+                "type": "switch",
+                "id": "showCpuStats",
+                "label": "Show CPU Stats",
+                "defaultValue": false
+              }
+            ]
+          },
+          {
+            "title": "Logging",
+            "settings": [
+              {
+                "type": "select",
+                "id": "logLevel",
+                "label": "Log Level",
+                "defaultValue": "error",
+                "options": [
+                  { "value": "off", "label": "Off" },
+                  { "value": "error", "label": "Error" },
+                  { "value": "warning", "label": "Warning" },
+                  { "value": "info", "label": "Info" },
+                  { "value": "debug", "label": "Debug" },
+                  { "value": "trace", "label": "Trace" }
+                ]
+              },
+              {
+                "type": "switch",
+                "id": "logToFile",
+                "label": "Log to File",
+                "defaultValue": true
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
