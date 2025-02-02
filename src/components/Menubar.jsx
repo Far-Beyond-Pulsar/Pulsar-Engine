@@ -1,4 +1,5 @@
 import React from 'react';
+import SettingsUI from './SettingsUI';
 
 const Menubar = ({ menus, activeMenu, onMenuClick, onMenuAction }) => (
   <div className="h-6 bg-black border-b border-blue-900/20 flex items-center px-2">
@@ -34,6 +35,7 @@ const Menubar = ({ menus, activeMenu, onMenuClick, onMenuAction }) => (
         )}
       </div>
     ))}
+    <SettingsUI />
   </div>
 );
 

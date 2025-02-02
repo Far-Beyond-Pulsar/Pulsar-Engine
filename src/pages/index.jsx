@@ -26,10 +26,10 @@ const GameEngineUI = () => {
 
   // Panel positions state with safe initial values
   const [panelPositions, setPanelPositions] = useState({
-    hierarchy: { x: 0, y: 40 },
     properties: { x: 0, y: 40 },
-    console: { x: 0, y: 40 },
-    viewport: { x: 250, y: 40 }
+    hierarchy:  { x: 0, y: 40 },
+    viewport:   { x: 250, y: 40 },
+    console:    { x: 0, y: 40 },
   });
 
   // Canvas references
@@ -40,12 +40,12 @@ const GameEngineUI = () => {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       setPanelPositions({
-        hierarchy: { x: 0, y: 40 },
         properties: { x: window.innerWidth - 300, y: 40 },
-        console: { x: 0, y: window.innerHeight - 200 },
-        viewport: { x: 250, y: 40 }
+        console:    { x: 0, y: window.innerHeight - 200 },
+        viewport:   { x: 250, y: 40 },
+        hierarchy:  { x: 0, y: 40 }
       });
-    }
+      }
   }, []);
 
   // Window resize handler
