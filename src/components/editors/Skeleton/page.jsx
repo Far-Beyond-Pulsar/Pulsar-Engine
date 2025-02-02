@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ScrollArea } from "@/components/ScrollArea";
+import { ScrollArea } from "@/components/shared/ScrollArea";
 import { Layers, Tree, Leaf, Sparkles, Plus, Minus } from 'lucide-react';
 
 export const CharacterSetupEditor = () => {

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ScrollArea } from "@/components/ScrollArea";
+import { ScrollArea } from "@/components/shared/ScrollArea";
 import { X, Save, Plus, Link } from 'lucide-react';
 
 type NodeType = 'sequence' | 'selector' | 'condition' | 'action';

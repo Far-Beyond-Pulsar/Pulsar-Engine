@@ -34,7 +34,7 @@ const createErrorHandledLazyComponent = (importFn: () => Promise<any>, component
 };
 
 const LevelEditor =        createErrorHandledLazyComponent(() => import('../components/editors/Level/page'),        'LevelEditor');
-const ScriptEditor =       createErrorHandledLazyComponent(() => import('../components/ScriptEditor'),              'ScriptEditor');
+const ScriptEditor =       createErrorHandledLazyComponent(() => import('../components/editors/Script/page'),       'ScriptEditor');
 const BPEdit =             createErrorHandledLazyComponent(() => import('../components/BPEdit/page'),               'BlueprintEditor');
 const MaterialEditor =     createErrorHandledLazyComponent(() => import('../components/editors/Material/page'),     'MaterialEditor');
 const AnimationEditor =    createErrorHandledLazyComponent(() => import('../components/editors/Animation/page'),    'AnimationEditor');

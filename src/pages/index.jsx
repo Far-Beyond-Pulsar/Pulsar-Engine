@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import Titlebar from "../components/Titlebar";
-import Menubar from '../components/Menubar';
+import Titlebar from  "../components/Titlebar";
+import Menubar from   '../components/Menubar';
 import useCanvas from '../hooks/useCanvas';
 import { initialSceneObjects, menus } from '../components/types';
 import EditorTabs from './EditorTabs';

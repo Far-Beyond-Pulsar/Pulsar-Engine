@@ -3,14 +3,12 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { 
-  Save, Files, Search, Settings, Plus,
+  Save, Search, Settings, Plus,
   ChevronRight, ChevronDown,
   FileCode, Folder, FolderOpen,
   X, Check, AlertCircle, Trash2,
-  FileDown, RefreshCw, FolderInput,
-  PanelLeft, Maximize2, Minimize2,
-  Terminal, Image, Box, File, ChevronsLeft,
-  MoreVertical, Copy, Edit, Download
+  RefreshCw, FolderInput, Terminal,
+  Image, Box, MoreVertical
 } from 'lucide-react';
 
 import {
@@ -19,7 +17,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/Dialog";
+} from "@/components/shared/Dialog";
 
 import {
   AlertDialog,
@@ -30,7 +28,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/AlertDialog";
+} from "@/components/shared/AlertDialog";
 
 import {
   DropdownMenu,
@@ -39,7 +37,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/DropdownMenu";
+} from "@/components/shared/DropdownMenu";
 
 // Dynamic imports for better performance
 const MonacoEditor = dynamic(
@@ -63,37 +61,37 @@ const is3DFile = (filename) => /\.(glb|gltf|obj|fbx|stl)$/i.test(filename);
 const getFileLanguage = (filename) => {
   const ext = filename.split('.').pop().toLowerCase();
   const languageMap = {
-    js: 'javascript',
-    jsx: 'javascript',
-    ts: 'typescript',
-    tsx: 'typescript',
-    py: 'python',
-    html: 'html',
-    css: 'css',
-    json: 'json',
-    md: 'markdown',
-    sql: 'sql',
-    rs: 'rust',
-    go: 'go',
-    java: 'java',
-    cpp: 'cpp',
-    c: 'c',
-    cs: 'csharp',
-    php: 'php',
-    rb: 'ruby',
-    swift: 'swift',
-    kt: 'kotlin',
-    dart: 'dart',
-    yaml: 'yaml',
-    yml: 'yaml',
-    xml: 'xml',
-    sh: 'shell',
-    bash: 'shell',
-    zsh: 'shell',
-    vue: 'vue',
-    svelte: 'svelte',
+    js:      'javascript',
+    jsx:     'javascript',
+    ts:      'typescript',
+    tsx:     'typescript',
+    py:      'python',
+    html:    'html',
+    css:     'css',
+    json:    'json',
+    md:      'markdown',
+    sql:     'sql',
+    rs:      'rust',
+    go:      'go',
+    java:    'java',
+    cpp:     'cpp',
+    c:       'c',
+    cs:      'csharp',
+    php:     'php',
+    rb:      'ruby',
+    swift:   'swift',
+    kt:      'kotlin',
+    dart:    'dart',
+    yaml:    'yaml',
+    yml:     'yaml',
+    xml:     'xml',
+    sh:      'shell',
+    bash:    'shell',
+    zsh:     'shell',
+    vue:     'vue',
+    svelte:  'svelte',
     graphql: 'graphql',
-    proto: 'protobuf'
+    proto:   'protobuf'
   };
   return languageMap[ext] || 'plaintext';
 };
@@ -181,27 +179,25 @@ const MediaViewer = ({ file }) => {
 // Main component
 const Quasar = () => {
   // State management
-  const [isMaximized, setIsMaximized] = useState(false);
   const [isSidebarVisible, setSidebarVisible] = useState(true);
   const [isTerminalVisible, setTerminalVisible] = useState(false);
   const [sidebarWidth, setSidebarWidth] = useState(260);
   const [isResizing, setIsResizing] = useState(false);
   
   // File state
+  const minimap = useState(true);
+  const fileHandles = useState(new Map());
   const [files, setFiles] = useState([]);
   const [openTabs, setOpenTabs] = useState([]);
   const [activeTab, setActiveTab] = useState(null);
-  const [minimap, setMinimap] = useState(true);
   const [consoleOutput, setConsoleOutput] = useState([]);
   const [cursorPosition, setCursorPosition] = useState({ line: 1, column: 1 });
   const [loadError, setLoadError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [fileHandles, setFileHandles] = useState(new Map());
   
   // Search state
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
-  const [searchResults, setSearchResults] = useState([]);
   
   // Dialog state
   const [showNewFileDialog, setShowNewFileDialog] = useState(false);
@@ -222,7 +218,6 @@ const Quasar = () => {
   const editorRef = useRef(null);
   const monacoRef = useRef(null);
   const sidebarRef = useRef(null);
-  const resizeRef = useRef(null);
 
   // Handle window resizing
   useEffect(() => {
@@ -622,25 +617,25 @@ const Quasar = () => {
       base: 'vs-dark',
       inherit: true,
       rules: [
-        { token: 'comment', foreground: '6A9955' },
-        { token: 'keyword', foreground: '569CD6' },
-        { token: 'string', foreground: 'CE9178' },
-        { token: 'number', foreground: 'B5CEA8' },
-        { token: 'regexp', foreground: 'D16969' },
-        { token: 'type', foreground: '4EC9B0' },
-        { token: 'class', foreground: '4EC9B0' },
+        { token: 'comment',  foreground: '6A9955' },
+        { token: 'keyword',  foreground: '569CD6' },
+        { token: 'string',   foreground: 'CE9178' },
+        { token: 'number',   foreground: 'B5CEA8' },
+        { token: 'regexp',   foreground: 'D16969' },
+        { token: 'type',     foreground: '4EC9B0' },
+        { token: 'class',    foreground: '4EC9B0' },
         { token: 'function', foreground: 'DCDCAA' },
         { token: 'variable', foreground: '9CDCFE' },
         { token: 'constant', foreground: '4FC1FF' }
       ],
       colors: {
-        'editor.background': '#000000',
-        'editor.foreground': '#D4D4D4',
-        'editor.lineHighlightBackground': '#1073CF2D',
-        'editor.lineHighlightBorder': '#1073CF2D',
-        'editor.selectionBackground': '#264F78',
+        'editor.background':                   '#000000',
+        'editor.foreground':                   '#D4D4D4',
+        'editor.lineHighlightBorder':          '#1073CF2D',
+        'editor.selectionBackground':          '#264F78',
+        'editor.findMatchBackground':          '#515C6A',
+        'editor.lineHighlightBackground':      '#1073CF2D',
         'editor.selectionHighlightBackground': '#2B384D',
-        'editor.findMatchBackground': '#515C6A',
         'editor.findMatchHighlightBackground': '#314365'
       }
     });
