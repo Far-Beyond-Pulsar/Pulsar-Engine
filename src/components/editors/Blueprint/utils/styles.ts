@@ -1,4 +1,4 @@
-import styled from 'styled-components';
+import styled, { createGlobalStyle } from 'styled-components';
 
 // Layout Styles
 export const Layout = styled.div`
@@ -131,7 +131,7 @@ export const THEME = {
 };
 
 // Global Styles
-export const GlobalStyles = styled.createGlobalStyle`
+export const GlobalStyles = createGlobalStyle`
   body {
     background-color: ${THEME.colors.background.dark};
     color: ${THEME.colors.text.primary};

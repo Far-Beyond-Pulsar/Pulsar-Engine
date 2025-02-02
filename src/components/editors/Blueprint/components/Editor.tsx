@@ -158,3 +158,5 @@ import React, {
     }
     return context;
   };
+
+  export default NodeEditorProvider;

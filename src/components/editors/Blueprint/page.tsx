@@ -1,51 +1,63 @@
-// Main Editor Export
-export { Editor } from './components/Editor';
+import dynamic from 'next/dynamic';
+import type { ComponentType } from 'react';
+import type { LoaderComponent } from 'next/dynamic';
 
-// Components
-export { UnrealNode } from './components/UnrealNode';
-export { NodeDetailsPanel } from './components/NodeDetailsPanel';
-import { NodeEditorContext } from './components/Editor';
+// Define proper types for dynamic imports
+type DynamicImportType<T> = Promise<{ default: ComponentType<T> }>;
 
-// Context
-/**
- * @module NodeEditor
- * @description Exports core functionality for the Node Editor component
- * 
- * @exports NodeEditorContext - Context object for the Node Editor
- * @exports NodeEditorProvider - Provider component that wraps the Node Editor functionality
- * @exports useNodeEditor - Custom hook to access Node Editor context
- * @exports NodeEditorContextType - Type definition for the Node Editor context
- * @exports ExtendedNode - Type definition for nodes with additional properties
- * @exports NodeHighlightGroup - Type definition for node highlighting groups
- * 
- * @example
- * import { NodeEditorProvider, useNodeEditor } from './context/NodeEditorContext';
- * 
- * // Wrap your component with the provider
- * <NodeEditorProvider>
- *   <YourComponent />
- * </NodeEditorProvider>
- * 
- * // Use the context in your components
- * const { nodes, edges } = useNodeEditor();
- */
-export { 
-  NodeEditorContext, 
-  NodeEditorProvider,
-  useNodeEditor,
-  type NodeEditorContextType,
-  type ExtendedNode,
-  type NodeHighlightGroup
+// Explicitly handle each dynamic import with proper types
+export const Editor = dynamic<{}>(
+  () => import('./components/Editor').then((mod) => mod.default),
+  {
+    loading: () => <div>Loading editor...</div>,
+    ssr: false
+  }
+);
+
+export const UnrealNode = dynamic<{}>(
+  () => import('./components/UnrealNode').then((mod) => mod.default),
+  {
+    loading: () => <div>Loading node...</div>,
+    ssr: false
+  }
+);
+
+export const NodeDetailsPanel = dynamic<{}>(
+  () => import('./components/NodeDetailsPanel').then((mod) => mod.default),
+  {
+    loading: () => <div>Loading details panel...</div>,
+    ssr: false
+  }
+);
+
+export const NodeEditorProvider = dynamic<{}>(
+  () => import('./context/NodeEditorContext').then((mod) => mod.NodeEditorProvider),
+  {
+    loading: () => <div>Loading editor context...</div>,
+    ssr: false
+  }
+);
+
+// Export hooks and utilities
+export { useNodeEditor } from './context/NodeEditorContext';
+
+// Export types
+export type { 
+  NodeEditorContextType,
+  ExtendedNode,
+  NodeHighlightGroup
 } from './context/NodeEditorContext';
 
-// Hooks
+// Re-export hook from hooks directory
 export { useNodeEditor as useNodeEditorHook } from './hooks/useNodeEditor';
 
-// Utilities
+// Export node configurations
 export { NODE_CONFIGS } from './utils/nodeConfigs';
-export { generateRustCode } from './utils/codeGenerator';
 
-// Styles
+// Export code generator
+export { CodeGenerator as generateRustCode } from './utils/codeGenerator';
+
+// Export styles and components
 export { 
   Layout, 
   EditorWrapper, 
@@ -57,10 +69,6 @@ export {
   Typography
 } from './utils/styles';
 
-// Types
-export type { 
-  NodeEditorState,
-  NodeEditAction,
-  Node,
-  Edge
-} from './types';
+// Export types
+export type { NodeEditorState, NodeEditAction } from './types';
+export type { Node, Edge } from 'reactflow';
