@@ -5,7 +5,7 @@ use std::{
 };
 use crossbeam_channel::Receiver;
 use log::debug;
-use super::state::{ViewportConfig, ViewportCommand};
+use super::state::ViewportCommand;
 use crate::viewport::vulkan::VulkanState;
 use parking_lot::RwLock;
 
@@ -44,7 +44,7 @@ impl RenderLoop {
                     // Render frame
                 }
 
-                thread::sleep(Duration::from_millis(16));
+                thread::sleep(Duration::from_millis(0)); // todo: If we want to limit framerate we will do that here
             }
         })
     }
