@@ -1,5 +1,5 @@
 // Node type configurations for Blueprint editor
-export const NODE_CONFIGS = {
+const NODE_CONFIGS = {
   // Variable Node Configuration
   Variable: {
     fields: {
@@ -128,3 +128,5 @@ export const NODE_CONFIGS = {
     }
   }
 };
+
+export default NODE_CONFIGS;

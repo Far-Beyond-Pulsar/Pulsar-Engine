@@ -7,7 +7,7 @@ import React, {
     useContext
   } from 'react';
   import { Node, Edge } from 'reactflow';
-  import { NODE_CONFIGS } from '../utils/nodeConfigs';
+  import NODE_CONFIGS from '../utils/nodeConfigs';
   
   // Types
   export interface ExtendedNode extends Node {
@@ -224,11 +224,4 @@ import React, {
       throw new Error('useNodeEditor must be used within a NodeEditorProvider');
     }
     return context;
-  };
-  
-  // Export types for external use
-  export type { 
-    ExtendedNode, 
-    NodeHighlightGroup, 
-    NodeEditorContextType 
   };

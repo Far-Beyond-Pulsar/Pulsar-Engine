@@ -3,7 +3,7 @@ import { Handle, Position, NodeProps } from 'reactflow';
 import styled from 'styled-components';
 import { Menu, Item, useContextMenu } from 'react-contexify';
 
-import { NODE_CONFIGS } from '../utils/nodeConfigs';
+import NODE_CONFIGS from '../utils/nodeConfigs';
 import { useNodeEditor } from '../context/NodeEditorContext';
 
 const StyledNode = styled.div`
@@ -62,7 +62,7 @@ export const UnrealNode: React.FC<NodeProps> = ({ id, data, selected }) => {
         <div className="node-type">{data.label}</div>
         
         {/* Input Handles */}
-        {config.handles.inputs.map((handle, index) => (
+        {config.handles.inputs.map((handle: string | undefined, index: number) => (
           <Handle
             key={`input-${handle}`}
             type="target"
@@ -79,7 +79,7 @@ export const UnrealNode: React.FC<NodeProps> = ({ id, data, selected }) => {
         ))}
         
         {/* Output Handles */}
-        {config.handles.outputs.map((handle, index) => (
+        {config.handles.outputs.map((handle: string | undefined, index: number) => (
           <Handle
             key={`output-${handle}`}
             type="source"

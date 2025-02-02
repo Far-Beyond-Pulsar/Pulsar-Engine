@@ -1,5 +1,4 @@
 import { Node, Edge } from 'reactflow';
-import { NODE_CONFIGS } from './nodeConfigs';
 
 // Types for code generation
 interface NodeConnections {

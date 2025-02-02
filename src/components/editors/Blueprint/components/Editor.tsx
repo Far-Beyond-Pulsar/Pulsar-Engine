@@ -6,7 +6,9 @@ import React, {
     ReactNode 
   } from 'react';
   import { Node, Edge } from 'reactflow';
+  import NODE_CONFIGS from '../utils/nodeConfigs';
   
+
   // Define the shape of the context
   interface NodeEditorContextType {
     nodes: Node[];

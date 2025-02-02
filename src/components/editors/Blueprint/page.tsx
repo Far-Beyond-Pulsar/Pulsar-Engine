@@ -1,42 +1,66 @@
 import dynamic from 'next/dynamic';
 import type { ComponentType } from 'react';
-import type { LoaderComponent } from 'next/dynamic';
+import type { NodeProps } from 'reactflow';
 
-// Define proper types for dynamic imports
-type DynamicImportType<T> = Promise<{ default: ComponentType<T> }>;
+// Define proper types for component props
+interface NodeDetailsPanelProps {
+  selectedNode: any;
+  onUpdateNode: (nodeId: string, newData: any) => void;
+  setSelectedNode: (node: any | null) => void;
+}
 
-// Explicitly handle each dynamic import with proper types
-export const Editor = dynamic<{}>(
-  () => import('./components/Editor').then((mod) => mod.default),
+// Dynamic imports with proper promise resolution and type checking
+const Editor = dynamic(
+  () => import('./components/Editor').then((mod) => {
+    if (!mod.default) throw new Error('No default export found in Editor');
+    return mod.default;
+  }),
   {
     loading: () => <div>Loading editor...</div>,
     ssr: false
   }
 );
 
-export const UnrealNode = dynamic<{}>(
-  () => import('./components/UnrealNode').then((mod) => mod.default),
+const UnrealNode = dynamic(
+  () => import('./components/UnrealNode').then((mod) => {
+    if (!mod.UnrealNode) throw new Error('No UnrealNode export found');
+    return mod.UnrealNode;
+  }),
   {
     loading: () => <div>Loading node...</div>,
     ssr: false
   }
 );
 
-export const NodeDetailsPanel = dynamic<{}>(
-  () => import('./components/NodeDetailsPanel').then((mod) => mod.default),
+const NodeDetailsPanel = dynamic(
+  () => import('./components/NodeDetailsPanel').then((mod) => {
+    if (!mod.NodeDetailsPanel) throw new Error('No NodeDetailsPanel export found');
+    return mod.NodeDetailsPanel;
+  }),
   {
     loading: () => <div>Loading details panel...</div>,
     ssr: false
   }
 );
 
-export const NodeEditorProvider = dynamic<{}>(
-  () => import('./context/NodeEditorContext').then((mod) => mod.NodeEditorProvider),
+const NodeEditorProvider = dynamic(
+  () => import('./context/NodeEditorContext').then((mod) => {
+    if (!mod.NodeEditorProvider) throw new Error('No NodeEditorProvider export found');
+    return mod.NodeEditorProvider;
+  }),
   {
     loading: () => <div>Loading editor context...</div>,
     ssr: false
   }
 );
+
+// Export components
+export {
+  Editor,
+  UnrealNode,
+  NodeDetailsPanel,
+  NodeEditorProvider
+};
 
 // Export hooks and utilities
 export { useNodeEditor } from './context/NodeEditorContext';
@@ -50,9 +74,6 @@ export type {
 
 // Re-export hook from hooks directory
 export { useNodeEditor as useNodeEditorHook } from './hooks/useNodeEditor';
-
-// Export node configurations
-export { NODE_CONFIGS } from './utils/nodeConfigs';
 
 // Export code generator
 export { CodeGenerator as generateRustCode } from './utils/codeGenerator';
