@@ -49,7 +49,7 @@ const PropertiesPanel = () => {
       <div className="p-4 h-[calc(100%-64px)]">
         <TabsContent value="properties" className="h-full mt-0">
           <ScrollArea className="h-full">
-            <Card>
+            <Card url={''} title={''} description={''}>
               <CardContent className="pt-6">
                 {selectedNode ? (
                   <div className="space-y-4">
@@ -193,17 +193,17 @@ const PropertiesPanel = () => {
               {validationErrors.length > 0 ? (
                 <div className="space-y-4">
                   {validationErrors.map((error, index) => (
-                    <Alert key={index} variant="destructive">
-                      <AlertDescription>{error}</AlertDescription>
-                    </Alert>
+                    <div key={index}>
+                      {error.message}
+                    </div>
                   ))}
                 </div>
               ) : (
-                <Alert>
-                  <AlertDescription className="text-green-500">
-                    No validation errors found
-                  </AlertDescription>
-                </Alert>
+                <div>
+                  <div className="text-green-500">
+                  No validation errors found
+                  </div>
+                </div>
               )}
             </CardContent>
           </Card>

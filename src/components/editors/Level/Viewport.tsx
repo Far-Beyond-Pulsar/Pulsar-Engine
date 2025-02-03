@@ -16,7 +16,7 @@ type ViewportMode = typeof TOOLS[keyof typeof TOOLS];
 
 const Viewport = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [activeTool, setActiveTool] = useState(TOOLS.SELECT);
+  const [activeTool, setActiveTool] = useState<ViewportMode>(TOOLS.SELECT);
   const [isPlaying, setIsPlaying] = useState(true);
   const [showGrid, setShowGrid] = useState(true);
   const [showGizmos, setShowGizmos] = useState(true);

@@ -20,7 +20,7 @@ function generateRustCode(nodes: Node[], edges: Edge[]): string {
     });
     
     // Replace input placeholders with actual connected node outputs
-    def.pins.inputs?.forEach((input) => {
+    def.pins.inputs?.forEach((input: { name: string | null | undefined; }) => {
       const incomingEdge = edges.find(
         (edge) => edge.target === node.id && edge.targetHandle === input.name
       );

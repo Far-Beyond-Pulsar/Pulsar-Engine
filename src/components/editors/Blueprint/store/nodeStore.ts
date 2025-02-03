@@ -258,7 +258,7 @@ export const useNodeStore = create<NodeStoreState & NodeStoreActions>((set, get)
       const nodeErrors: string[] = [];
 
       // Validate required fields
-      Object.entries(def.fields).forEach(([fieldName, field]) => {
+      (Object.entries(def.fields) as [string, PulsarField][]).forEach(([fieldName, field]) => {
         if (field.required && !node.data.fields[fieldName]) {
           nodeErrors.push(`Field "${fieldName}" is required`);
         }
@@ -360,7 +360,7 @@ export const validateNodeConnections = (
   const def = node.data.nodeDefinition;
 
   // Check required inputs
-  def.pins.inputs?.forEach(input => {
+  def.pins.inputs?.forEach((input: { name: string | null | undefined; }) => {
     const hasConnection = edges.some(edge => 
       edge.target === node.id && edge.targetHandle === input.name
     );
@@ -376,8 +376,8 @@ export const validateNodeConnections = (
       const targetNode = edge.target === node.id ? node : undefined;
 
       if (sourceNode && targetNode) {
-        const sourcePin = def.pins.outputs?.find(p => p.name === edge.sourceHandle);
-        const targetPin = def.pins.inputs?.find(p => p.name === edge.targetHandle);
+        const sourcePin = def.pins.outputs?.find((p: { name: string | null | undefined; }) => p.name === edge.sourceHandle);
+        const targetPin = def.pins.inputs?.find((p: { name: string | null | undefined; }) => p.name === edge.targetHandle);
 
         if (sourcePin && targetPin && sourcePin.type !== targetPin.type) {
           errors.push(

@@ -18,8 +18,8 @@ const TYPE_COLORS = {
   default:   { color: '#6B7280', border: '#374151' }   // Gray
 };
 
-const getTypeColors = (type: string) => {
-  return TYPE_COLORS[type] || TYPE_COLORS.default;
+const getTypeColors = (type: keyof typeof TYPE_COLORS | string) => {
+  return TYPE_COLORS[type as keyof typeof TYPE_COLORS] || TYPE_COLORS.default;
 };
 
 interface PulsarNodeProps {

@@ -1,4 +1,4 @@
-import { IconType } from 'lucide-react';
+import { LucideIcon } from 'lucide-react';
 
 // Base properties for all UI elements
 export interface BaseUIElement {
@@ -56,7 +56,7 @@ export type UIElement =
 // Element Type Configuration
 export interface ElementTypeConfig {
   name: string;
-  icon: IconType;
+  icon: LucideIcon;
   defaultProps: Partial<UIElement>;
 }
 

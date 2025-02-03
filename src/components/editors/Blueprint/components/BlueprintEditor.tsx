@@ -1,6 +1,8 @@
-import ReactFlow, {MiniMap, Background, Controls,
+import ReactFlow, {
+  MiniMap, Background, Controls,
   Panel, MarkerType, applyNodeChanges, applyEdgeChanges,
-  addEdge, ConnectionMode, ReactFlowInstance, Node
+  addEdge, ConnectionMode, ReactFlowInstance, Node, Edge,
+  EdgeChange, Position
 } from 'reactflow';
 
 import React, { useState, useCallback, useEffect } from 'react';
@@ -12,14 +14,53 @@ import { useNodeStore } from '../store/nodeStore';
 import PulsarNode from './PulsarNode';
 import { generateRustCode } from '../lib/generateRust';
 import { Label } from '@/components/shared/Label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/shared/Select';
+import { 
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/shared/Select";
+
+
+// Type definitions
+interface FieldDefinition {
+  label: string;
+  type: 'text' | 'number' | 'select' | 'multiline';
+  description?: string;
+  default?: string | number;
+  options?: string[];
+}
+
+interface NodeDefinition {
+  name: string;
+  description: string;
+  fields: Record<string, FieldDefinition>;
+  pins: {
+    inputs?: Array<{ name: string; type: string }>;
+    outputs?: Array<{ name: string; type: string }>;
+  };
+}
+
+interface ContextMenu {
+  show: boolean;
+  x: number;
+  y: number;
+  position?: { x: number; y: number };
+  type: 'pane' | 'node';
+  nodeId?: string;
+}
 
 const nodeTypes = {
   pulsarNode: PulsarNode,
 };
 
 // Type-based edge styling
-const TYPE_COLORS = {
+type ColorTypes = 'i32' | 'i64' | 'f32' | 'f64' | 'any' | 'array' | 'object' | 'number' | 'string' | 'boolean' | 'default' | 'execution';
+
+const TYPE_COLORS: Record<ColorTypes, string> = {
   i32:       '#F59E0B',  // Amber
   i64:       '#F59E0B',  // Amber
   f32:       '#F59E0B',  // Amber
@@ -54,12 +95,11 @@ const getEdgeStyle = (sourceType: string) => ({
   animated: true,
   markerEnd: {
     type: MarkerType.ArrowClosed,
-    width: 20,
+    color: TYPE_COLORS[sourceType as ColorTypes] || TYPE_COLORS.default,
     height: 20,
-    color: TYPE_COLORS[sourceType] || TYPE_COLORS.default,
   },
   style: {
-    stroke: TYPE_COLORS[sourceType] || TYPE_COLORS.default,
+    stroke: TYPE_COLORS[sourceType as ColorTypes] || TYPE_COLORS.default,
     strokeWidth: 2,
   },
 });
@@ -68,18 +108,9 @@ const proOptions = {
   hideAttribution: true,
 };
 
-interface ContextMenu {
-  show: boolean;
-  x: number;
-  y: number;
-  position?: { x: number; y: number };
-  type: 'pane' | 'node';
-  nodeId?: string;
-}
-
 const BlueprintEditor = () => {
   const [nodes, setNodes] = useState<Node[]>([]);
-  const [edges, setEdges] = useState([]);
+  const [edges, setEdges] = useState<Edge[]>([]);
   const [contextMenu, setContextMenu] = useState<ContextMenu>({ 
     show: false, 
     x: 0, 
@@ -117,17 +148,17 @@ const BlueprintEditor = () => {
     loadNodeDefinitions();
   }, [loadDefinition]);
 
-  const onInit = useCallback((instance) => {
+  const onInit = useCallback((instance: ReactFlowInstance) => {
     setRfInstance(instance);
     instance.fitView();
   }, []);
 
-  const onNodesChange = useCallback((changes) => {
+  const onNodesChange = useCallback((changes: any[]) => {
     setNodes((nds) => {
       const newNodes = applyNodeChanges(changes, nds);
       
       // Handle selection changes
-      const selectionChange = changes.find(change => change.type === 'select');
+      const selectionChange = changes.find((change: { type: string; }) => change.type === 'select');
       if (selectionChange) {
         const node = newNodes.find(n => n.id === selectionChange.id);
         if (selectionChange.selected) {
@@ -141,20 +172,21 @@ const BlueprintEditor = () => {
     });
   }, [selectedNode]);
 
-  const onEdgesChange = useCallback((changes) => {
+  const onEdgesChange = useCallback((changes: EdgeChange[]) => {
     setEdges((eds) => applyEdgeChanges(changes, eds));
   }, []);
 
-  const onConnect = useCallback((params) => {
+  const onConnect = useCallback((params: any) => {
     // Find the source node and pin to determine the connection type
     const sourceNode = nodes.find(n => n.id === params.source);
     const sourcePin = sourceNode?.data.nodeDefinition.pins.outputs?.find(
-      p => p.name === params.sourceHandle
+      (p: { name: string }) => p.name === params.sourceHandle
     );
 
     if (sourceNode && sourcePin) {
       const edgeStyle = getEdgeStyle(sourcePin.type);
       const connection = {
+        id: `edge-${params.source}-${params.target}`,
         ...params,
         ...edgeStyle
       };
@@ -306,7 +338,7 @@ const BlueprintEditor = () => {
         />
 
         {/* Right Panel */}
-        <Panel position="right" className="w-96 h-full bg-black border-l border-neutral-800">
+        <Panel position="top-right" className="w-96 h-full bg-black border-l border-neutral-800">
           <div className="flex flex-col h-full">
             {/* Code Preview */}
             <div className="h-1/2 border-b border-neutral-800">
@@ -335,9 +367,9 @@ const BlueprintEditor = () => {
                     {selectedNode.data.nodeDefinition.description}
                   </p>
                   <div className="space-y-4">
-                    {Object.entries(selectedNode.data.nodeDefinition.fields).map(([fieldName, field]) => (
+                    {Object.entries(selectedNode.data.nodeDefinition.fields as Record<string, FieldDefinition>).map(([fieldName, field]) => (
                       <div key={fieldName}>
-                        <Label htmlFor={fieldName} className="text-neutral-300">
+                        <Label className="text-neutral-300">
                           {field.label}
                         </Label>
                         {field.type === 'select' ? (
@@ -349,11 +381,13 @@ const BlueprintEditor = () => {
                               <SelectValue placeholder={`Select ${field.label}`} />
                             </SelectTrigger>
                             <SelectContent>
-                              {field.options?.map((option) => (
-                                <SelectItem key={option} value={option}>
-                                  {option}
-                                </SelectItem>
-                              ))}
+                              <SelectGroup>
+                                {field.options?.map((option) => (
+                                  <SelectItem key={option} value={option}>
+                                    {option}
+                                  </SelectItem>
+                                ))}
+                              </SelectGroup>
                             </SelectContent>
                           </Select>
                         ) : field.type === 'multiline' ? (

@@ -5,7 +5,10 @@ import * as SliderPrimitive from "@radix-ui/react-slider"
 
 import { cn } from "@/lib/utils"
 
-const Slider = React.forwardRef(({ className, ...props }, ref) => (
+const Slider = React.forwardRef<
+  HTMLDivElement,
+  React.ComponentProps<typeof SliderPrimitive.Root>
+>(({ className, ...props }, ref) => (
   <SliderPrimitive.Root
     ref={ref}
     className={cn(

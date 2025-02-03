@@ -20,10 +20,8 @@ import {
     Trash2, 
     Copy, 
     Edit, 
-    BorderRadius, 
     Scaling, 
     Palette, 
-    Opacity, 
     Text, 
     TextCursor, 
     StickyNote 

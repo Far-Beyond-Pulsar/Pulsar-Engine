@@ -157,9 +157,9 @@ export const getConnectionColor = (type: string): string => {
     string: '#EC4899',     // Pink
     String: '#EC4899',
     default: '#6B7280'     // Gray
-  };
+  } as const;
 
-  return colors[type] || colors.default;
+  return colors[type as keyof typeof colors] || colors.default;
 };
 
 export const getPinLabel = (pin: PulsarPin): string => {
