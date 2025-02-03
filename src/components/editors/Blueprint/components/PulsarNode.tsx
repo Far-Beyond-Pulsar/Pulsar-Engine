@@ -4,18 +4,18 @@ import { Handle, Position } from 'reactflow';
 
 // Type color mapping
 const TYPE_COLORS = {
-  number: { color: '#F59E0B', border: '#B45309' },  // Amber
-  i32: { color: '#F59E0B', border: '#B45309' },     // Amber
-  i64: { color: '#F59E0B', border: '#B45309' },     // Amber
-  f32: { color: '#F59E0B', border: '#B45309' },     // Amber
-  f64: { color: '#F59E0B', border: '#B45309' },     // Amber
-  string: { color: '#EC4899', border: '#BE185D' },  // Pink
-  boolean: { color: '#3B82F6', border: '#1D4ED8' }, // Blue
-  any: { color: '#6B7280', border: '#374151' },     // Gray
-  array: { color: '#10B981', border: '#047857' },   // Emerald
-  object: { color: '#8B5CF6', border: '#6D28D9' },  // Purple
-  execution: { color: '#6366F1', border: '#4F46E5' }, // Indigo
-  default: { color: '#6B7280', border: '#374151' }   // Gray
+  number:    { color: '#F59E0B', border: '#B45309' },  // Amber
+  i32:       { color: '#F59E0B', border: '#B45309' },  // Amber
+  i64:       { color: '#F59E0B', border: '#B45309' },  // Amber
+  f32:       { color: '#F59E0B', border: '#B45309' },  // Amber
+  f64:       { color: '#F59E0B', border: '#B45309' },  // Amber
+  string:    { color: '#EC4899', border: '#BE185D' },  // Pink
+  boolean:   { color: '#3B82F6', border: '#1D4ED8' },  // Blue
+  any:       { color: '#6B7280', border: '#374151' },  // Gray
+  array:     { color: '#10B981', border: '#047857' },  // Emerald
+  object:    { color: '#8B5CF6', border: '#6D28D9' },  // Purple
+  execution: { color: '#6366F1', border: '#4F46E5' },  // Indigo
+  default:   { color: '#6B7280', border: '#374151' }   // Gray
 };
 
 const getTypeColors = (type: string) => {

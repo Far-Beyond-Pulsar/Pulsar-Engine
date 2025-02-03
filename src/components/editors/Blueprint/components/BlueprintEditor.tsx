@@ -1,21 +1,9 @@
-// components/BlueprintEditor.tsx
-import React, { useState, useCallback, useEffect } from 'react';
-import ReactFlow, {
-  MiniMap,
-  Background,
-  Controls,
-  Edge,
-  Connection,
-  useReactFlow,
-  Panel,
-  MarkerType,
-  applyNodeChanges,
-  applyEdgeChanges,
-  addEdge,
-  ConnectionMode,
-  ReactFlowInstance,
-  Node
+import ReactFlow, {MiniMap, Background, Controls,
+  Panel, MarkerType, applyNodeChanges, applyEdgeChanges,
+  addEdge, ConnectionMode, ReactFlowInstance, Node
 } from 'reactflow';
+
+import React, { useState, useCallback, useEffect } from 'react';
 import 'reactflow/dist/style.css';
 import Editor from '@monaco-editor/react';
 import { Input } from '@/components/shared/Input';
@@ -32,18 +20,18 @@ const nodeTypes = {
 
 // Type-based edge styling
 const TYPE_COLORS = {
-  number: '#F59E0B',  // Amber
-  i32: '#F59E0B',     // Amber
-  i64: '#F59E0B',     // Amber
-  f32: '#F59E0B',     // Amber
-  f64: '#F59E0B',     // Amber
-  string: '#EC4899',  // Pink
-  boolean: '#3B82F6', // Blue
-  any: '#6B7280',     // Gray
-  array: '#10B981',   // Emerald
-  object: '#8B5CF6',  // Purple
-  execution: '#6366F1', // Indigo
-  default: '#6B7280'   // Gray
+  i32:       '#F59E0B',  // Amber
+  i64:       '#F59E0B',  // Amber
+  f32:       '#F59E0B',  // Amber
+  f64:       '#F59E0B',  // Amber
+  any:       '#6B7280',  // neutral
+  array:     '#10B981',  // Emerald
+  object:    '#8B5CF6',  // Purple
+  number:    '#F59E0B',  // Amber
+  string:    '#EC4899',  // Pink
+  boolean:   '#3B82F6',  // Blue
+  default:   '#6B7280',  // neutral
+  execution: '#6366F1'   // Indigo
 };
 
 const defaultEdgeOptions = {
@@ -307,21 +295,21 @@ const BlueprintEditor = () => {
       >
         <Background color="#333" gap={16} />
         <Controls 
-          className="bg-gray-900 border border-gray-800 fill-gray-400"
+          className="bg-neutral-900 border border-neutral-800 fill-neutral-400"
           showInteractive={true}
           position="bottom-right"
         />
         <MiniMap
-          className="bg-gray-900 border border-gray-800"
+          className="bg-neutral-900 border border-neutral-800"
           nodeColor="#2563eb"
           position="bottom-left"
         />
 
         {/* Right Panel */}
-        <Panel position="right" className="w-96 h-full bg-black border-l border-gray-800">
+        <Panel position="right" className="w-96 h-full bg-black border-l border-neutral-800">
           <div className="flex flex-col h-full">
             {/* Code Preview */}
-            <div className="h-1/2 border-b border-gray-800">
+            <div className="h-1/2 border-b border-neutral-800">
               <Editor
                 height="100%"
                 defaultLanguage="rust"
@@ -343,13 +331,13 @@ const BlueprintEditor = () => {
                   <h3 className="text-lg font-semibold text-blue-400 mb-2">
                     {selectedNode.data.nodeDefinition.name}
                   </h3>
-                  <p className="text-sm text-gray-400 mb-4">
+                  <p className="text-sm text-neutral-400 mb-4">
                     {selectedNode.data.nodeDefinition.description}
                   </p>
                   <div className="space-y-4">
                     {Object.entries(selectedNode.data.nodeDefinition.fields).map(([fieldName, field]) => (
                       <div key={fieldName}>
-                        <Label htmlFor={fieldName} className="text-gray-300">
+                        <Label htmlFor={fieldName} className="text-neutral-300">
                           {field.label}
                         </Label>
                         {field.type === 'select' ? (
@@ -357,7 +345,7 @@ const BlueprintEditor = () => {
                             value={selectedNode.data.fields[fieldName] || ''}
                             onValueChange={(value) => updateNodeFields(selectedNode.id, fieldName, value)}
                           >
-                            <SelectTrigger className="w-full bg-gray-800 border-gray-700">
+                            <SelectTrigger className="w-full bg-neutral-800 border-neutral-700">
                               <SelectValue placeholder={`Select ${field.label}`} />
                             </SelectTrigger>
                             <SelectContent>
@@ -373,7 +361,7 @@ const BlueprintEditor = () => {
                             id={fieldName}
                             value={selectedNode.data.fields[fieldName] || ''}
                             onChange={(e) => updateNodeFields(selectedNode.id, fieldName, e.target.value)}
-                            className="w-full h-24 bg-gray-800 border border-gray-700 rounded-md p-2 text-gray-300"
+                            className="w-full h-24 bg-neutral-800 border border-neutral-700 rounded-md p-2 text-neutral-300"
                           />
                         ) : (
                           <Input
@@ -387,18 +375,18 @@ const BlueprintEditor = () => {
                                 updateNodeFields(selectedNode.id, fieldName, newValue);
                               });
                             }}
-                            className="bg-gray-800 border-gray-700 text-gray-300"
+                            className="bg-neutral-800 border-neutral-700 text-neutral-300"
                           />
                         )}
                         {field.description && (
-                          <p className="text-xs text-gray-500 mt-1">{field.description}</p>
+                          <p className="text-xs text-neutral-500 mt-1">{field.description}</p>
                         )}
                       </div>
                     ))}
                   </div>
                 </div>
               ) : (
-                <div className="p-4 text-gray-500 text-center">
+                <div className="p-4 text-neutral-500 text-center">
                   Select a node to view properties
                 </div>
               )}
@@ -416,10 +404,10 @@ const BlueprintEditor = () => {
               left: contextMenu.x,
               zIndex: 1000,
             }}
-            className="bg-gray-900 border border-gray-800 rounded-lg shadow-xl w-48"
+            className="bg-neutral-900 border border-neutral-800 rounded-lg shadow-xl w-48"
           >
             <button
-              className="w-full px-4 py-2 text-left hover:bg-gray-800 text-red-400 flex items-center gap-2"
+              className="w-full px-4 py-2 text-left hover:bg-neutral-800 text-red-400 flex items-center gap-2"
               onClick={() => contextMenu.nodeId && deleteNode(contextMenu.nodeId)}
             >
               <Trash2 className="h-4 w-4" />
@@ -437,16 +425,16 @@ const BlueprintEditor = () => {
               left: contextMenu.x,
               zIndex: 1000,
             }}
-            className="bg-gray-900 border border-gray-800 rounded-lg shadow-xl w-64"
+            className="bg-neutral-900 border border-neutral-800 rounded-lg shadow-xl w-64"
           >
-            <div className="p-2 border-b border-gray-800">
+            <div className="p-2 border-b border-neutral-800">
               <div className="relative">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-neutral-500" />
                 <Input
                   placeholder="Search nodes..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-8 bg-gray-800 border-gray-700"
+                  className="pl-8 bg-neutral-800 border-neutral-700"
                   autoFocus
                 />
                 {searchQuery && (
@@ -454,7 +442,7 @@ const BlueprintEditor = () => {
                     onClick={() => setSearchQuery('')}
                     className="absolute right-2 top-2.5"
                   >
-                    <X className="h-4 w-4 text-gray-500" />
+                    <X className="h-4 w-4 text-neutral-500" />
                   </button>
                 )}
               </div>
@@ -463,11 +451,11 @@ const BlueprintEditor = () => {
               {filteredDefinitions.map((def) => (
                 <button
                   key={def.name}
-                  className="w-full px-4 py-2 text-left hover:bg-gray-800 text-gray-300"
+                  className="w-full px-4 py-2 text-left hover:bg-neutral-800 text-neutral-300"
                   onClick={() => addNode(def.name)}
                 >
                   <div className="font-medium">{def.name}</div>
-                  <div className="text-xs text-gray-500">{def.description}</div>
+                  <div className="text-xs text-neutral-500">{def.description}</div>
                 </button>
               ))}
             </div>
