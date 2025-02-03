@@ -6,6 +6,7 @@ import { RefreshCw } from 'lucide-react';
  * Dynamic import of Monaco Editor with loading state
  * Uses Next.js dynamic import to prevent SSR issues
  */
+
 const MonacoEditor = dynamic(
   () => import('@monaco-editor/react'),
   { 
@@ -45,6 +46,7 @@ const MonacoEditor = dynamic(
  *   onChange={handleChange}
  * />
  */
+
 const MonacoWrapper = ({
   value,
   language,
@@ -58,31 +60,43 @@ const MonacoWrapper = ({
     <MonacoEditor
       value={value}
       defaultLanguage={language}
-      theme={theme}
+      theme="amoled"
+      onMount={(editor, monaco) => {
+        monaco.editor.defineTheme('amoled', {
+          base: 'vs-dark',
+          inherit: true,
+          rules: [],
+          colors: {
+            'editor.background': '#000000',
+            'editor.foreground': '#FFFFFF',
+            'editorLineNumber.foreground': '#666666',
+            'editor.selectionBackground': '#264F78',
+            'editor.inactiveSelectionBackground': '#1D3B5C',
+            'editor.lineHighlightBackground': '#111111',
+            'editorCursor.foreground': '#FFFFFF',
+            'editorWidget.background': '#000000',
+            'editorWidget.border': '#333333',
+            'editorSuggestWidget.background': '#000000',
+            'editorSuggestWidget.border': '#333333',
+            'list.hoverBackground': '#111111',
+          }
+        });
+        monaco.editor.setTheme('amoled');
+        if (onMount) onMount(editor, monaco);
+      }}
       options={{
-        // Font settings
         fontFamily: 'JetBrains Mono, monospace',
         fontSize: options?.fontSize || 14,
         lineHeight: 1.6,
-
-        // Editor features
         minimap: { enabled: options?.minimap ?? true },
         wordWrap: options?.wordWrap || 'on',
         tabSize: options?.tabSize || 2,
-        
-        // Cursor settings
         cursorBlinking: 'smooth',
         cursorSmoothCaretAnimation: true,
-        
-        // Scrolling behavior
         smoothScrolling: true,
-        scrollBeyondLastLine: false,
-        
-        // Layout
+        scrollBeyondLastLine: true,
         automaticLayout: true,
         padding: { top: 10 },
-        
-        // Visual aids
         lineNumbers: options?.lineNumbers || 'on',
         renderWhitespace: 'selection',
         bracketPairColorization: { enabled: true },
@@ -90,12 +104,9 @@ const MonacoWrapper = ({
           indentation: true,
           bracketPairs: true
         },
-        
-        // Merge additional options
         ...options,
       }}
       onChange={onChange}
-      onMount={onMount}
       {...props}
     />
   );
