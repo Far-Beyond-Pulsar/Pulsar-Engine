@@ -13,7 +13,7 @@ fields:
   fields:
     type: string
     label: Fields
-    description: Struct fields (field: type format, one per line)
+    description: Struct fields (field type format, one per line)
     required: true
 template: |
   struct {{name}} {
