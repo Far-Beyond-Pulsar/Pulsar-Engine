@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { Node, Edge } from 'reactflow';
 import { ExtendedNode, NodeHighlightGroup } from '../types';
-import { NODE_CONFIGS } from '../utils/nodeConfigs';
+import NODE_CONFIGS  from '../utils/nodeConfigs';
 
 export const useNodeEditor = () => {
   const [nodes, setNodes] = useState<ExtendedNode[]>([]);
@@ -112,7 +112,7 @@ export const useNodeEditor = () => {
           return [
             ...prevGroups,
             { 
-              id: `group_${prevGroups.length + 1}`, 
+              groupId: `group_${prevGroups.length + 1}`, 
               nodeIds: [nodeId] 
             }
           ];

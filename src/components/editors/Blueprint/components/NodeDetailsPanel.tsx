@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import { ExtendedNode } from '../types';
-import { NODE_CONFIGS } from '../utils/nodeConfigs';
+import NODE_CONFIGS from '../utils/nodeConfigs';
 
 const DetailsPanel = styled.div`
   grid-area: details;
