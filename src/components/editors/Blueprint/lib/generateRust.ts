@@ -95,7 +95,7 @@ function validateNodeFields(node: Node) {
   const { fields = {}, nodeDefinition } = node.data;
   if (!nodeDefinition.fields) return;
   
-  Object.entries(nodeDefinition.fields)
+  Object.entries(nodeDefinition.fields as Record<string, { optional?: boolean }>)
     .filter(([_, field]) => !field.optional)
     .forEach(([fieldName, field]) => {
       const value = fields[fieldName];
@@ -113,8 +113,8 @@ function validateEdgeTypes(edge: Edge, nodes: Node[]) {
     throw new CodeGenError('Invalid edge connection');
   }
 
-  const sourcePin = sourceNode.data.nodeDefinition.pins.outputs?.find(p => p.name === edge.sourceHandle);
-  const targetPin = targetNode.data.nodeDefinition.pins.inputs?.find(p => p.name === edge.targetHandle);
+  const sourcePin = sourceNode.data.nodeDefinition.pins.outputs?.find((p: { name: string | null | undefined; }) => p.name === edge.sourceHandle);
+  const targetPin = targetNode.data.nodeDefinition.pins.inputs?.find((p: { name: string | null | undefined; }) => p.name === edge.targetHandle);
 
   if (!sourcePin || !targetPin) {
     throw new CodeGenError('Invalid pin connection');
@@ -182,7 +182,7 @@ function processTemplate(template: string, data: Record<string, any>): string {
           '>=': leftVal >= rightVal,
           '==': leftVal == rightVal,
           '!=': leftVal != rightVal
-        }[operator];
+        }[operator as string] ?? false;
         
         return compareResult ? processIfBlock(content) : '';
       }
@@ -236,7 +236,7 @@ function generateNodeCode(
     if (value === '0') templateData[key] = 0;
   });
 
-  def.pins.inputs?.forEach(input => {
+  def.pins.inputs?.forEach((input: { name: string; type: string | number; }) => {
     const conn = connections.find(c => 
       c.targetNode.id === node.id && c.inputPin === input.name
     );

@@ -42,3 +42,143 @@ pins:
 template: |
   // {{comment}}
   {{a}} - {{b}}
+---
+name: SignalProcessorNode
+category: SignalProcessing
+description: Advanced signal processing node with multiple operations and controls
+fields:
+  mode:
+    type: enum
+    label: Processing Mode
+    description: The type of signal processing to apply
+    options:
+      - filter
+      - modulate
+      - combine
+      - analyze
+    required: true
+  windowSize:
+    type: number
+    label: Window Size
+    description: Size of the processing window in samples
+    default: 1024
+    required: false
+  debug:
+    type: boolean
+    label: Enable Debug
+    description: Output additional debug information
+    default: false
+    required: false
+pins:
+  inputs:
+    - name: mainSignal
+      type: number[]
+      description: Primary input signal to process
+    - name: amplitude
+      type: number
+      description: Amplitude scaling factor
+      default: 1.0
+    - name: frequency
+      type: number
+      description: Frequency for modulation operations
+      default: 440
+    - name: phase
+      type: number
+      description: Phase offset in radians
+      default: 0
+    - name: filterCutoff
+      type: number
+      description: Cutoff frequency for filtering operations
+    - name: resonance
+      type: number
+      description: Filter resonance/Q factor
+      default: 0.707
+    - name: modulationDepth
+      type: number
+      description: Depth of modulation effect
+      default: 0.5
+    - name: mix
+      type: number
+      description: Wet/dry mix ratio
+      default: 1.0
+    - name: auxSignal
+      type: number[]
+      description: Secondary input signal for combining operations
+      required: false
+    - name: envelope
+      type: number[]
+      description: Envelope curve for amplitude shaping
+      required: false
+    - name: trigger
+      type: boolean
+      description: Trigger input for synchronized processing
+      default: false
+  outputs:
+    - name: processedSignal
+      type: number[]
+      description: Main processed output signal
+    - name: peakLevel
+      type: number
+      description: Peak level of the processed signal
+    - name: rmsLevel
+      type: number
+      description: RMS level of the processed signal
+    - name: frequencyContent
+      type: object
+      description: Frequency analysis data
+    - name: phaseData
+      type: number[]
+      description: Phase information of the processed signal
+    - name: envelopeFollower
+      type: number
+      description: Envelope follower output
+    - name: zeroCrossings
+      type: number
+      description: Zero crossing rate
+    - name: clipIndicator
+      type: boolean
+      description: Indicates if the signal is clipping
+    - name: debugData
+      type: object
+      description: Additional debug information when debug mode is enabled
+template: |
+  // Process signal based on selected mode
+  const output = {};
+  
+  if (debug) {
+    console.log(`Processing signal in ${mode} mode`);
+  }
+  
+  // Initialize processed signal based on mode
+  switch (mode) {
+    case 'filter':
+      output.processedSignal = applyFilter(mainSignal, filterCutoff, resonance);
+      break;
+    case 'modulate':
+      output.processedSignal = applyModulation(mainSignal, frequency, phase, modulationDepth);
+      break;
+    case 'combine':
+      output.processedSignal = combineSignals(mainSignal, auxSignal, mix);
+      break;
+    case 'analyze':
+      output.processedSignal = mainSignal;
+      break;
+  }
+  
+  // Apply amplitude scaling
+  output.processedSignal = output.processedSignal.map(x => x * amplitude);
+  
+  // Calculate output metrics
+  output.peakLevel = calculatePeakLevel(output.processedSignal);
+  output.rmsLevel = calculateRMSLevel(output.processedSignal);
+  output.frequencyContent = analyzeFrequencyContent(output.processedSignal, windowSize);
+  output.phaseData = calculatePhase(output.processedSignal);
+  output.envelopeFollower = followEnvelope(output.processedSignal);
+  output.zeroCrossings = countZeroCrossings(output.processedSignal);
+  output.clipIndicator = checkClipping(output.processedSignal);
+  
+  if (debug) {
+    output.debugData = generateDebugData(output);
+  }
+  
+  return output;
