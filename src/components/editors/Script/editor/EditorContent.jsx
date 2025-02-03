@@ -117,7 +117,6 @@ export default EditorContent;
  * 
  * 3. Performance:
  *    - Dynamic import for Monaco
- *    - No SSR for editor
  *    - Automatic layout handling
  * 
  * 4. Future Improvements:
