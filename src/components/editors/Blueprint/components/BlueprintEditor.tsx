@@ -14,7 +14,7 @@ import { useNodeStore } from '../store/nodeStore';
 import PulsarNode from './PulsarNode';
 import { generateRustCode } from '../lib/generateRust';
 import { Label } from '@/components/shared/Label';
-import { 
+import {
   Select,
   SelectContent,
   SelectGroup,
@@ -61,17 +61,17 @@ const nodeTypes = {
 type ColorTypes = 'i32' | 'i64' | 'f32' | 'f64' | 'any' | 'array' | 'object' | 'number' | 'string' | 'boolean' | 'default' | 'execution';
 
 const TYPE_COLORS: Record<ColorTypes, string> = {
-  i32:       '#F59E0B',  // Amber
-  i64:       '#F59E0B',  // Amber
-  f32:       '#F59E0B',  // Amber
-  f64:       '#F59E0B',  // Amber
-  any:       '#6B7280',  // neutral
-  array:     '#10B981',  // Emerald
-  object:    '#8B5CF6',  // Purple
-  number:    '#F59E0B',  // Amber
-  string:    '#EC4899',  // Pink
-  boolean:   '#3B82F6',  // Blue
-  default:   '#6B7280',  // neutral
+  i32: '#F59E0B',  // Amber
+  i64: '#F59E0B',  // Amber
+  f32: '#F59E0B',  // Amber
+  f64: '#F59E0B',  // Amber
+  any: '#6B7280',  // neutral
+  array: '#10B981',  // Emerald
+  object: '#8B5CF6',  // Purple
+  number: '#F59E0B',  // Amber
+  string: '#EC4899',  // Pink
+  boolean: '#3B82F6',  // Blue
+  default: '#6B7280',  // neutral
   execution: '#6366F1'   // Indigo
 };
 
@@ -111,11 +111,11 @@ const proOptions = {
 const BlueprintEditor = () => {
   const [nodes, setNodes] = useState<Node[]>([]);
   const [edges, setEdges] = useState<Edge[]>([]);
-  const [contextMenu, setContextMenu] = useState<ContextMenu>({ 
-    show: false, 
-    x: 0, 
-    y: 0, 
-    type: 'pane' 
+  const [contextMenu, setContextMenu] = useState<ContextMenu>({
+    show: false,
+    x: 0,
+    y: 0,
+    type: 'pane'
   });
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -156,7 +156,7 @@ const BlueprintEditor = () => {
   const onNodesChange = useCallback((changes: any[]) => {
     setNodes((nds) => {
       const newNodes = applyNodeChanges(changes, nds);
-      
+
       // Handle selection changes
       const selectionChange = changes.find((change: { type: string; }) => change.type === 'select');
       if (selectionChange) {
@@ -167,7 +167,7 @@ const BlueprintEditor = () => {
           setSelectedNode(null);
         }
       }
-      
+
       return newNodes;
     });
   }, [selectedNode]);
@@ -257,7 +257,7 @@ const BlueprintEditor = () => {
 
   const deleteNode = useCallback((nodeId: string) => {
     setNodes((nds) => nds.filter((node) => node.id !== nodeId));
-    setEdges((eds) => eds.filter((edge) => 
+    setEdges((eds) => eds.filter((edge) =>
       edge.source !== nodeId && edge.target !== nodeId
     ));
     if (selectedNode?.id === nodeId) {
@@ -268,7 +268,7 @@ const BlueprintEditor = () => {
 
   const addNode = useCallback((type: string) => {
     if (!contextMenu.position) return;
-    
+
     const definition = definitions[type];
     if (!definition) return;
 
@@ -326,7 +326,7 @@ const BlueprintEditor = () => {
         panActivationKeyCode="Space"
       >
         <Background color="#333" gap={16} />
-        <Controls 
+        <Controls
           className="bg-neutral-900 border border-neutral-800 fill-neutral-400"
           showInteractive={true}
           position="bottom-right"
@@ -351,7 +351,7 @@ const BlueprintEditor = () => {
                   readOnly: true,
                   minimap: { enabled: false },
                   fontSize: 14,
-                  wordWrap: 'on',
+                  wordWrap: 'off',
                 }}
               />
             </div>
@@ -366,58 +366,62 @@ const BlueprintEditor = () => {
                   <p className="text-sm text-neutral-400 mb-4">
                     {selectedNode.data.nodeDefinition.description}
                   </p>
-                  <div className="space-y-4">
-                    {Object.entries(selectedNode.data.nodeDefinition.fields as Record<string, FieldDefinition>).map(([fieldName, field]) => (
-                      <div key={fieldName}>
-                        <Label className="text-neutral-300">
-                          {field.label}
-                        </Label>
-                        {field.type === 'select' ? (
-                          <Select
-                            value={selectedNode.data.fields[fieldName] || ''}
-                            onValueChange={(value) => updateNodeFields(selectedNode.id, fieldName, value)}
-                          >
-                            <SelectTrigger className="w-full bg-neutral-800 border-neutral-700">
-                              <SelectValue placeholder={`Select ${field.label}`} />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectGroup>
-                                {field.options?.map((option) => (
-                                  <SelectItem key={option} value={option}>
-                                    {option}
-                                  </SelectItem>
-                                ))}
-                              </SelectGroup>
-                            </SelectContent>
-                          </Select>
-                        ) : field.type === 'multiline' ? (
-                          <textarea
-                            id={fieldName}
-                            value={selectedNode.data.fields[fieldName] || ''}
-                            onChange={(e) => updateNodeFields(selectedNode.id, fieldName, e.target.value)}
-                            className="w-full h-24 bg-neutral-800 border border-neutral-700 rounded-md p-2 text-neutral-300"
-                          />
-                        ) : (
-                          <Input
-                            id={fieldName}
-                            type={field.type}
-                            value={selectedNode.data.fields[fieldName] || ''}
-                            onChange={(e) => {
-                              e.preventDefault();
-                              const newValue = e.target.value;
-                              requestAnimationFrame(() => {
-                                updateNodeFields(selectedNode.id, fieldName, newValue);
-                              });
-                            }}
-                            className="bg-neutral-800 border-neutral-700 text-neutral-300"
-                          />
-                        )}
-                        {field.description && (
-                          <p className="text-xs text-neutral-500 mt-1">{field.description}</p>
-                        )}
-                      </div>
-                    ))}
-                  </div>
+                  {selectedNode.data.nodeDefinition.fields ? (
+                    <div className="space-y-4">
+                      {Object.entries(selectedNode.data.nodeDefinition.fields as Record<string, FieldDefinition>).map(([fieldName, field]) => (
+                        <div key={fieldName}>
+                          <Label className="text-neutral-300">
+                            {field.label}
+                          </Label>
+                          {field.type === 'select' ? (
+                            <Select
+                              value={selectedNode.data.fields[fieldName] || ''}
+                              onValueChange={(value) => updateNodeFields(selectedNode.id, fieldName, value)}
+                            >
+                              <SelectTrigger className="w-full bg-neutral-800 border-neutral-700">
+                                <SelectValue placeholder={`Select ${field.label}`} />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectGroup>
+                                  {field.options?.map((option) => (
+                                    <SelectItem key={option} value={option}>
+                                      {option}
+                                    </SelectItem>
+                                  ))}
+                                </SelectGroup>
+                              </SelectContent>
+                            </Select>
+                          ) : field.type === 'multiline' ? (
+                            <textarea
+                              id={fieldName}
+                              value={selectedNode.data.fields[fieldName] || ''}
+                              onChange={(e) => updateNodeFields(selectedNode.id, fieldName, e.target.value)}
+                              className="w-full h-24 bg-neutral-800 border border-neutral-700 rounded-md p-2 text-neutral-300"
+                            />
+                          ) : (
+                            <Input
+                              id={fieldName}
+                              type={field.type}
+                              value={selectedNode.data.fields[fieldName] || ''}
+                              onChange={(e) => {
+                                e.preventDefault();
+                                const newValue = e.target.value;
+                                requestAnimationFrame(() => {
+                                  updateNodeFields(selectedNode.id, fieldName, newValue);
+                                });
+                              }}
+                              className="bg-neutral-800 border-neutral-700 text-neutral-300"
+                            />
+                          )}
+                          {field.description && (
+                            <p className="text-xs text-neutral-500 mt-1">{field.description}</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-neutral-500">This node has no configurable fields.</p>
+                  )}
                 </div>
               ) : (
                 <div className="p-4 text-neutral-500 text-center">

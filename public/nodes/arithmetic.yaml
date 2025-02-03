@@ -3,11 +3,6 @@ name: AddNode
 category: Arithmetic
 description: Add two numbers together
 fields:
-  comment:
-    type: string
-    label: Comment
-    description: Optional comment for this operation
-    required: false
 pins:
   inputs:
     - name: a
@@ -21,7 +16,6 @@ pins:
       type: number
       description: Result of a + b
 template: |
-  // {{comment}}
   {{a}} + {{b}}
 ---
 name: SubtractNode

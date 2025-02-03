@@ -1,93 +1,345 @@
 import { Node, Edge } from 'reactflow';
 
-function generateRustCode(nodes: Node[], edges: Edge[]): string {
-  // Sort nodes based on dependencies
-  const sortedNodes = topologicalSort(nodes, edges);
-  
-  let code = "// Generated Rust Code\n\n";
-  
-  // Generate variable declarations and node logic
-  sortedNodes.forEach((node) => {
-    const def = node.data.nodeDefinition;
-    const fields = node.data.fields;
-    
-    // Use the template from node definition
-    let nodeCode = def.template;
-    
-    // Replace field placeholders
-    Object.entries(fields).forEach(([key, value]) => {
-      nodeCode = nodeCode.replace(`{{${key}}}`, String(value));
-    });
-    
-    // Replace input placeholders with actual connected node outputs
-    def.pins.inputs?.forEach((input: { name: string | null | undefined; }) => {
-      const incomingEdge = edges.find(
-        (edge) => edge.target === node.id && edge.targetHandle === input.name
-      );
-      if (incomingEdge) {
-        const sourceNode = nodes.find((n) => n.id === incomingEdge.source);
-        if (sourceNode) {
-          nodeCode = nodeCode.replace(
-            `{{${input.name}}}`,
-            `${sourceNode.id}_output`
-          );
-        }
-      }
-    });
-    
-    // Add variable declaration for node output
-    if (def.pins.outputs?.length) {
-      nodeCode = `let ${node.id}_output = ${nodeCode};\n`;
-    }
-    
-    code += nodeCode + "\n";
-  });
-  
-  return code;
+interface TypeDefinition {
+  rust_type: string;
+  default_value: string;
 }
 
-// Helper function for topological sort
+interface NodeConnection {
+  sourceNode: Node;
+  targetNode: Node;
+  edge: Edge;
+  inputPin: string;
+  outputPin: string;
+}
+
+const TYPE_MAPPINGS: Record<string, TypeDefinition> = {
+  'i32': { rust_type: 'i32', default_value: '0' },
+  'i64': { rust_type: 'i64', default_value: '0' },
+  'f32': { rust_type: 'f32', default_value: '0.0' },
+  'f64': { rust_type: 'f64', default_value: '0.0' },
+  'string': { rust_type: 'String', default_value: 'String::new()' },
+  'boolean': { rust_type: 'bool', default_value: 'false' },
+  'array': { rust_type: 'Vec<T>', default_value: 'vec![]' },
+  'any': { rust_type: 'Any', default_value: 'Default::default()' },
+  'execution': { rust_type: 'void', default_value: '()' }
+};
+
+class CodeGenError extends Error {
+  constructor(message: string, public node?: Node) {
+    super(message);
+    this.name = 'CodeGenError';
+  }
+}
+
+function generateRustCode(nodes: Node[], edges: Edge[]): string {
+  try {
+    if (!nodes.length) return '// Add nodes to generate code\n';
+    
+    const warnings: string[] = [];
+    const validNodes = nodes.filter(node => {
+      try {
+        validateNode(node);
+        return true;
+      } catch (error) {
+        if (error instanceof CodeGenError) {
+          warnings.push(`// Warning: ${error.message} in ${node.data?.nodeDefinition?.name ?? 'Unknown'} node`);
+        }
+        return false;
+      }
+    });
+
+    if (validNodes.length === 0) {
+      return '// No valid nodes to generate code from\n' + warnings.join('\n');
+    }
+
+    const validEdges = edges.filter(edge => 
+      validNodes.some(n => n.id === edge.source) && 
+      validNodes.some(n => n.id === edge.target)
+    );
+    
+    validateGraph(validNodes, validEdges);
+    const sortedNodes = topologicalSort(validNodes, validEdges);
+    const connections = mapConnections(validNodes, validEdges);
+    const nodeOutputTypes = inferTypes(validNodes, connections);
+    
+    let code = warnings.length ? warnings.join('\n') + '\n\n' : '';
+    code += generateHeader();
+    code += generateStructs(validNodes);
+    code += generateMainFunction(sortedNodes, connections, nodeOutputTypes);
+    
+    return code;
+  } catch (error) {
+    if (error instanceof CodeGenError) {
+      return `// Error generating code: ${error.message}\n// Node: ${error.node?.data?.nodeDefinition?.name ?? 'Unknown'}\n`;
+    }
+    return `// Unexpected error during code generation: ${error}\n`;
+  }
+}
+
+function validateNode(node: Node) {
+  if (!node.data?.nodeDefinition) {
+    throw new CodeGenError('Node missing definition', node);
+  }
+  validateNodeFields(node);
+}
+
+function validateGraph(nodes: Node[], edges: Edge[]) {
+  if (hasCycles(nodes, edges)) {
+    throw new CodeGenError('Graph contains cycles');
+  }
+  edges.forEach(edge => validateEdgeTypes(edge, nodes));
+}
+
+function validateNodeFields(node: Node) {
+  const { fields = {}, nodeDefinition } = node.data;
+  if (!nodeDefinition.fields) return;
+  
+  Object.entries(nodeDefinition.fields)
+    .filter(([_, field]) => !field.optional)
+    .forEach(([fieldName, field]) => {
+      const value = fields[fieldName];
+      if (fieldName !== 'comment' && value !== 0 && value !== false && !value) {
+        throw new CodeGenError(`Missing required field: ${fieldName}`, node);
+      }
+    });
+}
+
+function validateEdgeTypes(edge: Edge, nodes: Node[]) {
+  const sourceNode = nodes.find(n => n.id === edge.source);
+  const targetNode = nodes.find(n => n.id === edge.target);
+  
+  if (!sourceNode || !targetNode) {
+    throw new CodeGenError('Invalid edge connection');
+  }
+
+  const sourcePin = sourceNode.data.nodeDefinition.pins.outputs?.find(p => p.name === edge.sourceHandle);
+  const targetPin = targetNode.data.nodeDefinition.pins.inputs?.find(p => p.name === edge.targetHandle);
+
+  if (!sourcePin || !targetPin) {
+    throw new CodeGenError('Invalid pin connection');
+  }
+
+  if (!areTypesCompatible(sourcePin.type, targetPin.type)) {
+    throw new CodeGenError(`Type mismatch: Cannot connect ${sourcePin.type} to ${targetPin.type}`, targetNode);
+  }
+}
+
+function areTypesCompatible(sourceType: string, targetType: string): boolean {
+  if (sourceType === targetType || targetType === 'any') return true;
+  if (sourceType === 'i32' && ['i64', 'f32', 'f64'].includes(targetType)) return true;
+  if (sourceType === 'f32' && targetType === 'f64') return true;
+  return false;
+}
+
+function generateHeader(): string {
+  return `// Generated by Pulsar Blueprint Editor
+#![allow(unused_variables)]
+use std::collections::HashMap;
+use std::any::Any;
+
+`;
+}
+
+function generateStructs(nodes: Node[]): string {
+  const structs = new Set<string>();
+  nodes.forEach(node => {
+    if (node.data.nodeDefinition.struct) {
+      structs.add(node.data.nodeDefinition.struct);
+    }
+  });
+  return Array.from(structs).join('\n\n') + '\n\n';
+}
+
+function generateMainFunction(
+  sortedNodes: Node[],
+  connections: NodeConnection[],
+  nodeOutputTypes: Map<string, string>
+): string {
+  return 'fn main() {\n' +
+    sortedNodes.map(node => {
+      const varType = nodeOutputTypes.get(node.id) || 'i32';
+      if (varType === 'void') return '';
+      const nodeCode = generateNodeCode(node, connections, nodeOutputTypes);
+      return `    let ${getVariableName(node.id)}: ${varType} = ${nodeCode};\n\n`;
+    }).join('') +
+    '}\n';
+}
+
+function processTemplate(template: string, data: Record<string, any>): string {
+  const processIfBlock = (template: string): string => {
+    return template.replace(/{{#if\s+([^}]+)}}([\s\S]*?){{\/if}}/g, (match, condition, content) => {
+      // Handle comparison operators
+      if (condition.includes(' ')) {
+        const [left, operator, right] = condition.trim().split(/\s+/);
+        const leftVal = getValue(data[left]) ?? parseValue(left);
+        const rightVal = getValue(data[right]) ?? parseValue(right);
+        
+        const compareResult = {
+          '<': leftVal < rightVal,
+          '>': leftVal > rightVal,
+          '<=': leftVal <= rightVal,
+          '>=': leftVal >= rightVal,
+          '==': leftVal == rightVal,
+          '!=': leftVal != rightVal
+        }[operator];
+        
+        return compareResult ? processIfBlock(content) : '';
+      }
+
+      // Handle simple boolean condition with proper falsy value checking
+      const value = getValue(data[condition]);
+      return Boolean(value) ? processIfBlock(content) : '';
+    });
+  };
+
+  const getValue = (value: any): any => {
+    if (value === false || value === 0) return false;
+    return value;
+  };
+
+  const processVariables = (template: string): string => {
+    return template.replace(/{{([^#/][^}]*)}}/g, (_, key) => {
+      const value = data[key.trim()];
+      if (value === false) return 'false';
+      if (value === 0) return '0';
+      return value?.toString() ?? '';
+    });
+  };
+
+  const parseValue = (val: string): any => {
+    if (val === 'true') return true;
+    if (val === 'false') return false;
+    if (val === '0') return 0;
+    const num = Number(val);
+    return isNaN(num) ? val : num;
+  };
+
+  return processVariables(processIfBlock(template));
+}
+
+function generateNodeCode(
+  node: Node,
+  connections: NodeConnection[],
+  nodeOutputTypes: Map<string, string>
+): string {
+  const def = node.data.nodeDefinition;
+  const templateData = {
+    ...node.data.fields,
+    type: nodeOutputTypes.get(node.id)
+  };
+
+  // Convert boolean strings to actual booleans
+  Object.entries(templateData).forEach(([key, value]) => {
+    if (value === 'true') templateData[key] = true;
+    if (value === 'false') templateData[key] = false;
+    if (value === '0') templateData[key] = 0;
+  });
+
+  def.pins.inputs?.forEach(input => {
+    const conn = connections.find(c => 
+      c.targetNode.id === node.id && c.inputPin === input.name
+    );
+    templateData[input.name] = conn 
+      ? getVariableName(conn.sourceNode.id)
+      : TYPE_MAPPINGS[input.type]?.default_value ?? 'Default::default()';
+  });
+
+  return processTemplate(def.template || '', templateData);
+}
+
+function getVariableName(nodeId: string): string {
+  return `var_${nodeId.replace(/[^a-zA-Z0-9_]/g, '_')}`;
+}
+
+function inferTypes(nodes: Node[], connections: NodeConnection[]): Map<string, string> {
+  const types = new Map<string, string>();
+  nodes.forEach(node => {
+    const outputPin = node.data.nodeDefinition.pins.outputs?.[0];
+    if (outputPin) {
+      types.set(node.id, TYPE_MAPPINGS[outputPin.type]?.rust_type ?? 'Any');
+    }
+  });
+  return types;
+}
+
+function hasCycles(nodes: Node[], edges: Edge[]): boolean {
+  const visited = new Set<string>();
+  const recursionStack = new Set<string>();
+
+  function dfs(nodeId: string): boolean {
+    if (!visited.has(nodeId)) {
+      visited.add(nodeId);
+      recursionStack.add(nodeId);
+
+      const outgoingEdges = edges.filter(e => e.source === nodeId);
+      for (const edge of outgoingEdges) {
+        if (!visited.has(edge.target) && dfs(edge.target) || 
+            recursionStack.has(edge.target)) {
+          return true;
+        }
+      }
+    }
+    recursionStack.delete(nodeId);
+    return false;
+  }
+
+  return nodes.some(node => dfs(node.id));
+}
+
+function mapConnections(nodes: Node[], edges: Edge[]): NodeConnection[] {
+  return edges.map(edge => {
+    const sourceNode = nodes.find(n => n.id === edge.source);
+    const targetNode = nodes.find(n => n.id === edge.target);
+    
+    if (!sourceNode || !targetNode) {
+      throw new CodeGenError('Invalid connection mapping');
+    }
+
+    return {
+      sourceNode,
+      targetNode,
+      edge,
+      inputPin: edge.targetHandle ?? '',
+      outputPin: edge.sourceHandle ?? ''
+    };
+  });
+}
+
 function topologicalSort(nodes: Node[], edges: Edge[]): Node[] {
   const graph = new Map<string, Set<string>>();
   const inDegree = new Map<string, number>();
   
-  // Initialize graphs
-  nodes.forEach((node) => {
+  nodes.forEach(node => {
     graph.set(node.id, new Set());
     inDegree.set(node.id, 0);
   });
   
-  // Build dependency graph
-  edges.forEach((edge) => {
+  edges.forEach(edge => {
     graph.get(edge.source)?.add(edge.target);
-    inDegree.set(edge.target, (inDegree.get(edge.target) || 0) + 1);
+    inDegree.set(edge.target, (inDegree.get(edge.target) ?? 0) + 1);
   });
   
-  // Find nodes with no dependencies
-  const queue = nodes
-    .filter((node) => (inDegree.get(node.id) || 0) === 0)
-    .map((node) => node.id);
+  const queue = nodes.filter(node => inDegree.get(node.id) === 0);
+  const result = [...queue];
+  let idx = 0;
   
-  const result: Node[] = [];
+  while (idx < result.length) {
+    const node = result[idx++];
+    graph.get(node.id)?.forEach(dependent => {
+      const newDegree = (inDegree.get(dependent) ?? 0) - 1;
+      inDegree.set(dependent, newDegree);
+      if (newDegree === 0) {
+        result.push(nodes.find(n => n.id === dependent)!);
+      }
+    });
+  }
   
-  // Process queue
-  while (queue.length > 0) {
-    const nodeId = queue.shift()!;
-    const node = nodes.find((n) => n.id === nodeId);
-    if (node) {
-      result.push(node);
-      
-      // Update dependencies
-      graph.get(nodeId)?.forEach((dependent) => {
-        inDegree.set(dependent, (inDegree.get(dependent) || 0) - 1);
-        if (inDegree.get(dependent) === 0) {
-          queue.push(dependent);
-        }
-      });
-    }
+  if (result.length !== nodes.length) {
+    throw new CodeGenError('Graph contains cycles');
   }
   
   return result;
 }
 
-export { generateRustCode };
+export { generateRustCode, CodeGenError };
