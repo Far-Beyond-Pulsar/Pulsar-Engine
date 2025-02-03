@@ -7,6 +7,29 @@ import {
   DialogTitle,
 } from "@/components/shared/Dialog";
 
+/**
+ * NewFileDialog Component
+ * 
+ * A modal dialog for creating new files in the editor.
+ * Handles file name input and creation.
+ * 
+ * @component
+ * @param {Object} props - Component props
+ * @param {boolean} props.isOpen - Controls dialog visibility
+ * @param {Function} props.onClose - Handler for closing the dialog
+ * @param {Function} props.onCreate - Handler function for file creation
+ * @param {string} props.selectedPath - Current selected directory path
+ * @param {string} props.currentProjectPath - Root project path
+ * 
+ * @example
+ * <NewFileDialog
+ *   isOpen={showDialog}
+ *   onClose={() => setShowDialog(false)}
+ *   onCreate={handleCreate}
+ *   selectedPath="/path/to/directory"
+ *   currentProjectPath="/project/root"
+ * />
+ */
 const NewFileDialog = ({
   isOpen,
   onClose,
@@ -14,12 +37,19 @@ const NewFileDialog = ({
   selectedPath,
   currentProjectPath
 }) => {
+  // State for filename input
   const [filename, setFilename] = useState('');
 
+  /**
+   * Handles file creation
+   * Validates input and calls creation handler
+   * 
+   * @function
+   */
   const handleCreate = () => {
     if (filename.trim()) {
       onCreate(filename.trim(), selectedPath);
-      setFilename('');
+      setFilename(''); // Reset input
       onClose();
     }
   };
@@ -38,6 +68,7 @@ const NewFileDialog = ({
             <label htmlFor="filename" className="text-sm text-gray-400">
               Filename with extension
             </label>
+            {/* Filename input with enter key handler */}
             <input
               id="filename"
               type="text"
@@ -53,11 +84,13 @@ const NewFileDialog = ({
               }}
               autoFocus
             />
+            {/* Path display */}
             <span className="text-xs text-gray-500">
               Path: {selectedPath || currentProjectPath}
             </span>
           </div>
         </div>
+        {/* Dialog actions */}
         <div className="flex justify-end gap-2">
           <button
             className="px-4 py-2 bg-gray-800 rounded hover:bg-gray-700 text-gray-300 transition-colors"
@@ -78,3 +111,39 @@ const NewFileDialog = ({
 };
 
 export default NewFileDialog;
+
+/**
+ * Component Maintenance Notes:
+ * 
+ * 1. State Management:
+ *    - Uses local state for filename input
+ *    - Parent controls dialog visibility
+ * 
+ * 2. Validation:
+ *    - Currently only checks for non-empty trimmed filename
+ *    - Consider adding:
+ *      - File extension validation
+ *      - Reserved name checking
+ *      - Path length limits
+ * 
+ * 3. Accessibility:
+ *    - Labeled inputs
+ *    - Keyboard navigation (Enter to submit)
+ *    - Autofocus on input
+ * 
+ * 4. Styling:
+ *    - Tailwind CSS
+ *    - Dark theme
+ *    - Focus states
+ *    - Hover effects
+ * 
+ * 5. Future Improvements:
+ *    - Add file template selection
+ *    - Add file icon preview
+ *    - Add recent/common extensions list
+ *    - Add validation messages
+ * 
+ * 6. Dependencies:
+ *    - @/components/shared/Dialog
+ *    - React
+ */

@@ -2,7 +2,10 @@ import React from 'react';
 import dynamic from 'next/dynamic';
 import { RefreshCw } from 'lucide-react';
 
-// Dynamically import Monaco Editor to avoid SSR issues
+/**
+ * Dynamic import of Monaco Editor with loading state
+ * Uses Next.js dynamic import to prevent SSR issues
+ */
 const MonacoEditor = dynamic(
   () => import('@monaco-editor/react'),
   { 
@@ -18,6 +21,30 @@ const MonacoEditor = dynamic(
   }
 );
 
+/**
+ * MonacoWrapper Component
+ * 
+ * A wrapper component for Monaco Editor with default configurations
+ * and loading state handling.
+ * 
+ * @component
+ * @param {Object} props - Component props
+ * @param {string} props.value - Editor content
+ * @param {string} props.language - Programming language
+ * @param {string} props.theme - Editor theme
+ * @param {Object} props.options - Editor options
+ * @param {Function} props.onChange - Change handler
+ * @param {Function} props.onMount - Mount handler
+ * 
+ * @example
+ * <MonacoWrapper
+ *   value={fileContent}
+ *   language="javascript"
+ *   theme="vs-dark"
+ *   options={{ fontSize: 14 }}
+ *   onChange={handleChange}
+ * />
+ */
 const MonacoWrapper = ({
   value,
   language,
@@ -33,18 +60,29 @@ const MonacoWrapper = ({
       defaultLanguage={language}
       theme={theme}
       options={{
+        // Font settings
         fontFamily: 'JetBrains Mono, monospace',
         fontSize: options?.fontSize || 14,
         lineHeight: 1.6,
+
+        // Editor features
         minimap: { enabled: options?.minimap ?? true },
         wordWrap: options?.wordWrap || 'on',
         tabSize: options?.tabSize || 2,
+        
+        // Cursor settings
         cursorBlinking: 'smooth',
         cursorSmoothCaretAnimation: true,
+        
+        // Scrolling behavior
         smoothScrolling: true,
         scrollBeyondLastLine: false,
+        
+        // Layout
         automaticLayout: true,
         padding: { top: 10 },
+        
+        // Visual aids
         lineNumbers: options?.lineNumbers || 'on',
         renderWhitespace: 'selection',
         bracketPairColorization: { enabled: true },
@@ -52,6 +90,8 @@ const MonacoWrapper = ({
           indentation: true,
           bracketPairs: true
         },
+        
+        // Merge additional options
         ...options,
       }}
       onChange={onChange}
@@ -62,3 +102,40 @@ const MonacoWrapper = ({
 };
 
 export default MonacoWrapper;
+
+/**
+ * Component Maintenance Notes:
+ * 
+ * 1. Dynamic Loading:
+ *    - Uses Next.js dynamic import
+ *    - Custom loading spinner
+ *    - No SSR to prevent hydration issues
+ * 
+ * 2. Default Configuration:
+ *    - Font settings (JetBrains Mono)
+ *    - Editor behavior
+ *    - Visual aids
+ *    - Performance settings
+ * 
+ * 3. Customization:
+ *    - All Monaco options available
+ *    - Default values with override capability
+ *    - Theme support
+ * 
+ * 4. Performance:
+ *    - Automatic layout handling
+ *    - Smooth animations
+ *    - Optimized loading
+ * 
+ * 5. Future Improvements:
+ *    - Add error boundary
+ *    - Add custom extensions support
+ *    - Add command palette
+ *    - Add snippets support
+ *    - Add custom themes
+ * 
+ * 6. Dependencies:
+ *    - @monaco-editor/react
+ *    - next/dynamic
+ *    - lucide-react
+ */

@@ -6,12 +6,46 @@ import {
   DialogTitle,
 } from "@/components/shared/Dialog";
 
+/**
+ * SettingsDialog Component
+ * 
+ * A dialog component for managing editor settings including:
+ * - Font size
+ * - Tab size
+ * - Word wrap
+ * - Theme
+ * - Minimap
+ * - Line numbers
+ * - Auto save
+ * 
+ * @component
+ * @param {Object} props - Component props
+ * @param {boolean} props.isOpen - Controls dialog visibility
+ * @param {Function} props.onClose - Handler for closing dialog
+ * @param {Object} props.settings - Current editor settings
+ * @param {Function} props.onSettingsChange - Handler for settings updates
+ * 
+ * @example
+ * <SettingsDialog
+ *   isOpen={showSettings}
+ *   onClose={() => setShowSettings(false)}
+ *   settings={editorSettings}
+ *   onSettingsChange={setEditorSettings}
+ * />
+ */
 const SettingsDialog = ({
   isOpen,
   onClose,
   settings,
   onSettingsChange
 }) => {
+  /**
+   * Handles individual setting changes
+   * Updates the settings state while preserving other values
+   * 
+   * @param {string} key - Setting key to update
+   * @param {any} value - New value for the setting
+   */
   const handleSettingChange = (key, value) => {
     onSettingsChange(prev => ({
       ...prev,
@@ -27,7 +61,8 @@ const SettingsDialog = ({
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="flex flex-col gap-4">
-            {/* Font Size */}
+            {/* Font Size Setting 
+                Controls the editor font size (8-32px) */}
             <div className="flex justify-between items-center">
               <label className="text-sm text-gray-400">Font Size</label>
               <input
@@ -40,7 +75,8 @@ const SettingsDialog = ({
               />
             </div>
 
-            {/* Tab Size */}
+            {/* Tab Size Setting 
+                Controls the number of spaces per tab (2-8) */}
             <div className="flex justify-between items-center">
               <label className="text-sm text-gray-400">Tab Size</label>
               <input
@@ -53,7 +89,8 @@ const SettingsDialog = ({
               />
             </div>
 
-            {/* Word Wrap */}
+            {/* Word Wrap Setting 
+                Controls text wrapping behavior */}
             <div className="flex justify-between items-center">
               <label className="text-sm text-gray-400">Word Wrap</label>
               <select
@@ -66,7 +103,8 @@ const SettingsDialog = ({
               </select>
             </div>
 
-            {/* Theme */}
+            {/* Theme Setting 
+                Controls editor color theme */}
             <div className="flex justify-between items-center">
               <label className="text-sm text-gray-400">Theme</label>
               <select
@@ -79,7 +117,8 @@ const SettingsDialog = ({
               </select>
             </div>
 
-            {/* Minimap */}
+            {/* Minimap Setting 
+                Controls code minimap visibility */}
             <div className="flex justify-between items-center">
               <label className="text-sm text-gray-400">Minimap</label>
               <input
@@ -90,7 +129,8 @@ const SettingsDialog = ({
               />
             </div>
 
-            {/* Line Numbers */}
+            {/* Line Numbers Setting 
+                Controls line number display mode */}
             <div className="flex justify-between items-center">
               <label className="text-sm text-gray-400">Line Numbers</label>
               <select
@@ -104,7 +144,8 @@ const SettingsDialog = ({
               </select>
             </div>
 
-            {/* Auto Save */}
+            {/* Auto Save Setting 
+                Controls automatic save behavior */}
             <div className="flex justify-between items-center">
               <label className="text-sm text-gray-400">Auto Save</label>
               <select
@@ -125,3 +166,53 @@ const SettingsDialog = ({
 };
 
 export default SettingsDialog;
+
+/**
+ * Component Maintenance Notes:
+ * 
+ * 1. Settings Categories:
+ *    - Text rendering (font size, word wrap)
+ *    - Editor behavior (tab size, auto save)
+ *    - Visual features (theme, minimap, line numbers)
+ * 
+ * 2. Input Types:
+ *    - Number inputs (font size, tab size)
+ *    - Select dropdowns (theme, word wrap, line numbers)
+ *    - Checkbox (minimap)
+ * 
+ * 3. Validation:
+ *    - Number ranges enforced
+ *    - Select options predefined
+ *    - Type conversion handled
+ * 
+ * 4. Styling:
+ *    - Consistent dark theme
+ *    - Proper spacing
+ *    - Input alignment
+ *    - Responsive layout
+ * 
+ * 5. Future Improvements:
+ *    - Add setting descriptions
+ *    - Add setting categories/tabs
+ *    - Add setting search
+ *    - Add setting preview
+ *    - Add setting import/export
+ *    - Add setting profiles
+ *    - Add custom theme editor
+ *    - Add keybinding editor
+ * 
+ * 6. Accessibility:
+ *    - Labeled inputs
+ *    - Keyboard navigation
+ *    - ARIA attributes
+ *    - Focus management
+ * 
+ * 7. Dependencies:
+ *    - @/components/shared/Dialog
+ *    - React state management
+ * 
+ * 8. State Management:
+ *    - Settings preserved between sessions
+ *    - Real-time updates
+ *    - Default values
+ */
