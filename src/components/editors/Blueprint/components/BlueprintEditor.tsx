@@ -5,7 +5,7 @@ import ReactFlow, {
   EdgeChange, Position
 } from 'reactflow';
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useMemo, memo } from 'react';
 import 'reactflow/dist/style.css';
 import Editor from '@monaco-editor/react';
 import { Input } from '@/components/shared/Input';
@@ -24,8 +24,7 @@ import {
   SelectValue,
 } from "@/components/shared/Select";
 
-
-// Type definitions
+// Type definitions remain the same
 interface FieldDefinition {
   label: string;
   type: 'text' | 'number' | 'select' | 'multiline';
@@ -54,30 +53,29 @@ interface ContextMenu {
 }
 
 const nodeTypes = {
-  pulsarNode: PulsarNode,
+  pulsarNode: memo(PulsarNode),
 };
 
-// Type-based edge styling
-type ColorTypes = 'i32' | 'i64' | 'f32' | 'f64' | 'any' | 'array' | 'object' | 'number' | 'string' | 'boolean' | 'default' | 'execution';
+// Optimized color types with static object
+const TYPE_COLORS = {
+  i32: '#F59E0B',
+  i64: '#F59E0B',
+  f32: '#F59E0B',
+  f64: '#F59E0B',
+  any: '#6B7280',
+  array: '#10B981',
+  object: '#8B5CF6',
+  number: '#F59E0B',
+  string: '#EC4899',
+  boolean: '#3B82F6',
+  default: '#6B7280',
+  execution: '#6366F1'
+} as const;
 
-const TYPE_COLORS: Record<ColorTypes, string> = {
-  i32: '#F59E0B',  // Amber
-  i64: '#F59E0B',  // Amber
-  f32: '#F59E0B',  // Amber
-  f64: '#F59E0B',  // Amber
-  any: '#6B7280',  // neutral
-  array: '#10B981',  // Emerald
-  object: '#8B5CF6',  // Purple
-  number: '#F59E0B',  // Amber
-  string: '#EC4899',  // Pink
-  boolean: '#3B82F6',  // Blue
-  default: '#6B7280',  // neutral
-  execution: '#6366F1'   // Indigo
-};
-
+// Memoized edge options
 const defaultEdgeOptions = {
   type: 'smoothstep',
-  animated: true,
+  animated: false,
   markerEnd: {
     type: MarkerType.ArrowClosed,
     width: 20,
@@ -90,23 +88,188 @@ const defaultEdgeOptions = {
   },
 };
 
+// Memoized edge style generator
 const getEdgeStyle = (sourceType: string) => ({
   type: 'smoothstep',
-  animated: true,
+  animated: false,
   markerEnd: {
     type: MarkerType.ArrowClosed,
-    color: TYPE_COLORS[sourceType as ColorTypes] || TYPE_COLORS.default,
+    color: TYPE_COLORS[sourceType as keyof typeof TYPE_COLORS] || TYPE_COLORS.default,
     height: 20,
   },
   style: {
-    stroke: TYPE_COLORS[sourceType as ColorTypes] || TYPE_COLORS.default,
+    stroke: TYPE_COLORS[sourceType as keyof typeof TYPE_COLORS] || TYPE_COLORS.default,
     strokeWidth: 2,
   },
 });
 
-const proOptions = {
-  hideAttribution: true,
+const proOptions = { hideAttribution: true };
+
+// Memoized Editor options
+const editorOptions = {
+  readOnly: true,
+  minimap: { enabled: false },
+  fontSize: 14,
+  wordWrap: 'off',
 };
+
+// Memoized components
+const MemoizedEditor = memo(Editor);
+const MemoizedBackground = memo(Background);
+const MemoizedControls = memo(Controls);
+const MemoizedMiniMap = memo(MiniMap);
+
+// Memoized context menu component
+const ContextMenuComponent = memo(({ 
+  show, 
+  x, 
+  y, 
+  type, 
+  nodeId, 
+  onDelete, 
+  searchQuery, 
+  setSearchQuery,
+  filteredDefinitions,
+  addNode
+}: any) => {
+  if (!show) return null;
+
+  return type === 'node' ? (
+    <div
+      onClick={(e) => e.stopPropagation()}
+      style={{ position: 'fixed', top: y, left: x, zIndex: 1000 }}
+      className="bg-neutral-900 border border-neutral-800 rounded-lg shadow-xl w-48"
+    >
+      <button
+        className="w-full px-4 py-2 text-left hover:bg-neutral-800 text-red-400 flex items-center gap-2"
+        onClick={() => nodeId && onDelete(nodeId)}
+      >
+        <Trash2 className="h-4 w-4" />
+        Delete Node
+      </button>
+    </div>
+  ) : (
+    <div
+      onClick={(e) => e.stopPropagation()}
+      style={{ position: 'fixed', top: y, left: x, zIndex: 1000 }}
+      className="bg-neutral-900 border border-neutral-800 rounded-lg shadow-xl w-64"
+    >
+      <div className="p-2 border-b border-neutral-800">
+        <div className="relative">
+          <Search className="absolute left-2 top-2.5 h-4 w-4 text-neutral-500" />
+          <Input
+            placeholder="Search nodes..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-8 bg-neutral-800 border-neutral-700"
+            autoFocus
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-2 top-2.5"
+            >
+              <X className="h-4 w-4 text-neutral-500" />
+            </button>
+          )}
+        </div>
+      </div>
+      <div className="max-h-96 overflow-y-auto">
+        {filteredDefinitions.map((def: NodeDefinition) => (
+          <button
+            key={def.name}
+            className="w-full px-4 py-2 text-left hover:bg-neutral-800 text-neutral-300"
+            onClick={() => addNode(def.name)}
+          >
+            <div className="font-medium">{def.name}</div>
+            <div className="text-xs text-neutral-500">{def.description}</div>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+});
+
+// Memoized property panel component
+const PropertyPanel = memo(({ 
+  selectedNode, 
+  updateNodeFields 
+}: { 
+  selectedNode: Node | null;
+  updateNodeFields: (nodeId: string, fieldName: string, value: any) => void;
+}) => {
+  if (!selectedNode) {
+    return (
+      <div className="p-4 text-neutral-500 text-center">
+        Select a node to view properties
+      </div>
+    );
+  }
+
+  const { nodeDefinition, fields } = selectedNode.data;
+
+  return (
+    <div className="p-4">
+      <h3 className="text-lg font-semibold text-blue-400 mb-2">
+        {nodeDefinition.name}
+      </h3>
+      <p className="text-sm text-neutral-400 mb-4">
+        {nodeDefinition.description}
+      </p>
+      {nodeDefinition.fields ? (
+        <div className="space-y-4">
+          {Object.entries(nodeDefinition.fields).map(([fieldName, field]) => (
+            <div key={fieldName}>
+              <Label className="text-neutral-300">{field.label}</Label>
+              {field.type === 'select' ? (
+                <Select
+                  value={fields[fieldName] || ''}
+                  onValueChange={(value) => updateNodeFields(selectedNode.id, fieldName, value)}
+                >
+                  <SelectTrigger className="w-full bg-neutral-800 border-neutral-700">
+                    <SelectValue placeholder={`Select ${field.label}`} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      {field.options?.map((option) => (
+                        <SelectItem key={option} value={option}>
+                          {option}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              ) : field.type === 'multiline' ? (
+                <textarea
+                  value={fields[fieldName] || ''}
+                  onChange={(e) => updateNodeFields(selectedNode.id, fieldName, e.target.value)}
+                  className="w-full h-24 bg-neutral-800 border border-neutral-700 rounded-md p-2 text-neutral-300"
+                />
+              ) : (
+                <Input
+                  type={field.type}
+                  value={fields[fieldName] || ''}
+                  onChange={(e) => {
+                    const newValue = e.target.value;
+                    requestAnimationFrame(() => {
+                      updateNodeFields(selectedNode.id, fieldName, newValue);
+                    });
+                  }}
+                  className="bg-neutral-800 border-neutral-700 text-neutral-300"
+                />
+              )}
+              {field.description && (
+                <p className="text-xs text-neutral-500 mt-1">{field.description}</p>
+              )}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="text-sm text-neutral-500">This node has no configurable fields.</p>
+      )}
+    </div>
+  );
+});
 
 const BlueprintEditor = () => {
   const [nodes, setNodes] = useState<Node[]>([]);
@@ -122,6 +285,14 @@ const BlueprintEditor = () => {
   const [rfInstance, setRfInstance] = useState<ReactFlowInstance | null>(null);
   const { definitions, loadDefinition } = useNodeStore();
 
+  // Memoized filtered definitions
+  const filteredDefinitions = useMemo(() => 
+    Object.values(definitions).filter((def) =>
+      def.name.toLowerCase().includes(searchQuery.toLowerCase())
+    ),
+    [definitions, searchQuery]
+  );
+
   // Load node definitions
   useEffect(() => {
     const loadNodeDefinitions = async () => {
@@ -134,12 +305,12 @@ const BlueprintEditor = () => {
           'types.yaml'
         ];
 
-        for (const file of nodeFiles) {
+        await Promise.all(nodeFiles.map(async (file) => {
           const response = await fetch(`/nodes/${file}`);
           if (!response.ok) throw new Error(`Failed to load ${file}`);
           const content = await response.text();
           loadDefinition(content);
-        }
+        }));
       } catch (error) {
         console.error('Error loading node definitions:', error);
       }
@@ -156,28 +327,20 @@ const BlueprintEditor = () => {
   const onNodesChange = useCallback((changes: any[]) => {
     setNodes((nds) => {
       const newNodes = applyNodeChanges(changes, nds);
-
-      // Handle selection changes
-      const selectionChange = changes.find((change: { type: string; }) => change.type === 'select');
+      const selectionChange = changes.find((change) => change.type === 'select');
       if (selectionChange) {
         const node = newNodes.find(n => n.id === selectionChange.id);
-        if (selectionChange.selected) {
-          setSelectedNode(node || null);
-        } else if (selectedNode?.id === selectionChange.id) {
-          setSelectedNode(null);
-        }
+        setSelectedNode(selectionChange.selected ? node || null : null);
       }
-
       return newNodes;
     });
-  }, [selectedNode]);
+  }, []);
 
   const onEdgesChange = useCallback((changes: EdgeChange[]) => {
     setEdges((eds) => applyEdgeChanges(changes, eds));
   }, []);
 
   const onConnect = useCallback((params: any) => {
-    // Find the source node and pin to determine the connection type
     const sourceNode = nodes.find(n => n.id === params.source);
     const sourcePin = sourceNode?.data.nodeDefinition.pins.outputs?.find(
       (p: { name: string }) => p.name === params.sourceHandle
@@ -194,44 +357,38 @@ const BlueprintEditor = () => {
     }
   }, [nodes]);
 
-  const handleNodeContextMenu = useCallback((event: React.MouseEvent, node: Node) => {
+  const handleContextMenu = useCallback((event: React.MouseEvent, node?: Node) => {
     event.preventDefault();
     event.stopPropagation();
-    setContextMenu({
-      show: true,
-      x: event.clientX,
-      y: event.clientY,
-      type: 'node',
-      nodeId: node.id
-    });
-  }, []);
-
-  const handlePaneContextMenu = useCallback((event: React.MouseEvent) => {
-    event.preventDefault();
-    if (!rfInstance) return;
-
-    const { left, top } = event.currentTarget.getBoundingClientRect();
-    const position = rfInstance.project({
-      x: event.clientX - left,
-      y: event.clientY - top,
-    });
-
-    setContextMenu({
-      show: true,
-      x: event.clientX,
-      y: event.clientY,
-      position,
-      type: 'pane'
-    });
+    
+    if (node) {
+      setContextMenu({
+        show: true,
+        x: event.clientX,
+        y: event.clientY,
+        type: 'node',
+        nodeId: node.id
+      });
+    } else if (rfInstance) {
+      const { left, top } = event.currentTarget.getBoundingClientRect();
+      const position = rfInstance.project({
+        x: event.clientX - left,
+        y: event.clientY - top,
+      });
+      
+      setContextMenu({
+        show: true,
+        x: event.clientX,
+        y: event.clientY,
+        position,
+        type: 'pane'
+      });
+    }
   }, [rfInstance]);
-
-  const handleNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
-    setSelectedNode(node);
-  }, []);
 
   const updateNodeFields = useCallback((nodeId: string, fieldName: string, value: any) => {
     setNodes(nds => {
-      const updatedNodes = nds.map(node => {
+      return nds.map(node => {
         if (node.id === nodeId) {
           const updatedNode = {
             ...node,
@@ -243,7 +400,6 @@ const BlueprintEditor = () => {
               }
             }
           };
-          // Also update selected node if this is the one being edited
           if (selectedNode?.id === nodeId) {
             setSelectedNode(updatedNode);
           }
@@ -251,7 +407,6 @@ const BlueprintEditor = () => {
         }
         return node;
       });
-      return updatedNodes;
     });
   }, [selectedNode]);
 
@@ -260,11 +415,9 @@ const BlueprintEditor = () => {
     setEdges((eds) => eds.filter((edge) =>
       edge.source !== nodeId && edge.target !== nodeId
     ));
-    if (selectedNode?.id === nodeId) {
-      setSelectedNode(null);
-    }
+    setSelectedNode((prev) => prev?.id === nodeId ? null : prev);
     setContextMenu({ show: false, x: 0, y: 0, type: 'pane' });
-  }, [selectedNode]);
+  }, []);
 
   const addNode = useCallback((type: string) => {
     if (!contextMenu.position) return;
@@ -295,9 +448,8 @@ const BlueprintEditor = () => {
     setContextMenu({ show: false, x: 0, y: 0, type: 'pane' });
   }, []);
 
-  const filteredDefinitions = Object.values(definitions).filter((def) =>
-    def.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Memoized Rust code generation
+  const generatedRustCode = useMemo(() => generateRustCode(nodes, edges), [nodes, edges]);
 
   return (
     <div className="w-full h-screen bg-black" onClick={closeContextMenu}>
@@ -308,11 +460,11 @@ const BlueprintEditor = () => {
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         onInit={onInit}
-        onNodeClick={handleNodeClick}
+        onNodeClick={(_, node) => setSelectedNode(node)}
         nodeTypes={nodeTypes}
         defaultEdgeOptions={defaultEdgeOptions}
-        onContextMenu={handlePaneContextMenu}
-        onNodeContextMenu={handleNodeContextMenu}
+        onContextMenu={(e) => handleContextMenu(e)}
+        onNodeContextMenu={(e, node) => handleContextMenu(e, node)}
         connectionMode={ConnectionMode.Loose}
         minZoom={0.1}
         maxZoom={4}
@@ -325,13 +477,13 @@ const BlueprintEditor = () => {
         zoomActivationKeyCode="Control"
         panActivationKeyCode="Space"
       >
-        <Background color="#333" gap={16} />
-        <Controls
+        <MemoizedBackground color="#333" gap={16} />
+        <MemoizedControls
           className="bg-neutral-900 border border-neutral-800 fill-neutral-400"
           showInteractive={true}
           position="bottom-right"
         />
-        <MiniMap
+        <MemoizedMiniMap
           className="bg-neutral-900 border border-neutral-800"
           nodeColor="#2563eb"
           position="bottom-left"
@@ -342,166 +494,41 @@ const BlueprintEditor = () => {
           <div className="flex flex-col h-full">
             {/* Code Preview */}
             <div className="h-1/2 border-b border-neutral-800">
-              <Editor
+              <MemoizedEditor
                 height="100%"
                 defaultLanguage="rust"
                 theme="vs-dark"
-                value={generateRustCode(nodes, edges)}
-                options={{
-                  readOnly: true,
-                  minimap: { enabled: false },
-                  fontSize: 14,
-                  wordWrap: 'off',
-                }}
+                value={generatedRustCode}
+                options={editorOptions}
               />
             </div>
 
             {/* Properties Panel */}
             <div className="h-1/2 overflow-y-auto">
-              {selectedNode ? (
-                <div className="p-4">
-                  <h3 className="text-lg font-semibold text-blue-400 mb-2">
-                    {selectedNode.data.nodeDefinition.name}
-                  </h3>
-                  <p className="text-sm text-neutral-400 mb-4">
-                    {selectedNode.data.nodeDefinition.description}
-                  </p>
-                  {selectedNode.data.nodeDefinition.fields ? (
-                    <div className="space-y-4">
-                      {Object.entries(selectedNode.data.nodeDefinition.fields as Record<string, FieldDefinition>).map(([fieldName, field]) => (
-                        <div key={fieldName}>
-                          <Label className="text-neutral-300">
-                            {field.label}
-                          </Label>
-                          {field.type === 'select' ? (
-                            <Select
-                              value={selectedNode.data.fields[fieldName] || ''}
-                              onValueChange={(value) => updateNodeFields(selectedNode.id, fieldName, value)}
-                            >
-                              <SelectTrigger className="w-full bg-neutral-800 border-neutral-700">
-                                <SelectValue placeholder={`Select ${field.label}`} />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectGroup>
-                                  {field.options?.map((option) => (
-                                    <SelectItem key={option} value={option}>
-                                      {option}
-                                    </SelectItem>
-                                  ))}
-                                </SelectGroup>
-                              </SelectContent>
-                            </Select>
-                          ) : field.type === 'multiline' ? (
-                            <textarea
-                              id={fieldName}
-                              value={selectedNode.data.fields[fieldName] || ''}
-                              onChange={(e) => updateNodeFields(selectedNode.id, fieldName, e.target.value)}
-                              className="w-full h-24 bg-neutral-800 border border-neutral-700 rounded-md p-2 text-neutral-300"
-                            />
-                          ) : (
-                            <Input
-                              id={fieldName}
-                              type={field.type}
-                              value={selectedNode.data.fields[fieldName] || ''}
-                              onChange={(e) => {
-                                e.preventDefault();
-                                const newValue = e.target.value;
-                                requestAnimationFrame(() => {
-                                  updateNodeFields(selectedNode.id, fieldName, newValue);
-                                });
-                              }}
-                              className="bg-neutral-800 border-neutral-700 text-neutral-300"
-                            />
-                          )}
-                          {field.description && (
-                            <p className="text-xs text-neutral-500 mt-1">{field.description}</p>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-neutral-500">This node has no configurable fields.</p>
-                  )}
-                </div>
-              ) : (
-                <div className="p-4 text-neutral-500 text-center">
-                  Select a node to view properties
-                </div>
-              )}
+              <PropertyPanel
+                selectedNode={selectedNode}
+                updateNodeFields={updateNodeFields}
+              />
             </div>
           </div>
         </Panel>
 
-        {/* Context Menus */}
-        {contextMenu.show && contextMenu.type === 'node' && (
-          <div
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              position: 'fixed',
-              top: contextMenu.y,
-              left: contextMenu.x,
-              zIndex: 1000,
-            }}
-            className="bg-neutral-900 border border-neutral-800 rounded-lg shadow-xl w-48"
-          >
-            <button
-              className="w-full px-4 py-2 text-left hover:bg-neutral-800 text-red-400 flex items-center gap-2"
-              onClick={() => contextMenu.nodeId && deleteNode(contextMenu.nodeId)}
-            >
-              <Trash2 className="h-4 w-4" />
-              Delete Node
-            </button>
-          </div>
-        )}
-
-        {contextMenu.show && contextMenu.type === 'pane' && (
-          <div
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              position: 'fixed',
-              top: contextMenu.y,
-              left: contextMenu.x,
-              zIndex: 1000,
-            }}
-            className="bg-neutral-900 border border-neutral-800 rounded-lg shadow-xl w-64"
-          >
-            <div className="p-2 border-b border-neutral-800">
-              <div className="relative">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-neutral-500" />
-                <Input
-                  placeholder="Search nodes..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-8 bg-neutral-800 border-neutral-700"
-                  autoFocus
-                />
-                {searchQuery && (
-                  <button
-                    onClick={() => setSearchQuery('')}
-                    className="absolute right-2 top-2.5"
-                  >
-                    <X className="h-4 w-4 text-neutral-500" />
-                  </button>
-                )}
-              </div>
-            </div>
-            <div className="max-h-96 overflow-y-auto">
-              {filteredDefinitions.map((def) => (
-                <button
-                  key={def.name}
-                  className="w-full px-4 py-2 text-left hover:bg-neutral-800 text-neutral-300"
-                  onClick={() => addNode(def.name)}
-                >
-                  <div className="font-medium">{def.name}</div>
-                  <div className="text-xs text-neutral-500">{def.description}</div>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
+        {/* Context Menu */}
+        <ContextMenuComponent
+          show={contextMenu.show}
+          x={contextMenu.x}
+          y={contextMenu.y}
+          type={contextMenu.type}
+          nodeId={contextMenu.nodeId}
+          onDelete={deleteNode}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          filteredDefinitions={filteredDefinitions}
+          addNode={addNode}
+        />
       </ReactFlow>
     </div>
   );
 };
 
-export default BlueprintEditor;
+export default memo(BlueprintEditor);

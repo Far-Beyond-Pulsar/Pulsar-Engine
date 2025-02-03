@@ -26,7 +26,7 @@ pins:
 template: |
   if {{condition}} { {{then_value}} } else { {{else_value}} }
 ---
-name: LoopNode
+name: Loop
 category: ControlFlow
 description: Loop over a range
 fields:
