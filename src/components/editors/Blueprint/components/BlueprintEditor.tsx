@@ -30,6 +30,22 @@ const nodeTypes = {
   pulsarNode: PulsarNode,
 };
 
+// Type-based edge styling
+const TYPE_COLORS = {
+  number: '#F59E0B',  // Amber
+  i32: '#F59E0B',     // Amber
+  i64: '#F59E0B',     // Amber
+  f32: '#F59E0B',     // Amber
+  f64: '#F59E0B',     // Amber
+  string: '#EC4899',  // Pink
+  boolean: '#3B82F6', // Blue
+  any: '#6B7280',     // Gray
+  array: '#10B981',   // Emerald
+  object: '#8B5CF6',  // Purple
+  execution: '#6366F1', // Indigo
+  default: '#6B7280'   // Gray
+};
+
 const defaultEdgeOptions = {
   type: 'smoothstep',
   animated: true,
@@ -37,13 +53,28 @@ const defaultEdgeOptions = {
     type: MarkerType.ArrowClosed,
     width: 20,
     height: 20,
-    color: '#2563eb',
+    color: TYPE_COLORS.default,
   },
   style: {
-    stroke: '#2563eb',
+    stroke: TYPE_COLORS.default,
     strokeWidth: 2,
   },
 };
+
+const getEdgeStyle = (sourceType: string) => ({
+  type: 'smoothstep',
+  animated: true,
+  markerEnd: {
+    type: MarkerType.ArrowClosed,
+    width: 20,
+    height: 20,
+    color: TYPE_COLORS[sourceType] || TYPE_COLORS.default,
+  },
+  style: {
+    stroke: TYPE_COLORS[sourceType] || TYPE_COLORS.default,
+    strokeWidth: 2,
+  },
+});
 
 const proOptions = {
   hideAttribution: true,
@@ -127,8 +158,21 @@ const BlueprintEditor = () => {
   }, []);
 
   const onConnect = useCallback((params) => {
-    setEdges((eds) => addEdge(params, eds));
-  }, []);
+    // Find the source node and pin to determine the connection type
+    const sourceNode = nodes.find(n => n.id === params.source);
+    const sourcePin = sourceNode?.data.nodeDefinition.pins.outputs?.find(
+      p => p.name === params.sourceHandle
+    );
+
+    if (sourceNode && sourcePin) {
+      const edgeStyle = getEdgeStyle(sourcePin.type);
+      const connection = {
+        ...params,
+        ...edgeStyle
+      };
+      setEdges((eds) => addEdge(connection, eds));
+    }
+  }, [nodes]);
 
   const handleNodeContextMenu = useCallback((event: React.MouseEvent, node: Node) => {
     event.preventDefault();
