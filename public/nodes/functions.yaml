@@ -1,0 +1,35 @@
+---
+name: FunctionNode
+category: Functions
+description: Define a function
+fields:
+  name:
+    type: string
+    label: Function Name
+    description: Name of the function
+    required: true
+    validation:
+      pattern: "^[a-zA-Z_][a-zA-Z0-9_]*$"
+  params:
+    type: string
+    label: Parameters
+    description: Function parameters (comma-separated)
+    required: false
+  return_type:
+    type: string
+    label: Return Type
+    description: Function return type
+    required: true
+pins:
+  inputs:
+    - name: body
+      type: any
+      description: Function body
+  outputs:
+    - name: function
+      type: function
+      description: The defined function
+template: |
+  fn {{name}}({{params}}) -> {{return_type}} {
+      {{body}}
+  }

@@ -1,0 +1,50 @@
+---
+name: AddNode
+category: Arithmetic
+description: Add two numbers together
+fields:
+  comment:
+    type: string
+    label: Comment
+    description: Optional comment for this operation
+    required: false
+pins:
+  inputs:
+    - name: a
+      type: number
+      description: First number to add
+    - name: b
+      type: number
+      description: Second number to add
+  outputs:
+    - name: sum
+      type: number
+      description: Result of a + b
+template: |
+  // {{comment}}
+  {{a}} + {{b}}
+---
+name: SubtractNode
+category: Arithmetic
+description: Subtract two numbers
+fields:
+  comment:
+    type: string
+    label: Comment
+    description: Optional comment for this operation
+    required: false
+pins:
+  inputs:
+    - name: a
+      type: number
+      description: Number to subtract from
+    - name: b
+      type: number
+      description: Number to subtract
+  outputs:
+    - name: difference
+      type: number
+      description: Result of a - b
+template: |
+  // {{comment}}
+  {{a}} - {{b}}

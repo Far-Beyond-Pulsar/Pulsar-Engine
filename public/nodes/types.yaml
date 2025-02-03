@@ -1,0 +1,42 @@
+---
+name: StructNode
+category: Types
+description: Define a struct
+fields:
+  name:
+    type: string
+    label: Struct Name
+    description: Name of the struct
+    required: true
+    validation:
+      pattern: "^[A-Z][a-zA-Z0-9_]*$"
+  fields:
+    type: string
+    label: Fields
+    description: Struct fields (field: type format, one per line)
+    required: true
+template: |
+  struct {{name}} {
+      {{fields}}
+  }
+---
+name: EnumNode
+category: Types
+description: Define an enum
+fields:
+  name:
+    type: string
+    label: Enum Name
+    description: Name of the enum
+    required: true
+    validation:
+      pattern: "^[A-Z][a-zA-Z0-9_]*$"
+  variants:
+    type: string
+    label: Variants
+    description: Enum variants (one per line)
+    required: true
+template: |
+  enum {{name}} {
+      {{variants}}
+  }

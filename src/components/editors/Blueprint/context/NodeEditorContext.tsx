@@ -1,227 +1,237 @@
-import React, { 
-    createContext, 
-    useState, 
-    useCallback, 
-    useMemo, 
-    ReactNode,
-    useContext
-  } from 'react';
-  import { Node, Edge } from 'reactflow';
-  import NODE_CONFIGS from '../utils/nodeConfigs';
+import React, { createContext, useContext, useCallback, useMemo } from 'react';
+import { Node, Edge, useNodesState, useEdgesState, Connection, addEdge } from 'reactflow';
+import { useNodeStore } from '../store/nodeStore';
+import { PulsarNode, PulsarNodeData, ValidationError } from '../types';
+import { calculateNodePosition, findConnectedNodes } from '../lib/utils';
+
+interface NodeEditorContextType {
+  // State
+  nodes: Node[];
+  edges: Edge[];
+  selectedNode: PulsarNode | null;
+  validationErrors: ValidationError[];
   
-  // Types
-  export interface ExtendedNode extends Node {
-    data: {
-      label: string;
-      fields?: Record<string, string>;
-      isHighlighted?: boolean;
+  // Node operations
+  addNode: (type: string, position?: { x: number; y: number }) => void;
+  updateNode: (nodeId: string, updates: Partial<PulsarNodeData>) => void;
+  deleteNode: (nodeId: string) => void;
+  duplicateNode: (nodeId: string) => void;
+  
+  // Selection
+  setSelectedNode: (node: PulsarNode | null) => void;
+  
+  // Edge operations
+  onNodesChange: (changes: any) => void;
+  onEdgesChange: (changes: any) => void;
+  onConnect: (connection: Connection) => void;
+  
+  // Graph operations
+  clearGraph: () => void;
+  validateGraph: () => void;
+  generateCode: () => string;
+  
+  // UI state
+  isValidating: boolean;
+  isGeneratingCode: boolean;
+}
+
+const NodeEditorContext = createContext<NodeEditorContextType | undefined>(undefined);
+
+export const NodeEditorProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // Node and edge state management using ReactFlow's hooks
+  const [nodes, setNodes, onNodesChange] = useNodesState([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  
+  // Local state management
+  const [selectedNode, setSelectedNode] = React.useState<PulsarNode | null>(null);
+  const [validationErrors, setValidationErrors] = React.useState<ValidationError[]>([]);
+  const [isValidating, setIsValidating] = React.useState(false);
+  const [isGeneratingCode, setIsGeneratingCode] = React.useState(false);
+
+  // Access to node definitions and validation from store
+  const {
+    definitions,
+    validateGraph: validateGraphFromStore,
+    generateCode: generateCodeFromStore,
+  } = useNodeStore();
+
+  // Node operations
+  const addNode = useCallback((type: string, position?: { x: number; y: number }) => {
+    const definition = definitions[type];
+    if (!definition) return;
+
+    const nodePosition = position || calculateNodePosition(nodes);
+    
+    const newNode: PulsarNode = {
+      id: `node_${Date.now()}`,
+      type: 'pulsarNode',
+      position: nodePosition,
+      data: {
+        nodeDefinition: definition,
+        fields: Object.fromEntries(
+          Object.entries(definition.fields).map(([key, field]) => [
+            key,
+            field.default ?? ''
+          ])
+        ),
+      },
     };
-  }
-  
-  export interface NodeHighlightGroup {
-    id: string;
-    nodeIds: string[];
-    color?: string;
-  }
-  
-  // Define the shape of the context
-  export interface NodeEditorContextType {
-    nodes: ExtendedNode[];
-    edges: Edge[];
-    highlightedGroups: NodeHighlightGroup[];
-    addNode: (type: string, x?: number, y?: number) => ExtendedNode;
-    deleteNode: (nodeId: string) => void;
-    updateNode: (nodeId: string, newData: any) => void;
-    toggleNodeHighlight: (nodeId: string) => void;
-    clearAll: () => void;
-    setNodes: React.Dispatch<React.SetStateAction<ExtendedNode[]>>;
-    setEdges: React.Dispatch<React.SetStateAction<Edge[]>>;
-  }
-  
-  // Create the context with a default empty implementation
-  export const NodeEditorContext = createContext<NodeEditorContextType>({
-    nodes: [],
-    edges: [],
-    highlightedGroups: [],
-    addNode: () => ({ 
-      id: '', 
-      type: '', 
-      position: { x: 0, y: 0 }, 
-      data: { label: '', fields: {} } 
-    }),
-    deleteNode: () => {},
-    updateNode: () => {},
-    toggleNodeHighlight: () => {},
-    clearAll: () => {},
-    setNodes: () => {},
-    setEdges: () => {}
-  });
-  
-  // Provider component
-  export const NodeEditorProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    const [nodes, setNodes] = useState<ExtendedNode[]>([]);
-    const [edges, setEdges] = useState<Edge[]>([]);
-    const [highlightedGroups, setHighlightedGroups] = useState<NodeHighlightGroup[]>([]);
-  
-    // Add a new node
-    const addNode = useCallback((type: string, x = 200, y = 200): ExtendedNode => {
-      const config = NODE_CONFIGS[type as keyof typeof NODE_CONFIGS];
-      const initialFields = Object.keys(config.fields).reduce((acc, fieldName) => ({
-        ...acc,
-        [fieldName]: ''
-      }), {});
-  
-      const newNode: ExtendedNode = {
-        id: `node_${nodes.length + 1}`,
-        type: 'unrealNode',
-        data: { 
-          label: type,
-          fields: initialFields,
-          isHighlighted: false
-        },
-        position: { x: Number(x), y: Number(y) }
-      };
-      
-      setNodes((prevNodes) => [...prevNodes, newNode]);
-      return newNode;
-    }, [nodes]);
-  
-    // Delete a node and its connected edges
-    const deleteNode = useCallback((nodeId: string) => {
-      // Remove the node
-      setNodes(prevNodes => prevNodes.filter(node => node.id !== nodeId));
-      
-      // Remove any edges connected to this node
-      setEdges(prevEdges => 
-        prevEdges.filter(edge => 
-          edge.source !== nodeId && edge.target !== nodeId
-        )
-      );
-  
-      // Remove node from any highlight groups
-      setHighlightedGroups(prevGroups => 
-        prevGroups.map(group => ({
-          ...group,
-          nodeIds: group.nodeIds.filter(id => id !== nodeId)
-        })).filter(group => group.nodeIds.length > 0)
-      );
-    }, []);
-  
-    // Update a node's data
-    const updateNode = useCallback((nodeId: string, newData: any) => {
-      setNodes(prevNodes => 
-        prevNodes.map(node => 
-          node.id === nodeId 
-            ? { ...node, data: { ...node.data, ...newData } }
-            : node
-        )
-      );
-    }, []);
-  
-    // Toggle node highlight in groups
-    const toggleNodeHighlight = useCallback((nodeId: string) => {
-      const node = nodes.find(n => n.id === nodeId);
-      if (!node) return;
-  
-      // Update node's highlighted state
-      setNodes(prevNodes => 
-        prevNodes.map(n => 
-          n.id === nodeId 
-            ? { 
-                ...n, 
-                data: { 
-                  ...n.data, 
-                  isHighlighted: !n.data.isHighlighted 
-                } 
-              }
-            : n
-        )
-      );
-  
-      // Update highlight groups
-      setHighlightedGroups(prevGroups => {
-        const existingGroupIndex = prevGroups.findIndex(group => 
-          group.nodeIds.includes(nodeId)
-        );
-  
-        if (existingGroupIndex !== -1) {
-          // Remove from existing group
-          const newGroups = [...prevGroups];
-          newGroups[existingGroupIndex] = {
-            ...newGroups[existingGroupIndex],
-            nodeIds: newGroups[existingGroupIndex].nodeIds.filter(id => id !== nodeId)
+
+    setNodes((nds) => [...nds, newNode]);
+  }, [nodes, definitions]);
+
+  const updateNode = useCallback((nodeId: string, updates: Partial<PulsarNodeData>) => {
+    setNodes((nds) =>
+      nds.map((node) => {
+        if (node.id === nodeId) {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              ...updates,
+            },
           };
-  
-          return newGroups.filter(group => group.nodeIds.length > 0);
-        } else {
-          // Add to a new or existing group
-          const lastGroup = prevGroups[prevGroups.length - 1];
-          
-          if (lastGroup && lastGroup.nodeIds.length < 5) {
-            // Add to last group if not full
-            return [
-              ...prevGroups.slice(0, -1),
-              { 
-                ...lastGroup, 
-                nodeIds: [...lastGroup.nodeIds, nodeId] 
-              }
-            ];
-          } else {
-            // Create new group
-            return [
-              ...prevGroups,
-              { 
-                id: `group_${prevGroups.length + 1}`, 
-                nodeIds: [nodeId] 
-              }
-            ];
-          }
         }
-      });
-    }, [nodes]);
-  
-    // Clear all nodes, edges, and highlights
-    const clearAll = useCallback(() => {
-      setNodes([]);
-      setEdges([]);
-      setHighlightedGroups([]);
-    }, []);
-  
-    // Memoize the context value to prevent unnecessary re-renders
-    const contextValue = useMemo(() => ({
+        return node;
+      })
+    );
+  }, []);
+
+  const deleteNode = useCallback((nodeId: string) => {
+    // Remove connected edges first
+    setEdges((eds) =>
+      eds.filter((edge) => edge.source !== nodeId && edge.target !== nodeId)
+    );
+    
+    // Remove the node
+    setNodes((nds) => nds.filter((node) => node.id !== nodeId));
+    
+    // Clear selection if this was the selected node
+    if (selectedNode?.id === nodeId) {
+      setSelectedNode(null);
+    }
+  }, [selectedNode, setEdges, setNodes]);
+
+  const duplicateNode = useCallback((nodeId: string) => {
+    const node = nodes.find((n) => n.id === nodeId);
+    if (!node) return;
+
+    const newNode: PulsarNode = {
+      ...node,
+      id: `node_${Date.now()}`,
+      position: {
+        x: node.position.x + 20,
+        y: node.position.y + 20,
+      },
+      data: {
+        ...node.data,
+      },
+    };
+
+    setNodes((nds) => [...nds, newNode]);
+  }, [nodes]);
+
+  // Edge operations
+  const onConnect = useCallback(
+    (connection: Connection) => {
+      setEdges((eds) => addEdge(connection, eds));
+    },
+    [setEdges]
+  );
+
+  // Graph operations
+  const clearGraph = useCallback(() => {
+    setNodes([]);
+    setEdges([]);
+    setSelectedNode(null);
+    setValidationErrors([]);
+  }, []);
+
+  const validateGraph = useCallback(() => {
+    setIsValidating(true);
+    try {
+      const result = validateGraphFromStore();
+      setValidationErrors(result.errors);
+    } finally {
+      setIsValidating(false);
+    }
+  }, [validateGraphFromStore]);
+
+  const generateCode = useCallback(() => {
+    setIsGeneratingCode(true);
+    try {
+      return generateCodeFromStore();
+    } finally {
+      setIsGeneratingCode(false);
+    }
+  }, [generateCodeFromStore]);
+
+  // Context value memoization
+  const contextValue = useMemo(
+    () => ({
+      // State
       nodes,
       edges,
-      highlightedGroups,
+      selectedNode,
+      validationErrors,
+      
+      // Node operations
       addNode,
-      deleteNode,
       updateNode,
-      toggleNodeHighlight,
-      clearAll,
-      setNodes,
-      setEdges
-    }), [
-      nodes, 
-      edges, 
-      highlightedGroups, 
-      addNode, 
-      deleteNode, 
-      updateNode, 
-      toggleNodeHighlight, 
-      clearAll
-    ]);
-  
-    return (
-      <NodeEditorContext.Provider value={contextValue}>
-        {children}
-      </NodeEditorContext.Provider>
-    );
-  };
-  
-  // Custom hook to use the NodeEditor context
-  export const useNodeEditor = () => {
-    const context = useContext(NodeEditorContext);
-    if (context === undefined) {
-      throw new Error('useNodeEditor must be used within a NodeEditorProvider');
-    }
-    return context;
-  };
+      deleteNode,
+      duplicateNode,
+      
+      // Selection
+      setSelectedNode,
+      
+      // Edge operations
+      onNodesChange,
+      onEdgesChange,
+      onConnect,
+      
+      // Graph operations
+      clearGraph,
+      validateGraph,
+      generateCode,
+      
+      // UI state
+      isValidating,
+      isGeneratingCode,
+    }),
+    [
+      nodes,
+      edges,
+      selectedNode,
+      validationErrors,
+      addNode,
+      updateNode,
+      deleteNode,
+      duplicateNode,
+      onNodesChange,
+      onEdgesChange,
+      onConnect,
+      clearGraph,
+      validateGraph,
+      generateCode,
+      isValidating,
+      isGeneratingCode,
+    ]
+  );
+
+  return (
+    <NodeEditorContext.Provider value={contextValue}>
+      {children}
+    </NodeEditorContext.Provider>
+  );
+};
+
+// Custom hook for using the Node Editor context
+export const useNodeEditor = () => {
+  const context = useContext(NodeEditorContext);
+  if (context === undefined) {
+    throw new Error('useNodeEditor must be used within a NodeEditorProvider');
+  }
+  return context;
+};
+
+export default NodeEditorProvider;
