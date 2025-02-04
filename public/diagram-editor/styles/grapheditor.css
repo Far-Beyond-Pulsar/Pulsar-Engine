@@ -1,0 +1,2194 @@
+:root {
+	--panel-color: #f1f3f4;
+	--border-color: #dadada;
+	--text-color: #3F3F3F;
+	--dark-color: #121212;
+	--dark-panel-color: #1B1D1E;
+	--dark-border-color: #333333;
+	--dark-text-color: #C0C0C0;
+	--dark-accent-color: #003555;
+	--dark-active-accent-color: #004A77;
+	--dark-inverse-active-color: #c4c4c4;
+	--dark-header-color: #1B1D1E;
+}
+* {
+	forced-color-adjust: none;
+}
+button, select {
+	color: light-dark(#000000, var(--dark-text-color));
+}
+html body.geSimple.geDarkMode .geMenubarContainer div.geMenuItem {
+	border-width:1px;
+	border-style:solid;
+}
+html body.geSimple.geDarkMode .geToolbarContainer .geMenuItem, html body.geSimple.geDarkMode .geToolbarContainer .geToolbarButton,
+html body.geSimple.geDarkMode .geMenubarContainer .geMenuItem .geMenuItem, html body.geSimple.geDarkMode .geMenubarContainer a.geMenuItem,
+html body.geSimple.geDarkMode .geMenubarContainer .geToolbarButton, .geDarkMode .mxPopupMenuItem > div:not(:has(img)) {
+	filter: invert(100%);
+}
+.mxPopupMenuItem > div {
+	opacity: 0.7;
+}
+html body.geEditor.geMinimal:not(.geDarkMode) div.diagramContainer button.gePrimaryBtn,
+html body.geEditor.geMinimal:not(.geDarkMode) .mxWindow button.gePrimaryBtn,
+html body.geEditor.geMinimal:not(.geDarkMode) .geDialog button.gePrimaryBtn,
+html body.geEditor .gePrimaryBtn {
+	background: light-dark(#29b6f2, var(--dark-accent-color));
+	color:light-dark(#ffffff, var(--dark-text-color));
+	box-shadow: none;
+	border: none;
+}
+html body.geEditor .gePrimaryBtn:hover:not([disabled]) {
+	background: light-dark(#12a2e0, var(--dark-active-accent-color));
+	box-shadow: none;
+	border: none;
+}
+html body .geStatus {
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+html body .geStatus > *:not([class]) {
+	vertical-align:top;
+}
+html body.geSimple .mxWindow {
+	z-index: 3;
+	font-size: 12px;
+}
+html body.geSimple table.mxWindow {
+	font-size: 12px;
+}
+.geSimple .geStatus > div {
+	box-sizing: border-box;
+	max-width: 100%;
+	text-overflow: ellipsis;
+}
+.geSimple .geBtn button {
+	min-width:72px !important;
+}
+.geSimple div.geToolbarContainer a.geButton {
+	margin:0px;
+	padding: 0 2px 4px 2px;
+}
+html body.geSimple div.geToolbarContainer a.geColorBtn {
+	margin: 2px;
+}
+.geSimpletable.mxWindow td.mxWindowPane button.geColorBtn {
+	padding:0px;
+	box-sizing: border-box;
+}
+html body.geSimple .geMenuItem {
+	font-size:14px;
+	text-decoration: none;
+	font-weight: normal;
+	padding: 6px 10px 6px 10px;
+	border: none;
+	border-radius: 5px;
+	color: light-dark(#353535, #cccccc);
+	box-shadow: inset 0 0 0 1px rgba(0,0,0,.11), inset 0 -1px 0 0 rgba(0,0,0,.08), 0 1px 2px 0 rgba(0,0,0,.04);
+}
+html body div.mxPopupMenu {
+	border-radius:5px;
+	border:1px solid #c0c0c0;
+	padding:5px 0 5px 0;
+	box-shadow: 0px 4px 17px -4px rgba(96,96,96,1);
+}
+html table.mxPopupMenu td.mxPopupMenuItem {
+	color: light-dark(#353535, #cccccc);
+	font-size: 14px;
+	padding-top: 4px;
+	padding-bottom: 4px;
+}
+html table.mxPopupMenu tr.mxPopupMenuItemHover {
+	background-color: light-dark(#29b6f2, #000000);
+}
+html tr.mxPopupMenuItemHover td.mxPopupMenuItem, html tr.mxPopupMenuItemHover td.mxPopupMenuItem span {
+	color: light-dark(#ffffff, #cccccc) !important;
+}
+html tr.mxPopupMenuItem, html td.mxPopupMenuItem {
+	transition-property: none !important;
+}
+html body td.mxWindowTitle {
+	padding-right: 14px;
+}
+html body.geEditor.geDarkMode *, html body .mxWindow.geDarkMode {
+	box-shadow:none !important;
+}
+html body.geDarkMode .geStatus > *, html body.geDarkMode .geUser {
+	color:var(--dark-text-color);
+}
+html body.geDarkMode div.geMenubarContainer, html body.geDarkMode .geFormatContainer,
+html body.geDarkMode div.geMenubarContainer .geStatus:hover {
+	background-color:var(--dark-panel-color);
+}
+html body.geDarkMode .mxCellEditor {
+	color:#f0f0f0;
+}
+html body.geDarkMode.geEditor div.mxPopupMenu {
+	border:1px solid var(--dark-border-color);
+	background:var(--dark-panel-color);
+}
+.geTabContainer {
+	border-left-color:var(--dark-border-color);
+	border-right-color:var(--dark-border-color);
+}
+html body.geEditor .geActivePage, html body.geEditor .geTab:active, .geRuler *, 
+html body.geEditor .geSidebarContainer .geTitle:active {
+	background:light-dark(#ffffff, var(--dark-border-color));
+}
+.geSearchSidebar input, .geBtnStepper, .geBtnUp,
+html body.geDarkMode a.geStatus .geStatusBox {
+	border-color:var(--dark-border-color);
+}
+html body.geDarkMode.geEditor div.mxPopupMenu hr {
+	background-color:var(--dark-border-color);
+}
+html body.geDarkMode .geDragPreview {
+	border:1px dashed #cccccc;
+}
+html body.geDarkMode, html body.geDarkMode .geFooterContainer, html body.geDarkMode #geFooterItem1, html body.geDarkMode textarea,
+html body.geDarkMode .mxWindowTitle, html body.geDarkMode .geDialogTitle, html body.geDarkMode .geDialogFooter, html .geHint
+{
+	background:var(--dark-panel-color);
+}
+html .geToolbarButton, html body.geDarkMode .geMenubarContainer .geMenuItem {
+	border-color:var(--dark-border-color);
+	color:#303030;
+}
+html > body.geDarkMode > div > div.geToolbarContainer.geSimpleMainMenu,
+html > body.geDarkMode > div > div.geToolbarContainer.geSimpleMainMenu .geToolbarContainer {
+	background:var(--dark-header-color);
+}
+html body.geDarkMode div.mxRubberband {
+	border:1px dashed #ffffff !important;
+	background:var(--dark-border-color) !important;
+}
+html body.geDarkMode .geTemplate, html body.geDarkMode.geEditor a.geInverseToolbarButton input {
+	color:#000000;
+}
+html body.geDarkMode.geEditor input:not([disabled]),
+html body.geDarkMode.geEditor select:not([disabled]),
+html body.geDarkMode.geEditor textarea:not([disabled]),
+html body.geDarkMode.geEditor .geColorBtn:not([disabled]),
+html body.geDarkMode.geEditor button:not([disabled], .gePrimaryBtn),
+html body.geDarkMode.geEditor .geBtn:not([disabled], .gePrimaryBtn),
+html body.geDarkMode.geEditor .geBigButton:not([disabled]) {
+	background:var(--dark-header-color);
+	border:1px solid var(--dark-border-color);
+	color:var(--dark-text-color);
+}
+html body.geDarkMode.geEditor button.geAdaptiveAsset:hover:not([disabled]) {
+	background:#fff;
+}
+html body.geDarkMode.geEditor button.geAdaptiveAsset:not([disabled]) {
+	border-color:#a2a2a2;
+}
+html body.geDarkMode.geEditor select:hover:not([disabled]),
+html body.geDarkMode.geEditor .geColorBtn:hover:not([disabled]),
+html body.geDarkMode.geEditor button:hover:not([disabled], .geAdaptiveAsset, .gePrimaryBtn) {
+	background:var(--dark-border-color);
+}
+.geDarkMode .geInsertTablePicker, .geDarkMode .geInsertTablePicker * {
+	border-color:var(--dark-border-color);
+}
+html body.geDarkMode .geSketch .geToolbarContainer {
+	border-style:solid;
+}
+html body.geDarkMode .geSidebarTooltip {
+	border:1px solid var(--dark-border-color);
+}
+html body.geDarkMode .geSprite, html body.geDarkMode .geSocialFooter img,
+.geDarkMode .geAdaptiveAsset:not(.geUser img) {
+	filter:invert(100%);
+}
+body.geDarkMode .geInverseAdaptiveAsset, .geDarkMode .geCommentUserImg {
+	filter:none !important
+}
+.geAdaptiveAsset {
+	color: #333333;
+}
+.geSidebarContainer {
+	border-right:1px solid var(--border-color);
+}
+html body.geDarkMode .geToolbarMenu, html body.geDarkMode .geFooterContainer,
+html body.geDarkMode .geFooterContainer td {
+	border-color:var(--dark-border-color);
+}
+html body.geDarkMode .geFooterContainer a {
+	background-color:none;
+}
+html body.geDarkMode .geBigStandardButton {
+	border: 1px solid var(--dark-border-color);
+}
+html body.geDarkMode .geFooterContainer td:hover, html body.geDarkMode #geFooterItem1:hover,
+html body.geDarkMode .geBigStandardButton:hover {
+	background-color:#000000;
+}
+html body.geDarkMode .geSidebarContainer, html body.geDarkMode .geDiagramBackdrop {
+	background:var(--dark-panel-color);
+}
+html body.geDarkMode tr.mxPopupMenuItem {
+	color:#cccccc;
+}
+html body.geDarkMode.geEditor table.mxPopupMenu tr.mxPopupMenuItemHover {
+	background:var(--dark-accent-color);
+	color:#cccccc;
+}
+html .geDarkMode .geSidebarContainer .geTitle:hover, html body.geDarkMode .geSidebarContainer .geItem:hover,
+html body.geDarkMode .geMenubarContainer .geItem:hover, html body.geDarkMode.geEditor .geBaseButton:hover {
+	background:var(--dark-border-color);
+}
+html body.geDarkMode .geToolbarContainer .geSeparator {
+	background-color:var(--dark-border-color);
+}
+html body.geDarkMode .geVsplit, html body.geDarkMode table.mxPopupMenu hr {
+	border-color:var(--dark-border-color);
+	background-color:var(--dark-color);
+}
+html body.geDarkMode .geToolbarContainer .geButton:hover, html body.geDarkMode .geToolbarContainer .geButton:active,
+html body.geDarkMode .geToolbarContainer .geLabel:hover, html body.geDarkMode .geToolbarContainer .geLabel:active,
+html body.geDarkMode .geVsplit:hover {
+	background-color:var(--dark-color);
+}
+html body.geDarkMode .geToolbarContainer .geButton.geAdaptiveAsset:hover {
+	background-color: #fff;
+}
+html body.geDarkMode .geDialog, html body.geDarkMode div.mxWindow,
+html body div.mxWindow.geDarkMode {
+	background:var(--dark-panel-color);
+	border-color:#565656;
+}
+html body.geDarkMode a.geStatus .geStatusAlertOrange {
+	background-color:rgb(187, 103, 0);
+	border:rgb(240, 135, 5);
+}
+html body.geDarkMode a.geStatus .geStatusAlert {
+	background-color:#a20025;
+	border:1px solid #bd002b;
+	color:#fff !important;
+}
+html body.geDarkMode a.geStatus .geStatusAlert:hover {
+	background-color:#a20025;
+	border-color:#bd002b;
+}
+html .geDarkMode .geCommentContainer {
+	background-color:transparent;
+	border-width:1px;
+	color:inherit;
+}
+.geEditor {
+	width:100%;
+	height:100%;
+	position:absolute;
+	color-scheme:light dark;
+	color:light-dark(var(--text-color), var(--dark-text-color));
+	background:light-dark(var(--panel-color), var(--dark-panel-color));
+}
+.mxCellEditor {
+	font-family:initial;
+}
+.geEditor *:not(svg *, .mxCellEditor *), .mxWindow *, .geCommentsToolbar {
+	border-color:light-dark(var(--border-color), var(--dark-border-color));
+}
+html div.mxWindow, .geDialog, .geSketch .geToolbarContainer {
+	border-radius:5px;
+	box-shadow:0px 0px 2px #C0C0C0;
+}
+div td.mxWindowTitle {
+	border-bottom-style:solid;
+	border-bottom-width:1px;
+	font-size:13px;
+	height:22px;
+}
+.mxWindowTitle > div > img {
+	padding:4px;
+}
+.geEditor {
+	font-family:-apple-system, BlinkMacSystemFont, "Segoe UI Variable", "Segoe UI", system-ui, ui-sans-serif, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+	font-size:14px;
+	border:none;
+	margin:0px;
+}
+.geBackground {
+	background:light-dark(#ffffff, var(--dark-color));
+}
+.geEditor input[type=text]::-ms-clear {
+	display: none;
+}
+.geEditor input, .geEditor select,
+.geEditor textarea, .geEditor button {
+    font-size: inherit;
+}
+.geMenubarContainer, .geToolbarContainer, .geHsplit,
+.geVsplit, .mxWindowTitle, .geSidebarContainer,
+.geEditor .geTabItem {
+	background:light-dark(var(--panel-color), var(--dark-panel-color));
+}
+.geButtonContainer {
+	display: inline-flex;
+	align-items: center;
+	padding: 0 32px 0 0;
+	margin-left: auto;
+}
+.geEditor .geTabItem {
+	border-width:1px;
+	border-top-style:solid;
+}
+.geEditor .geTabItem {
+	cursor:default;
+	user-select:none;
+}
+.geEditor div.mxTooltip {
+	background:light-dark(var(--panel-color), var(--dark-panel-color));
+	color:light-dark(var(--text-color), var(--dark-text-color));
+	box-shadow:1px 1px 2px 0px #ddd;
+	font-size:11px;
+	padding:6px;
+}
+.geDragPreview {
+	border: 1px dashed black;
+}
+html > body > div > div.geToolbarContainer.geSimpleMainMenu,
+html > body > div > div.geToolbarContainer.geSimpleMainMenu .geToolbarContainer{
+	border-top: none !important;
+	border-left: none !important;
+	border-right: none !important;
+}
+html > body > div > div.geToolbarContainer.geSimpleMainMenu .geToolbarContainer{
+	border:none !important;
+}
+.geMenubarContainer {
+	display:inline-flex;
+	align-items:center;
+}
+.geMenubarContainer .geItem, .geToolbar .geButton, .geToolbar .geLabel {
+	cursor:pointer !important;
+}
+.geSidebarContainer .geTitle {
+	cursor:default !important;
+}
+.geBackgroundPage {
+  	box-shadow:0px 0px 3px 0px #d1d1d1;
+}
+.geSidebarContainer a, .geMenubarContainer a, .geToolbar a {
+	text-decoration:none;
+}
+.geMenubarContainer, .geToolbarContainer, .geDiagramContainer, .geSidebarContainer, .geFooterContainer, .geHsplit, .geVsplit {
+	overflow:hidden;
+	position:absolute;
+	cursor:default;
+}
+.geFormatContainer {
+	overflow-x:hidden !important;
+	overflow-y:auto !important;
+	font-size:12px;
+	border-left:1px solid #dadce0;
+	transition:width 0.3s;
+}
+.geFormatContainer button:not(.geColorBtn), .geFormatContainer select {
+	border-radius:4px;
+	padding:2px;
+}
+.geSidebarFooter {
+	border-top:1px solid #dadce0;
+}
+.geFormatSection {
+	border-bottom:1px solid #dadce0;
+	border-color:#dadce0;
+}
+.geDiagramContainer {
+	background-color:light-dark(#ffffff, var(--dark-color));
+	font-size:0px;
+	outline:none;
+}
+.geMenubar, .geToolbar {
+	white-space:nowrap;
+	display:block;
+	width:100%;
+}
+.geMenubarContainer .geItem, .geToolbar .geButton, .geToolbar .geLabel,
+.geSidebar, .geSidebar .geItem, .mxPopupMenuItem {
+	-webkit-transition: all 0.1s ease-in-out;
+	-moz-transition: all 0.1s ease-in-out;
+	-o-transition: all 0.1s ease-in-out;
+	-ms-transition: all 0.1s ease-in-out;
+	transition: all 0.1s ease-in-out;
+}
+.geEditor .geHint {
+	background-color:light-dark(var(--panel-color), var(--dark-panel-color));
+	border-color:light-dark(var(--border-color), var(--dark-border-color));
+	box-shadow:1px 1px 2px 0px #ddd;
+	border-style:solid;
+	border-width:1px;
+	padding:4px 16px 4px 16px;
+	border-radius:3px;
+	opacity:0.8;
+	font-size:9pt;
+}
+.geHint img {
+	opacity: 0.7;
+}
+.geHint img:hover
+{
+	opacity: 1;
+}
+.geUser {
+	display:inline-block;
+	cursor:pointer;
+	font-size:10px;
+}
+.geStatus > * {
+	overflow:hidden;
+	white-space:nowrap;
+	vertical-align:middle;
+	display:inline-block;
+	font-size:12px;
+}
+a.geStatus {
+	display:inline-flex;
+	align-items:center;
+	white-space:nowrap;
+	min-width:0;
+	height:100%;
+}
+.geStatus *[data-action] {
+	cursor:pointer;
+}
+.geStatus img {
+	max-width:16px;
+	vertical-align:bottom;
+}
+a.geStatus div + div {
+	margin-left:8px;
+}
+a.geStatus .geStatusBox {
+	border-style: solid;
+	border-width: 1px;
+	border-radius: 3px;
+	font-size: 10px;
+	padding: 3px;
+}
+a.geStatus .geStatusAlert {
+	padding:4px 8px;
+	background-color:#eacccc;
+	border:1px solid #dca4ad;
+	color:#b62623 !important;
+	border-radius:3px;
+}
+a.geStatus .geStatusAlertOrange {
+	padding:4px 8px;
+	background-color:rgb(242, 147, 30);
+	border:rgb(240, 135, 5);
+	color:#000000 !important;
+	border-radius:3px;
+}
+html body div.geSmallBanner {
+	background-color: #F2931E;
+	background-image: linear-gradient(#F2931E 0px,#F08707 100%);
+	border: 1px solid #F08707;
+	color: #000;
+}
+html body div.geSmallBanner:hover:not([disabled]) {
+	background-color: #ffb75e;
+	background-image: linear-gradient(#ffb75e 0px,#F2931E 100%);
+	border: 1px solid #F08707;
+	color: #000;
+}
+a.geStatus .geStatusMessage {
+	padding:4px 6px 4px 6px;
+	font-size:12px;
+	background: -webkit-linear-gradient(top,#dff0d8 0,#c8e5bc 100%);
+    background: -o-linear-gradient(top,#dff0d8 0,#c8e5bc 100%);
+    background: -webkit-gradient(linear,left top,left bottom,from(#dff0d8),to(#c8e5bc));
+    background: linear-gradient(to bottom,#dff0d8 0,#c8e5bc 100%);
+    background-repeat: repeat-x;
+    border:1px solid #b2dba1;
+	border-radius:3px;
+	color:#3c763d !important;
+}
+.geAlert {
+	position:absolute;
+	white-space:nowrap;
+	padding:14px;
+	background-color:#f2dede;
+	border:1px solid #ebccd1;
+	color:#a94442;
+	border-radius:3px;
+	-webkit-box-shadow: 2px 2px 3px 0px #ddd;
+	-moz-box-shadow: 2px 2px 3px 0px #ddd;
+	box-shadow: 2px 2px 3px 0px #ddd;
+}
+.geEditor input, .geEditor button, .geEditor select, .geColorBtn {
+	border: 1px solid #d8d8d8;
+	border-radius: 4px;
+}
+.geEditor button:not([disabled]), .geEditor select:not([disabled]), .geColorBtn {
+	background:#eee;
+}
+.geEditor ::-webkit-scrollbar-thumb {
+	background-color:light-dark(#e2e2e2, #2c2c2c);
+}
+.geHsplit:hover, .geVsplit:hover,
+.geEditor ::-webkit-scrollbar-thumb:hover,
+.geSidebarContainer .geTitle:hover, .geTab:hover:not(.geActivePage),
+.geEditor button:hover:not([disabled], .geBigButton, .geShareBtn),
+.geEditor select:hover:not([disabled]), .geColorBtn:hover:not([disabled]) {
+	background-color:light-dark(var(--border-color), var(--dark-border-color));
+}
+.geToolbarContainer .geButton:active, .geToolbarContainer .geLabel:active,
+.geEditor button:active:not([disabled], .geBigButton, .geShareBtn),
+.geColorBtn:active:not([disabled]) {
+	opacity:0.7;
+}
+.geColorDropper {
+	cursor:pointer;
+	opacity:0.7;
+}
+.geColorDropper:hover {
+	opacity:1;
+}
+.geBtn, .mxWindow .geBtn {
+	font-size:13px;
+	font-weight:500;
+	border-radius:4px;
+	height:30px;
+	margin:0 0 0 8px;
+	min-width:72px;
+	outline:0;
+	padding:0 8px;
+	text-overflow:ellipsis;
+	white-space:nowrap;
+	overflow:hidden;
+}
+.geBtn:hover:not([disabled]), .geBtn:focus {
+	box-shadow:0px 1px 1px rgba(0,0,0,0.1);
+}
+.geToolbarContainer {
+	border-width:1px;
+	border-style:none none solid none;
+	box-shadow:none;
+	z-index:1;
+}
+html .geShapePicker {
+	display:block;
+	position:absolute;
+	border-radius:10px;
+	border-style:solid;
+	border-width:1px;
+	padding:6px 0 8px 0;
+	text-align:center;
+	box-shadow:0px 0px 3px 1px #d1d1d1;
+}
+.geBtnStepper {
+	display:inline-block;
+	border-radius:3px;
+	border-style:solid;
+	border-width:1px;
+}
+.geBtnStepper > div {
+	position:relative;
+	background-position:center center;
+	background-repeat:no-repeat;
+	border-bottom-style:solid;
+	background-size:18px;
+	border-width:1px;
+}
+.geBtnStepper > div:active {
+	background-color:#4d90fe;
+}
+html .geColorBtn {
+	padding:0px;
+}
+html .geColorBtn:disabled {
+	opacity:0.5;
+}
+.geAlertLink {
+	color:#843534;
+	font-weight:700;
+	text-decoration:none;
+}
+.geMenubar {
+	padding:0px 2px 0px 2px;
+	display:inline-flex;
+	align-items:center;
+}
+.geMenubarContainer .geItem, .geToolbar .geItem {
+	padding:6px 6px 6px 9px;
+	cursor:default;
+}
+.geItem:hover:not([disabled]), .geToolbarButton:hover:not([disabled]),
+.geBtn:hover:not([disabled]) {
+	opacity: 1 !important;
+}
+.geItem:active:not([disabled]):not(.geStatus), .geBtn:active:not([disabled]),
+.geStatus div[data-action]:active:not([disabled]),
+html .geToolbarButton:active:not([disabled]) {
+	opacity: 0.7 !important;
+}
+.geBtn:disabled {
+	opacity: 0.5;
+}
+.geMenubarContainer .geItem:active {
+	background: #F8C382;
+}
+.geToolbarContainer .geButton:hover {
+	opacity:1;
+}
+.geToolbarContainer .geLabel:hover {
+	background: #eee;
+	border-radius:2px;
+}
+.geActiveButton:hover {
+	opacity: 0.7;
+}
+.geActiveButton:active {
+	opacity: 0.3;
+}
+html body.geEditor .geToolbarButton {
+	border-color:light-dark(var(--text-color), var(--dark-border-color));
+	opacity: 0.6;
+}
+.geToolbarButton:active {
+	opacity: 0.2 !important;
+}
+.mxDisabled:hover {
+	background-color:inherit !important;
+}
+.geMenubar a.geStatus {
+	color:#888888;
+	padding:0px 0px 0px 10px;
+	display:inline-flex;
+	align-items:center;
+	cursor:default !important;
+}
+.geMenubar a.geStatus:hover {
+	background:transparent;
+}
+.geSidebarContainer .geToolbarContainer {
+	background:transparent;
+	border-bottom:none;
+}
+.geSidebarContainer button {
+	text-overflow:ellipsis;
+	overflow:hidden;
+}
+div.mxWindow .geButton {
+	margin: -1px 2px 2px 2px;
+	padding: 1px 2px 2px 1px;
+}
+.geToolbarContainer, .geToolbar {
+	display:flex;
+	align-items:center;
+}
+.geToolbar {
+	height:100%;
+	border-top-style:solid;
+	border-top-width:1px;
+}
+.geToolbar .geToolbarButton, .geToolbar .geLabel,
+.geToolbar .geButton {
+	display:inline-flex;
+	align-items:center;
+	cursor:pointer;
+	height:20px;
+	width:20px;
+	padding:2px;
+	margin:2px;
+}
+.geToolbar .geSeparator {
+	display:inline-block;
+	background:#e5e5e5;
+	margin-left:6px;
+	margin-right:6px;
+	height:20px;
+	width:1px;
+}
+.geToolbarContainer .geButton {
+	opacity:0.6;
+}
+.geToolbarContainer .mxDisabled:hover {
+	border-color:transparent !important;
+	opacity:0.2 !important;
+}
+.geDiagramBackdrop {
+	background-color: #fbfbfb;
+}
+.geSidebarContainer {
+	position:absolute;
+	overflow-x:hidden;
+	overflow-y:auto;
+}
+.mxWindowPane .geSidebarContainer {
+	width:100%;
+	height:100%;
+}
+.geEditor > div > .geMenubarContainer {
+	border-bottom-style:solid;
+	border-bottom-width:1px;
+}
+.geTabContainer {
+	border-width:1px;
+	border-top-style:solid;
+	border-left-style:solid;
+	border-right-style:solid;
+	display:flex;
+	white-space:nowrap;
+	overflow:hidden;
+	position:absolute;
+	z-index:1;
+}
+.geTabScroller {
+	display:inline-block;
+	position:relative;
+	max-width:calc(100% - 90px);
+	white-space:nowrap;
+	overflow:hidden;
+	overflow-x:auto;
+	-ms-overflow-style: none;
+	scrollbar-width: none;
+	left:0px;
+}
+.geTabScroller::-webkit-scrollbar {
+	display: none;
+}
+.geToggleItem {
+	padding:4px;
+	border-radius:8px;
+}
+.geActiveItem {
+	background-color:light-dark(var(--border-color), var(--dark-border-color));
+}
+.geAdaptiveAsset.geActiveItem {
+	background-color:light-dark(var(--border-color), var(--dark-inverse-active-color));
+}
+.geTabMenuButton {
+	width:14px;
+	height:14px;
+	margin-left:4px;
+	margin-right:-6px;
+	cursor:pointer;
+}
+.geInactivePage .geTabMenuButton {
+	display:none;
+}
+.geTabMenuButton {
+	display:inline-block;
+	opacity:1;
+}
+.geTabMenuButton:hover {
+	opacity:0.7;
+}
+.geTabContainer > :first-child,
+.geTabScroller > :first-child {
+	border-left-style:none;
+}
+.geTabContainer > .geControlTab:first-child {
+	border-right-style:solid;
+}
+.geTab .geAdaptiveAsset {
+	opacity: 0.5;
+}
+.geTab.geDisabledControlTab .geAdaptiveAsset {
+	opacity: 0.1;
+}
+.geTab {
+	height: 100%;
+	border-width:1px;
+	box-sizing:border-box;
+	border-left-style:solid;
+	text-overflow:ellipsis;
+	border-color:light-dark(var(--border-color), var(--dark-border-color));
+
+	font-size:12px;
+	font-weight: 600;
+	display: inline-flex;
+	align-items: center;
+	cursor: move;
+}
+.gePageTab {
+	padding: 0px 12px 0px 12px;
+}
+.geSidebar {
+	border-bottom:1px solid light-dark(var(--border-color), var(--dark-border-color));
+	padding:6px;
+	padding-left:10px;
+	padding-bottom:6px;
+	overflow:hidden;
+}
+.geSidebarContainer .geTitle {
+	display:flex;
+	font-size:13px;
+	border-bottom:1px solid light-dark(var(--border-color), var(--dark-border-color));
+	font-weight:500;
+	padding:8px 0px 8px 20px;
+	margin:0px;
+	cursor:default;
+	white-space:nowrap;
+	overflow:hidden;
+	text-overflow:ellipsis;
+	line-height:1.4em;
+	justify-content:start;
+	align-items:center;
+}
+.geSidebarContainer .geTitle > span {
+	flex-grow: 1;
+    flex-shrink: 1;
+    width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.geSidebarContainer .geTitle > div {
+    background-color: inherit;
+    flex-grow: 0;
+    padding-right: 2px;
+}
+.geSidebarContainer .geTitle > img {
+	margin-right:8px;
+}
+.geSidebarContainer .geDropTarget {
+	border:2px dotted light-dark(var(--text-color), var(--dark-text-color));
+	border-radius:10px;
+	text-align:center;
+	font-size:12px;
+	opacity:0.6;
+	padding:4px;
+	margin:4px;
+}
+.geTitle img {
+	opacity:0.5;
+}
+.geTitle img:hover {
+	opacity:1;
+}
+.geTitle .geButton {
+	border:1px solid transparent;
+	padding:3px;
+	border-radius:2px;
+}
+.geTitle .geButton:hover {
+	border:1px solid gray;
+}
+.geSidebar .geItem {
+	display:inline-block;
+	background-repeat:no-repeat;
+	background-position:50% 50%;
+	border-radius: 8px;
+}
+.geSidebar .geItem, .geShapePicker .geItem {
+	transition: transform 100ms ease-out;
+}
+.geSidebar .geItem:hover {
+	background-color:#e0e0e0;
+}
+.geSidebar .geItem:active, .geShapePicker .geItem:active {
+	transform: scale(0.8,0.8);
+}
+.geItem {
+	vertical-align: top;
+	display: inline-block;
+}
+.geSidebarTooltip {
+	position:absolute;
+	overflow:hidden;
+	background:light-dark(var(--panel-color), var(--dark-panel-color));
+	box-shadow:0 2px 6px 2px rgba(60,64,67,.15);
+	border-radius:6px;
+}
+.geFooterContainer {
+	background:#e5e5e5;
+	border-top:1px solid #c0c0c0;
+}
+.geFooterContainer a {
+	display:inline-block;
+	box-sizing:border-box;
+	width:100%;
+	white-space:nowrap;
+	font-size:14px;
+	color:#235695;
+	font-weight:bold;
+	text-decoration:none;
+}
+.geFooterContainer table {
+	border-collapse:collapse;
+	margin:0 auto;
+}
+.geFooterContainer td {
+	border-left:1px solid #c0c0c0;
+	border-right:1px solid #c0c0c0;
+}
+.geToolbarButton {
+	border-color:#333333;
+}
+.geFooterContainer td:hover {
+	background-color: #b3b3b3;
+}
+.geHsplit {
+	cursor:col-resize;
+}
+.geVsplit {
+	font-size:1pt;
+	cursor:row-resize;
+}
+.geHsplit {
+	background-color:transparent;
+}
+.geVSplit {
+	border-top:1px solid var(--border-color);
+	border-bottom:1px solid var(--border-color);
+}
+.mxWindow {
+	background:light-dark(var(--panel-color), var(--dark-panel-color));
+}
+.geDialog {
+	position:absolute;
+	background:white;
+	line-height:1em;
+	overflow:hidden;
+	padding:30px;
+	border:1px solid #acacac;
+	box-shadow:0px 0px 2px 2px #d5d5d5;
+	z-index: 2;
+}
+.geTransDialog {
+	position:absolute;
+	overflow:hidden;
+	z-index: 2;
+}
+.geDialogClose {
+	position:absolute;
+	width:9px;
+	height:9px;
+	opacity:0.5;
+	cursor:pointer;
+}
+.geDialogClose:hover {
+	opacity:1;
+}
+.geDialogTitle {
+	box-sizing:border-box;
+	white-space:nowrap;
+	background:light-dark(var(--panel-color), var(--dark-panel-color));
+	border-bottom-width:1px;
+	border-bottom-style:solid;
+	font-size:15px;
+	font-weight:bold;
+	text-align:center;
+}
+.geDialogFooter {
+	background:light-dark(var(--panel-color), var(--dark-panel-color));
+	white-space:nowrap;
+	text-align:right;
+	box-sizing:border-box;
+	border-top-width:1px;
+	border-top-style:solid;
+}
+.geEditor .geBaseButton {
+	padding:10px;
+	border-radius:6px;
+	cursor:pointer;
+	border:1px solid light-dark(var(--border-color), var(--dark-border-color));
+	background-color:light-dark(var(--panel-color), var(--dark-panel-color));
+}
+.geEditor .geBaseButton:hover {
+	background:#ececec;
+}
+.geEditor button.geBigButton {
+	color:#ffffff;
+	border: none;
+	padding:4px 10px;
+	font-size:14px;
+	white-space: nowrap;
+	border-radius:3px;
+	background:#0052cc;
+	cursor:pointer;
+	transition: background-color 0.1s ease-out;
+	overflow:hidden;
+	text-overflow: ellipsis;
+}
+.geEditor button.geBigButton:hover {
+	background:#0065ff;
+}
+.geEditor button.geBigButton:active {
+	background:#0747a6;
+}
+html body .geBigStandardButton {
+	color: #344563;
+	background-color: rgba(9, 30, 66, 0.08);
+}
+html body .geBigStandardButton:hover {
+	background-color: rgba(9, 30, 66, 0.13);
+}
+html body .geBigStandardButton:active {
+	background-color: #F8C382;
+	color: #600000;
+}
+@media print {
+	div.geNoPrint { display: none !important; }
+}
+html div.mxRubberband {
+	border-color:#0000DD;
+	background:#99ccff;
+}
+td.mxPopupMenuIcon div {
+	width:16px;
+	height:16px;
+}
+.geEditor div.mxPopupMenu {
+	box-shadow: 0px 0px 2px #C0C0C0;
+	background:var(--panel-color);
+	border-radius:4px;
+	border-style:solid;
+	border-width:1px;
+	border-color:lightgray;
+	padding:3px;
+}
+.geSearchSidebar {
+	padding: 14px 8px 0px 8px;
+	box-sizing: border-box;
+	min-height: 60px;
+	overflow: hidden;
+	width: 100%;
+}
+.geSearchSidebar input {
+	font-size: 12px;
+	box-sizing: border-box;
+	border: 1px solid #d5d5d5;
+	border-radius: 4px;
+	width: 100%;
+	outline: none;
+	padding: 6px 20px 6px 6px
+}
+html table.mxPopupMenu {
+	border-collapse:collapse;
+	margin:0px;
+}
+html td.mxPopupMenuItem {
+	padding:7px 30px 7px 30px;
+	font-family:-apple-system, BlinkMacSystemFont, "Segoe UI Variable", "Segoe UI", system-ui, ui-sans-serif, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+	font-size:10pt;
+}
+html td.mxPopupMenuIcon {
+	background-color:transparent;
+	padding:0px;
+}
+td.mxPopupMenuIcon .geIcon {
+	padding:2px;
+	padding-bottom:4px;
+	margin:2px;
+	border:1px solid transparent;
+	opacity:0.5;
+}
+table.mxPopupMenu tr {
+	font-size:4pt;
+}
+table.mxPopupMenu hr {
+	color:light-dark(var(--border-color), var(--dark-border-color));
+	background-color:light-dark(var(--border-color), var(--dark-border-color));
+	border:none;
+	height:1px;
+}
+html td.mxWindowTitle {
+	color:light-dark(var(--text-color), var(--dark-text-color));
+	background-image:none;
+	padding:4px;
+}
+table.geProperties {
+	table-layout:fixed;
+}
+table.geProperties tr td {
+	height:21px;
+}
+.gePropHeader, .gePropRow {
+	border:1px solid light-dark(var(--border-color), var(--dark-panel-color));
+}
+.gePropRowDark {
+	border:1px solid light-dark(#4472C4, var(--dark-panel-color));
+}
+.gePropHeader>.gePropHeaderCell {
+    border-top: 0;
+    border-bottom: 0;
+    text-align: left;
+	width: 50%;
+}
+.gePropHeader>.gePropHeaderCell:first-child {
+    border-left: none;
+}
+.gePropHeader>.gePropHeaderCell:last-child {
+    border-right: none;
+}
+.gePropHeader {
+    background:light-dark(#e5e5e5, var(--dark-panel-color));
+    color:light-dark(black, #cccccc);
+}
+.gePropRowCell {
+    border-left:1px solid light-dark(#f3f3f3, var(--dark-panel-color));
+	white-space:nowrap;
+	text-overflow:ellipsis;
+	overflow:hidden;
+    max-width:50%;
+}
+.gePropRow>.gePropRowCell {
+    background:light-dark(#fff, var(--dark-panel-color));
+}
+.gePropRowAlt>.gePropRowCell {
+    background:light-dark(#fcfcfc, var(--dark-panel-color));
+}
+.gePropRowDark>.gePropRowCell {
+    background:light-dark(#fff, var(--dark-panel-color));
+    color:light-dark(#305496, #cccccc);
+    font-weight: bold;
+}
+.gePropRowDarkAlt>.gePropRowCell {
+    background:light-dark(#D9E1F2, #000000);
+    color:light-dark(#305496, #cccccc);
+    font-weight: bold;
+}
+.gePropEditor input:invalid {
+  border: 1px solid red;
+}
+/* Templates dialog css */
+.geTemplateDlg {
+	width: 100%;
+	height: 100%;
+}
+.geTemplateDlg ::-webkit-scrollbar {
+    width:12px;
+    height:12px;
+}
+.geTemplateDlg ::-webkit-scrollbar-track {
+	background:whiteSmoke;
+	box-shadow:inset 0 0 4px rgba(0,0,0,0.1);
+}
+.geTemplateDlg ::-webkit-scrollbar-thumb {
+	background:#c5c5c5;
+    border-radius:10px;
+	border:whiteSmoke solid 3px;
+}
+.geTemplateDlg ::-webkit-scrollbar-thumb:hover {
+	background:#b5b5b5;
+}
+
+.geTempDlgHeader {
+	box-sizing: border-box;
+	height: 62px;
+	width: 100%;
+	border: 1px solid #CCCCCC;
+	border-radius: 5px 5px 0 0;
+	background-color: #F5F5F5;
+}
+.geTempDlgHeaderLogo {
+	height: 34px;
+	margin: 14px 14px 14px 20px;
+}
+.geTempDlgSearchBox {
+    color:#888888;
+    background:url("/images/icon-search.svg") no-repeat;
+	background-color: #FFFFFF;
+	background-position: 15px;
+	height: 40px;
+	width: 40%;
+	max-width: 400px;
+	border: 1px solid #CCCCCC;
+	border-radius: 3px;
+    float:right;
+    font-family:Arial,Helvetica,sans-serif;
+    font-size:15px;
+    line-height:36px;
+    margin: 11px 36px 0 0;
+    outline:medium none;
+    padding:0 0 0 36px;
+    text-shadow:1px 1px 0 white;
+}
+.geTemplatesList {
+	box-sizing: border-box;
+	float: left;
+	height: calc(100% - 118px);
+	width: 20%;
+	border: 1px solid #CCCCCC;
+	background-color: #FFFFFF;
+	display: inline-block;
+	overflow-x: hidden;
+	overflow-y: auto;
+}
+.geTempDlgContent {
+	box-sizing: border-box;
+	float: right;
+	height: calc(100% - 118px);
+	width: 80%;
+	border: 1px solid #CCCCCC;
+	background-color: #FFFFFF;
+	display: inline-block;
+	overflow-x: hidden;
+	overflow-y: auto;
+	position: relative;
+}
+.geTempDlgFooter {
+	box-sizing: border-box;
+	height: 52px;
+	width: 100%;
+	border: 1px solid #CCCCCC;
+	border-radius: 0 0 5px 5px;
+	background-color: #F5F5F5;
+	text-align: right;
+	font-family: Helvetica;
+	font-size: 14px;
+	line-height: 17px;
+	padding-top: 11px;
+}
+.geTempDlgCreateBtn, .geTempDlgOpenBtn {
+	display: inline-block;
+	width: 67px;
+    border-radius: 3px;
+    background-color: #3D72AD;
+    padding: 6px;
+    text-align: center;
+    color: #fff;
+    cursor: pointer;
+    margin-left: 5px;
+}
+.geTempDlgCancelBtn {
+	display: inline-block;
+	width: 67px;
+    padding: 6px;
+    text-align: center;
+    color: #3D72AD;
+    cursor: pointer;
+}
+.geTempDlgCancelBtn:active, .geTempDlgCreateBtn:active, 
+.geTempDlgOpenBtn:active, .geTempDlgShowAllBtn:active {
+	transform: translateY(2px);
+}
+.geTempDlgBtnDisabled {
+    background-color: #9fbddd;
+}
+.geTempDlgBtnDisabled:active {
+    transform: translateY(0px);
+}
+
+.geTempDlgBtnBusy {
+	background-image: url(/images/aui-wait.gif);
+    background-repeat: no-repeat;
+    background-position: 62px 7px;
+}
+
+.geTempDlgBack {
+	height: 17px;
+	color: #333333;
+	font-family: Helvetica;
+	font-size: 14px;
+	font-weight: bold;
+	line-height: 17px;
+	padding: 25px 0 0 20px;
+	cursor: pointer;
+}
+.geTempDlgHLine {
+	height: 1px;
+	width: calc(100% - 22px);
+	background-color: #CCCCCC;
+	margin: 20px 0 0 11px;
+}
+.geTemplatesLbl {
+	height: 17px;
+	color: #6D6D6D;
+	font-family: Helvetica;
+	font-size: 14px;
+	font-weight: bold;
+	line-height: 17px;
+	text-transform: uppercase;
+	margin: 20px 0 3px 20px;
+}
+.geTemplateCatLink {
+	height: 17px;
+	color: #3D72AD;
+	font-family: Helvetica;
+	font-size: 14px;
+	line-height: 17px;
+	margin: 12px 0 0 20px;
+	cursor: pointer;
+}
+.geTempDlgNewDiagramCat {
+	height: 280px;
+	width: 100%;
+	background-color: #555555;
+}
+.geTempDlgNewDiagramCatLbl {
+	height: 17px;
+	color: #FFFFFF;
+	font-family: Helvetica;
+	font-size: 14px;
+	font-weight: bold;
+	line-height: 17px;
+	padding: 25px 0 0 20px;
+	text-transform: uppercase;
+}
+.geTempDlgNewDiagramCatList {
+	width: 100%;
+	height: 190px;
+	padding-left: 9px;
+	box-sizing: border-box;
+	overflow-y: auto;
+	overflow-x: hidden; 
+}
+.geTempDlgNewDiagramCatFooter {
+	width: 100%;
+}
+.geTempDlgShowAllBtn {
+	width: 78px;
+	border: 1px solid #777777;
+	border-radius: 3px;
+	cursor: pointer;
+	text-align: center;
+	color: #DDDDDD;
+	font-family: Helvetica;
+	font-size: 14px;
+	line-height: 17px;
+	padding: 4px;
+	float: right;
+	margin-right: 30px;
+}
+.geTempDlgNewDiagramCatItem {
+	height: 155px;
+	width: 134px;
+	padding: 18px 6px 0 9px;
+	display: inline-block;
+}
+
+.geTempDlgNewDiagramCatItemImg {
+	box-sizing: border-box;
+	height: 134px;
+	width: 134px;
+	border: 1px solid #CCCCCC;
+	border-radius: 3px;
+	background-color: #FFFFFF;
+	display:table-cell;
+	vertical-align:middle;
+	text-align:center;
+	cursor: pointer;
+}
+
+.geTempDlgNewDiagramCatItemActive > .geTempDlgNewDiagramCatItemImg {
+	border: 4px solid #3D72AD;
+}
+
+.geTempDlgNewDiagramCatItemLbl {
+	height: 17px;
+	width: 100%;
+	color: #FFFFFF;
+	font-family: Helvetica;
+	font-size: 14px;
+	line-height: 17px;
+	text-align: center;
+	padding-top: 4px;
+	cursor: pointer;
+}
+
+.geTempDlgDiagramsList {
+	box-sizing: border-box;
+	width: 100%;
+	min-height: calc(100% - 280px);
+	padding-left: 9px;
+	box-sizing: border-box;
+	background-color: #E5E5E5;
+}
+
+.geTempDlgDiagramsListHeader {
+	width: 100%;
+    height: 45px;
+	padding: 18px 20px 0 11px;
+	box-sizing: border-box;
+}
+.geTempDlgDiagramsListTitle {
+	box-sizing: border-box;
+	height: 17px;
+	color: #666666;
+	font-family: Helvetica;
+	font-size: 14px;
+	font-weight: bold;
+	line-height: 17px;
+	text-transform: uppercase;
+	padding-top: 5px;
+	display: inline-block;
+}
+.geTempDlgDiagramsListBtns {
+	float: right;
+	margin-top: -9px;
+}		
+.geTempDlgRadioBtn {
+	box-sizing: border-box;
+	border: 1px solid #CCCCCC;
+	border-radius: 3px;
+	background-color: #FFFFFF;
+	color: #333333;
+	display: inline-block;
+	font-family: Helvetica;
+	font-size: 14px;
+	line-height: 17px;
+	text-align: center;
+	padding: 4px;
+	cursor: pointer;
+}
+.geTempDlgRadioBtnActive {
+	background-color: #555555;
+	color: #FFFFFF;
+}
+.geTempDlgRadioBtnLarge {
+	height: 27px;
+	width: 120px;
+}
+/* TODO is there a better way for these buttons */
+.geTempDlgRadioBtnSmall {
+	position: relative;
+	top: 9px;
+	height: 27px;
+	width: 27px;
+}
+.geTempDlgRadioBtnSmall img {
+	position: absolute;
+	top: 6px;
+	left: 6px;
+	height: 13px;
+	width: 13px;
+}
+.geTempDlgSpacer {
+    display: inline-block;
+	width: 10px;
+}
+
+.geTempDlgDiagramsListGrid {
+	width: 100%;
+	white-space: nowrap;
+	font-size: 13px;
+	padding: 0px 20px 20px 10px;
+    box-sizing: border-box;
+    border-spacing: 0;
+}
+
+.geTempDlgDiagramsListGrid tr {
+	height: 40px;
+}
+
+.geTempDlgDiagramsListGrid th {
+	background-color: #E5E5E5;
+	color: #8E8E8E;
+	font-weight: bold;
+	text-align: left;
+	padding: 5px;
+	border-bottom: 1px solid #CCCCCC;
+	font-size: 14px;
+}
+
+.geTempDlgDiagramsListGrid td {
+	background-color: #FFFFFF;
+	color: #888888;
+	padding: 5px;
+	border-bottom: 1px solid #CCCCCC;
+	overflow: hidden;
+}
+
+.geTempDlgDiagramsListGridActive td {
+	border-bottom: 2px solid #3D72AD;
+	border-top: 2px solid #3D72AD;
+}
+
+.geTempDlgDiagramsListGridActive td:first-child  {
+	border-left: 2px solid #3D72AD;
+}
+
+.geTempDlgDiagramsListGridActive td:last-child  {
+	border-right: 2px solid #3D72AD;
+}
+
+.geTempDlgDiagramTitle {
+	font-weight: bold;
+	color: #666666 !important;
+}
+
+.geTempDlgDiagramsTiles {
+	position: relative;
+	min-height: 100px;
+}
+
+.geTempDlgDiagramTile {
+	height: 152px;
+	width: 130px;
+	padding: 20px 7px 0 10px;
+	display: inline-block;
+	position: relative;
+}
+
+.geTempDlgDiagramTileImg {
+	box-sizing: border-box;
+	height: 130px;
+	width: 130px;
+	border: 1px solid #CCCCCC;
+	border-radius: 3px;
+	background-color: #FFFFFF;
+	display:table-cell;
+	vertical-align:middle;
+	text-align:center;
+}
+
+.geTempDlgDiagramTileImgLoading {
+	background-image: url(/images/aui-wait.gif);
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.geTempDlgDiagramTileImgError {
+	background-image: url(/images/broken.png);
+    background-repeat: no-repeat;
+    background-position: center;
+    background-color: #be3730;
+}
+
+.geTempDlgDiagramTileImg img{
+	max-width: 117px;
+    max-height: 117px;
+    cursor: pointer;
+}
+
+.geTempDlgDiagramTileActive > .geTempDlgDiagramTileImg{
+	border: 4px solid #3D72AD;
+}
+
+.geTempDlgDiagramTileLbl {
+	height: 17px;
+	width: 100%;
+	color: #333333;
+	font-family: Helvetica;
+	font-size: 14px;
+	line-height: 17px;
+	text-align: center;
+	padding-top: 5px;
+	cursor: pointer;
+}
+
+.geTempDlgDiagramPreviewBtn {
+	position: absolute;
+	top: 28px;
+	right: 15px;
+	cursor: pointer;
+}
+
+.geTempDlgDiagramListPreviewBtn {
+	cursor: pointer;
+	padding-left: 5px;
+	padding-right: 15px;
+}
+
+.geTempDlgDiagramPreviewBox {
+	position: absolute;
+    top: 3%;
+    left: 10%;
+    width: 80%;
+    height: 94%;
+    background: white;
+    border: 4px solid #3D72AD;
+    border-radius: 6px;
+    box-sizing: border-box;
+	display:table-cell;
+	vertical-align:middle;
+	text-align:center;
+    z-index: 2;
+}
+
+.geTempDlgDialogMask {
+	position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+.geTempDlgDiagramPreviewBox img {
+	max-width: 95%;
+    max-height: 95%;
+    vertical-align: middle;
+}
+
+.geTempDlgPreviewCloseBtn {
+	position: absolute;
+	top: 5px;
+	right: 5px;
+	cursor: pointer;
+}
+
+.geTempDlgLinkToDiagramHint {
+	color: #555;
+}
+
+.geTempDlgLinkToDiagramBtn {
+	color: #555;
+    margin: 0 10px 0 10px;
+    height: 27px;
+    font-size: 14px;
+}
+
+.geTempDlgErrMsg {
+	display: none;
+	color: red;
+    position: absolute;
+    width: 100%;
+    text-align: center;
+}
+
+.geTempDlgImportCat {
+	font-weight: bold;
+    background: #f9f9f9;
+    padding: 5px 0px;
+    padding: 10px;
+    margin: 10px 10px 0px 0px;
+}
+/* Comments CSS */
+.geCommentsWin {
+	user-select: none;
+	border: 1px solid whiteSmoke;
+	height: 100%;
+	margin-bottom: 10px;
+	overflow: auto;	
+}
+
+.geCommentsToolbar {
+	position: absolute;
+	bottom: 0px;
+	left: 0px;
+	right: 0px;
+	overflow: hidden;
+	border-width: 1px 0px 0px 0px;
+	border-style: solid;
+	display: block;
+	white-space: nowrap;
+}
+
+.geCommentsList {
+	position: absolute;
+	overflow: auto;
+	left: 0px;
+	right: 0px;
+	top: 0px;	
+}
+
+.geCommentContainer {
+	position: relative;
+	padding: 12px;
+	margin: 5px;
+	min-height: 50px;
+	display: block;
+	background-color: white;
+	border-width: 0px 0px 1px 0px;
+	border-style: solid;
+	border-radius: 10px;
+	white-space: nowrap;
+	box-shadow: 2px 2px 6px rgba(60,64,67,.15);
+	color: #3C4043;
+}
+
+.geCommentHeader {
+	width: 100%;
+	height: 32px;
+}
+
+.geCommentUserImg {
+	width: 32px;
+	height: 32px;
+	border-radius: 50%;
+	float: left;
+	background-color: whitesmoke;
+}
+
+.geCommentHeaderTxt {
+	overflow: hidden;
+	height: 32px;
+	padding-left: 5px;
+}
+
+.geCommentUsername {
+	overflow: hidden;
+	height: 18px;
+	font-size: 15px;
+	font-weight: bold;
+	text-overflow: ellipsis;
+}
+
+.geCommentDate {
+	color: #707070;
+	overflow: hidden;
+	height: 14px;
+	font-size: 11px;
+	text-overflow: ellipsis;
+}
+
+.geCommentDate::first-letter {
+    text-transform: uppercase;
+}
+
+.geCommentTxt {
+	font-size: 14px;
+    padding-top: 5px;
+    white-space: normal;
+    min-height: 12px;
+}
+
+.geCommentEditTxtArea {
+    margin-top: 5px;
+    font-size: 14px !important;
+    min-height: 12px;
+    max-width: 100%;
+    min-width: 100%;
+	width: 100%;
+    box-sizing: border-box;
+}
+
+.geCommentEditBtns {
+	width: 100%;
+    box-sizing: border-box;
+    padding-top: 5px;
+    height: 20px;
+}
+
+.geCommentEditBtn {
+	padding: 3px 8px 3px 8px !important;
+    float: right !important;
+    margin-left: 5px;
+}
+
+.geCommentActions {
+	color: #707070;
+	font-size: 12px;
+}
+
+.geCommentActionsList {
+	list-style-type: disc;
+	margin: 0px;
+	padding: 10px 0 0 0;
+}
+
+.geCommentAction {
+	display: inline-block;
+    padding: 0;
+}
+
+.geCommentAction:before {
+	content: "\2022";
+	padding: 5px;
+} 
+
+.geCommentAction:first-child:before {
+	content: "";
+	padding: 0;
+} 
+
+.geCommentActionLnk {
+	cursor: pointer;
+	color: #707070;
+	text-decoration: none;
+}
+
+.geCommentActionLnk:hover {
+	text-decoration: underline;
+}
+
+.geCheckedBtn {
+	background-color: #ccc;
+    border-top: 1px solid black !important;
+    border-left: 1px solid black !important;
+}
+
+.geCommentBusyImg {
+	position: absolute;
+	top: 5px;
+	right: 5px;
+}
+
+.geAspectDlgListItem 
+{
+	width : 120px;
+	height : 120px;
+	display : inline-block;
+	border: 3px solid #F0F0F0;
+	border-radius: 5px;
+	padding: 5px;
+	margin : 2px 2px 20px 2px;
+}
+
+.geAspectDlgListItem:hover
+{
+	border: 3px solid #c5c5c5;
+}
+
+.geAspectDlgListItemSelected 
+{
+	border: 3px solid #3b73af;
+}
+
+.geAspectDlgListItemSelected:hover
+{
+	border: 3px solid #405a86;
+}
+
+.geAspectDlgListItemText
+{
+	text-overflow: ellipsis;
+	max-width: 100%;
+	min-height : 2em;
+	overflow : hidden;
+	text-align : center;
+	margin-top : 10px;
+}
+
+.geAspectDlgList
+{
+	min-height: 184px;
+	white-space: nowrap;
+	overflow-x: auto;
+}
+
+.geStripedTable
+{
+	border-collapse: collapse;
+ 	width: 100%;
+ 	table-layout: fixed;
+}
+
+.geStripedTable td, .geStripedTable th
+{
+	border: 1px solid #ddd;
+	text-align: left;
+	padding: 2px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.geStripedTable tr:nth-child(odd){background-color: #f2f2f2;}
+
+.geStripedTable tr:hover {background-color: #ddd;}
+
+.geStripedTable th {
+  padding-top: 4px;
+  padding-bottom: 4px;
+  background-color: #bbb;
+}
+
+.geNotification-box {
+	display:flex;
+	text-align: center;
+	position: relative;
+	cursor: pointer;
+	width: 20px;
+}
+.geNotification-bell {
+  animation: geBellAnim 1s 1s both;
+}
+.geNotification-bell * {
+  display: block;
+  margin: 0 auto;
+  background-color: light-dark(#656565, #aaa);
+}
+
+.geBell-top {
+  width: 2px;
+  height: 2px;
+  border-radius: 1px 1px 0 0;
+}
+.geBell-middle {
+  width: 12px;
+  height: 12px;
+  margin-top: -1px;
+  border-radius: 7px 7px 0 0;
+}
+.geBell-bottom {
+  position: relative;
+  z-index: 0;
+  width: 16px;
+  height: 1px;
+}
+.geBell-bottom::before,
+.geBell-bottom::after {
+  content: '';
+  position: absolute;
+  top: -4px;
+}
+.geBell-bottom::before {
+  left: 1px;
+  border-bottom-width: 4px;
+  border-right: 0 solid transparent;
+  border-left: 4px solid transparent;
+}
+.geBell-bottom::after {
+  right: 1px;
+  border-bottom-width: 4px;
+  border-right: 4px solid transparent;
+  border-left: 0 solid transparent;
+}
+.geBell-rad {
+  width: 3px;
+  height: 2px;
+  margin-top: 0.5px;
+  border-radius: 0 0 2px 2px;
+  animation: geRadAnim 1s 2s both;
+}
+.geNotification-count {
+  position: absolute;
+  z-index: 1;
+  top: -5px;
+  right: -4px;
+  width: 13px;
+  height: 13px;
+  line-height: 13px;
+  font-size: 8px;
+  border-radius: 50%;
+  background-color: #ff4927;
+  color: #FFF;
+  animation: geZoomAnim 1s 1s both;
+}
+@keyframes geBellAnim {
+  0% { transform: rotate(0); }
+  10% { transform: rotate(30deg); }
+  20% { transform: rotate(0); }
+  80% { transform: rotate(0); }
+  90% { transform: rotate(-30deg); }
+  100% { transform: rotate(0); }
+}
+@keyframes geRadAnim {
+  0% { transform: translateX(0); }
+  10% { transform: translateX(5px); }
+  20% { transform: translateX(0); }
+  80% { transform: translateX(0); }
+  90% { transform: translateX(-5px); }
+  100% { transform: translateX(0); }
+}
+@keyframes geZoomAnim {
+  0% { opacity: 0; transform: scale(0); }
+  50% { opacity: 1; transform: scale(1); }
+  100% { opacity: 1; }
+}
+.geNotifPanel {
+  height: 300px;
+  width: 300px;
+  background: #fff;
+  border-radius: 3px;
+  overflow: hidden;
+  box-shadow: 10px 10px 15px 0 rgba(0, 0, 0, 0.3);
+  transition: all .5s ease-in-out;
+  position: absolute;
+  right: 100px;
+  top: 42px;
+  z-index: 150;
+}
+.geNotifPanel .header {
+  background: light-dark(#cecece, #424242);
+  color: light-dark(#707070, #ccc);
+  font-size: 15px;
+}
+.geNotifPanel .header .title {
+  display: block;
+  text-align: center;
+  line-height: 30px;
+  font-weight: 600;
+}
+.geNotifPanel .header .closeBtn {
+  position: absolute;
+  line-height: 30px;
+  cursor: pointer;
+  right: 15px;
+  top: 0;
+}
+.geNotifPanel .notifications {
+  position: relative;
+  background-color: light-dark(transparent, #707070);
+  height: 270px;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+.geNotifPanel .notifications .line {
+  position: absolute;
+  top: 0;
+  left: 27px;
+  height: 100%;
+  width: 3px;
+  background: #EBEBEB;
+}
+.geNotifPanel .notifications .notification {
+  position: relative;
+  z-index: 2;
+  margin: 25px 20px 25px 43px;
+}
+.geNotifPanel .notifications .notification:nth-child(n+1) {
+  animation: geHere-am-i 0.5s ease-out 0.4s;
+  animation-fill-mode: both;
+}
+.geNotifPanel .notifications .notification:hover {
+  color: #1B95E0;
+  cursor: pointer;
+}
+.geNotifPanel .notifications .notification .circle {
+  box-sizing: border-box;
+  position: absolute;
+  height: 11px;
+  width: 11px;
+  background: #fff;
+  border: 2px solid #1B95E0;
+  box-shadow: 0 0 0 3px #fff;
+  border-radius: 6px;
+  top: 0;
+  left: -20px;
+}
+
+.geNotifPanel .notifications .notification .circle.active {
+  background: #1B95E0;
+}
+
+.geNotifPanel .notifications .notification .time {
+  display: block;
+  font-size: 11px;
+  line-height: 11px;
+  margin-bottom: 2px;
+}
+.geNotifPanel .notifications .notification p {
+  font-size: 15px;
+  line-height: 20px;
+  margin: 0;
+}
+.geNotifPanel .notifications .notification p b {
+  font-weight: 600;
+}
+@-webkit-keyframes geHere-am-i {
+  from {
+    transform: translate3d(0, 50px, 0);
+    opacity: 0;
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
+}
+
+@keyframes geHere-am-i {
+  from {
+   transform: translate3d(0, 50px, 0);
+    opacity: 0;
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
+}
+
+.geTempTree {
+  margin: 0;
+  padding: 0;
+}
+
+.geTempTree, .geTempTreeActive, .geTempTreeNested {
+  list-style-type: none;
+  transition: all 0.5s;
+}
+
+.geTempTreeCaret {
+  box-sizing: border-box;
+  cursor: pointer;
+  user-select: none;
+  padding: 6px;
+  width: 100%;
+  transition: all 0.5s;
+}
+
+.geTempTreeCaret::before {
+  content: "\25B6";
+  display: inline-block;
+  font-size: 10px;
+  margin-right: 6px;
+}
+
+.geTempTreeCaret-down::before {
+  transform: rotate(90deg);  
+}
+
+.geTempTreeNested {
+  height: 0;
+  opacity: 0;
+}
+
+.geTempTreeActive {
+  height: 100%;
+  opacity: 1;
+}
+
+.geTempTreeActive, .geTempTreeNested {
+  padding-left: 15px;
+}
+
+.geTempTreeActive > li, .geTempTreeNested > li {
+  box-sizing: border-box;
+  padding: 3px;
+  width: 100%;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.5s;
+}
+
+/*Electron Window Controls*/
+#geWindow-controls {
+  display: grid;
+  grid-template-columns: repeat(3, 30px);
+  position: absolute;
+  top: 2px;
+  right: 3px;
+  height: 22px;
+  -webkit-app-region: no-drag;
+}
+
+#geWindow-controls .button {
+  grid-row: 1 / span 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  user-select: none;
+}
+#min-button {
+  grid-column: 1;
+}
+#max-button, #restore-button {
+  grid-column: 2;
+}
+#close-button {
+  grid-column: 3;
+}
+#geWindow-controls .button.dark:hover {
+  background: rgba(255,255,255,0.1);
+}
+#geWindow-controls .button.dark:active {
+  background: rgba(255,255,255,0.2);
+}
+
+#geWindow-controls .button.white:hover {
+  background: rgba(0,0,0,0.1);
+}
+#geWindow-controls .button.white:active {
+  background: rgba(0,0,0,0.2);
+}
+
+#close-button:hover {
+  background: #E81123 !important;
+}
+#close-button:active {
+  background: #F1707A !important;
+}
+
+#restore-button {
+  display: none !important;
+}
+.geMaximized #restore-button {
+  display: flex !important;
+}
+
+.geMaximized #max-button {
+  display: none;
+}
+[draggable="true"] {
+    transform: translate(0, 0);
+    z-index: 0;
+}

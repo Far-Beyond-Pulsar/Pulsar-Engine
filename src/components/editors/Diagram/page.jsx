@@ -1,61 +1,56 @@
-import React, { useRef, useState } from 'react';
-import { DrawIoEmbed, DrawIoEmbedRef } from 'react-drawio';
+import React, { useRef, useState, useEffect } from 'react';
 
-const AmoledDrawioEditor = () => {
-  const drawioRef = useRef(null);
+const DiagramEditor = () => {
+  const iframeRef = useRef(null);
   const [lastSavedXml, setLastSavedXml] = useState('');
 
-  // Handle manual save functionality
-  const handleSave = (data) => {
-    // Store the XML data
-    setLastSavedXml(data.xml);
-    
-    // Create a blob and trigger download
-    const blob = new Blob([data.xml], { type: 'application/xml' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'diagram.drawio';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
-  };
+  useEffect(() => {
+    const handleMessage = (event) => {
+      if (event.data && event.data.event === 'save') {
+        const xml = event.data.xml;
+        setLastSavedXml(xml);
+        
+        // Create download
+        const blob = new Blob([xml], { type: 'application/xml' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'diagram.drawio';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      }
+    };
 
-  const config = {};
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
 
-  const urlParameters = {
-    dark: 1,
-    ui: 'kennedy',
-    spin: 'hidden',
-    proto: 'json',
-    math: 1,
-    border: 0,
-    grid: 1,
-    shape: 1,
-    hide: ['ruler'],
-    toolbar: 'zoom layers lightbox',
-    // Enable only manual save functionality
-    saveAndExit: '1',
-    noSaveBtn: '0',
-    saveAndBack: '1'
-  };
+  const editorUrl = new URL('/diagram-editor/index.html', window.location.origin);
+  editorUrl.searchParams.set('dark', '1');
+  editorUrl.searchParams.set('ui', 'kennedy');
+  editorUrl.searchParams.set('spin', 'hidden');
+  editorUrl.searchParams.set('proto', 'json');
+  editorUrl.searchParams.set('math', '1');
+  editorUrl.searchParams.set('border', '0');
+  editorUrl.searchParams.set('grid', '1');
+  editorUrl.searchParams.set('shape', '1');
+  editorUrl.searchParams.set('toolbar', 'zoom layers lightbox');
+  editorUrl.searchParams.set('saveAndExit', '1');
+  editorUrl.searchParams.set('noSaveBtn', '0');
+  editorUrl.searchParams.set('saveAndBack', '1');
 
   return (
     <div className="w-full h-full">
-      <DrawIoEmbed
-        ref={drawioRef}
-        className="w-full h-full"
-        urlParameters={urlParameters}
-        configuration={config}
-        baseUrl="https://embed.diagrams.net"
-        // Disable autosave
-        autosave={false}
-        // Handle only manual save events
-        onSave={handleSave}
+      <iframe
+        ref={iframeRef}
+        src={editorUrl.toString()}
+        className="w-full h-full border-0"
+        title="Diagram Editor"
       />
     </div>
   );
 };
 
-export default AmoledDrawioEditor;
+export default DiagramEditor;
