@@ -42,6 +42,7 @@ const SkeletonEditor =     createErrorHandledLazyComponent(() => import('../comp
 const TerrainEditor =      createErrorHandledLazyComponent(() => import('../components/editors/Terrain/page'),      'TerrainEditor');
 const NavMeshEditor =      createErrorHandledLazyComponent(() => import('../components/editors/NavMesh/page'),      'NavMeshEditor');
 const PhysicsDebug =       createErrorHandledLazyComponent(() => import('../components/editors/Physics/page'),      'PhysicsDebug');
+const DiagramEditor =      createErrorHandledLazyComponent(() => import('../components/editors/Diagram/page'),      'DiagramEditor');
 const FoliageEditor =      createErrorHandledLazyComponent(() => import('../components/editors/Foliage/page'),      'FoliageEditor');
 const PrefabEditor =       createErrorHandledLazyComponent(() => import('../components/editors/Prefab/page'),       'PrefabEditor');
 const ScriptEditor =       createErrorHandledLazyComponent(() => import('../components/editors/Script/page'),       'ScriptEditor');
@@ -67,6 +68,7 @@ const EDITOR_TYPES: EditorType[] = [
   { type: 'terrain',   title: 'Terrain Editor',       component: TerrainEditor },
   { type: 'navmesh',   title: 'Navigation Mesh',      component: NavMeshEditor },
   { type: 'physics',   title: 'Physics Debug',        component: PhysicsDebug },
+  { type: 'diagram',   title: 'Diagram Editor',       component: DiagramEditor },
   { type: 'prefab',    title: 'Prefab Editor',        component: PrefabEditor },
   { type: 'skeleton',  title: 'Skeleton Editor',      component: SkeletonEditor },
   { type: 'behavior',  title: 'Behavior Tree Editor', component: BehaviorTreeEditor },
