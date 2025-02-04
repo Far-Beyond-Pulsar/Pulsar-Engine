@@ -110,7 +110,7 @@ const editorOptions = {
   readOnly: true,
   minimap: { enabled: false },
   fontSize: 14,
-  wordWrap: 'off',
+  wordWrap: 'off' as 'off',
 };
 
 // Memoized components
@@ -220,18 +220,18 @@ const PropertyPanel = memo(({
         <div className="space-y-4">
           {Object.entries(nodeDefinition.fields).map(([fieldName, field]) => (
             <div key={fieldName}>
-              <Label className="text-neutral-300">{field.label}</Label>
-              {field.type === 'select' ? (
+              <Label className="text-neutral-300">{(field as FieldDefinition).label}</Label>
+              {(field as FieldDefinition).type === 'select' ? (
                 <Select
                   value={fields[fieldName] || ''}
                   onValueChange={(value) => updateNodeFields(selectedNode.id, fieldName, value)}
                 >
                   <SelectTrigger className="w-full bg-neutral-800 border-neutral-700">
-                    <SelectValue placeholder={`Select ${field.label}`} />
+                    <SelectValue placeholder={`Select ${(field as FieldDefinition).label}`} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
-                      {field.options?.map((option) => (
+                      {(field as FieldDefinition).options?.map((option: string) => (
                         <SelectItem key={option} value={option}>
                           {option}
                         </SelectItem>
@@ -239,7 +239,7 @@ const PropertyPanel = memo(({
                     </SelectGroup>
                   </SelectContent>
                 </Select>
-              ) : field.type === 'multiline' ? (
+              ) : (field as FieldDefinition).type === 'multiline' ? (
                 <textarea
                   value={fields[fieldName] || ''}
                   onChange={(e) => updateNodeFields(selectedNode.id, fieldName, e.target.value)}
@@ -247,7 +247,7 @@ const PropertyPanel = memo(({
                 />
               ) : (
                 <Input
-                  type={field.type}
+                  type={(field as FieldDefinition).type}
                   value={fields[fieldName] || ''}
                   onChange={(e) => {
                     const newValue = e.target.value;
@@ -258,8 +258,8 @@ const PropertyPanel = memo(({
                   className="bg-neutral-800 border-neutral-700 text-neutral-300"
                 />
               )}
-              {field.description && (
-                <p className="text-xs text-neutral-500 mt-1">{field.description}</p>
+              {(field as FieldDefinition).description && (
+                <p className="text-xs text-neutral-500 mt-1">{(field as FieldDefinition).description}</p>
               )}
             </div>
           ))}
