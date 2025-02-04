@@ -1,6 +1,6 @@
 <mxfile host="tauri.localhost" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36 Edg/132.0.0.0" version="26.0.7" pages="2">
   <diagram id="Oc2sufx1-WyecKZLcLsp" name="Pre-BuildTime">
-    <mxGraphModel dx="10222779" dy="253" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="1" shadow="0">
+    <mxGraphModel dx="1986" dy="423" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="1" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -110,6 +110,11 @@
         </mxCell>
         <mxCell id="28" value="" style="aspect=fixed;perimeter=ellipsePerimeter;html=1;align=left;shadow=0;dashed=0;spacingTop=3;image;image=img/lib/active_directory/folder.svg;spacingLeft=20;fontColor=default;strokeColor=default;" parent="1" vertex="1">
           <mxGeometry x="126" y="173.15" width="10" height="13.7" as="geometry" />
+        </mxCell>
+        <mxCell id="rsUvn8Ku_VxDoovtE9m1-190" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="29" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="270" y="210" as="targetPoint" />
+          </mxGeometry>
         </mxCell>
         <mxCell id="29" value="" style="aspect=fixed;perimeter=ellipsePerimeter;html=1;align=left;shadow=0;dashed=0;spacingTop=3;image;image=img/lib/active_directory/folder.svg;spacingLeft=20;fontColor=default;strokeColor=default;" parent="1" vertex="1">
           <mxGeometry x="286" y="203.15" width="10" height="13.7" as="geometry" />
@@ -351,7 +356,7 @@
         <mxCell id="X7ES4t8qxUZ2AalR-ngR-209" value="" style="sketch=0;pointerEvents=1;shadow=0;dashed=0;html=1;strokeColor=default;fillColor=#00BEF2;labelPosition=center;verticalLabelPosition=bottom;verticalAlign=top;outlineConnect=0;align=center;shape=mxgraph.office.concepts.book_journal;rounded=0;strokeWidth=1;fontColor=default;" parent="X7ES4t8qxUZ2AalR-ngR-210" vertex="1">
           <mxGeometry x="6.5" width="11" height="13" as="geometry" />
         </mxCell>
-        <mxCell id="_elWD8YFD2aStqSoCVVO-190" value="fdgdfsgsdfgs" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+        <mxCell id="_elWD8YFD2aStqSoCVVO-190" value="fdgdfsgsdfgs" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="210" y="380" width="120" height="60" as="geometry" />
         </mxCell>
       </root>
