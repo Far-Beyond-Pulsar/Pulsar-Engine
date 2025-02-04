@@ -42,3 +42,6 @@ custom-protocol = ["tauri/custom-protocol"]
 [target.'cfg(target_os = "windows")'.dependencies]
 windows = { version = "0.59", features = ["Win32_Foundation"] }
 
+[profile.release.package.wry]
+debug = true
+debug-assertions = true
