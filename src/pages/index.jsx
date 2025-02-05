@@ -1,11 +1,71 @@
+"use client";
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Titlebar from  "../components/Titlebar";
 import Menubar from   '../components/Menubar';
+import EditorTabs from './EditorTabs';
+import StatusBar from './StatusBar';
 import useCanvas from '../hooks/useCanvas';
 import { initialSceneObjects, menus } from '../components/types';
-import EditorTabs from './EditorTabs';
 
 const GameEngineUI = () => {
+  const [engineState, setEngineState] = useState({
+    tabs: [
+      { id: 1, name: 'Main Scene' },
+      { id: 2, name: 'Physics Debug' }
+    ],
+    showNewTabMenu: false,
+    fps: 3000,
+    memoryUsage: 702,
+    
+    // Rust Analyzer state
+    rustAnalyzer: {
+      status: 'running', // 'running' | 'error' | 'warning'
+      diagnostics: 2,
+      inlayHints: true,
+      version: '0.4.0',
+      details: {
+        parseErrors: 0,
+        typeErrors: 1,
+        warnings: 1
+      }
+    },
+    
+    // Game engine performance metrics
+    engineMetrics: {
+      drawCalls: 1250,
+      entityCount: 3420,
+      physicsObjects: 145,
+      cpuUsage: 2,
+      gpuUsage: 3,
+      frameTime: 3.1,
+      gcStats: {
+        collections: 12,
+        pauseTime: 0.5
+      }
+    },
+    
+    // Git integration state
+    gitInfo: {
+      branch: 'feature/physics-update',
+      modified: true,
+      lastCommit: 'a1b2c3d4e5f6g7h8i9j0',
+      uncommittedFiles: [
+        'src/physics/collision.rs',
+        'src/engine/world.rs',
+        'assets/config/physics.toml'
+      ]
+    },
+    
+    // Detailed memory statistics
+    memoryDetails: {
+      total: 1024,
+      used: 512,
+      peak: 768,
+      allocations: 15460
+    }
+  });
+
   // Core state management
   const [activeMenu, setActiveMenu] = useState(null);
   const [consoleMessages, setConsoleMessages] = useState([]);
@@ -60,6 +120,30 @@ const GameEngineUI = () => {
 
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+    useEffect(() => {
+    let frameId;
+    
+    const updateMetrics = () => {
+      setEngineState(prevState => ({
+        ...prevState,
+        fps: Math.floor(Math.random() * 10 + 3000), // Simulate FPS fluctuation
+        engineMetrics: {
+          ...prevState.engineMetrics,
+          drawCalls: Math.floor(Math.random() * 100 + 1200),
+          cpuUsage: Math.floor(Math.random() * 10 + 40),
+          gpuUsage: Math.floor(Math.random() * 10 + 70),
+          frameTime: 1000 / (Math.random() * 10 + 55)
+        },
+        memoryUsage: Math.floor(Math.random() * 100 + 450)
+      }));
+      
+      frameId = requestAnimationFrame(updateMetrics);
+    };
+    
+    frameId = requestAnimationFrame(updateMetrics);
+    return () => cancelAnimationFrame(frameId);
   }, []);
 
   // Utility functions
@@ -216,7 +300,16 @@ const GameEngineUI = () => {
       <EditorTabs onTabChange={(type) => {
         console.log('Tab changed to:', type);
       }} />
-    </div>
+      <StatusBar
+        tabs={engineState.tabs}
+        showNewTabMenu={engineState.showNewTabMenu}
+        fps={engineState.fps}
+        memoryUsage={engineState.memoryUsage}
+        rustAnalyzer={engineState.rustAnalyzer}
+        engineMetrics={engineState.engineMetrics}
+        gitInfo={engineState.gitInfo}
+        memoryDetails={engineState.memoryDetails}
+      />    </div>
   );
 };
 

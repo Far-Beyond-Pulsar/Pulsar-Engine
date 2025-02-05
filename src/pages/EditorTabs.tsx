@@ -542,17 +542,7 @@ const EditorTabs: React.FC<EditorTabsProps> = ({
         })}
       </div>
 
-      {/* Status Bar */}
-      <div className="h-6 bg-black border-t border-neutral-800 px-2 flex items-center text-xs text-neutral-400">
-        <div className="flex-1">
-          {tabs.length} tab{tabs.length !== 1 ? 's' : ''} open
-        </div>
-        <div className="flex items-center gap-4">
-            <div className={`transition-colors ${showNewTabMenu ? 'text-blue-500' : ''}`}>Alt+N: New Tab</div>
-            <div className={`transition-colors ${tabs.length > 1 ? 'text-blue-500' : ''}`}>Ctrl+W: Close Tab</div>
-            <div className={`transition-colors ${tabs.length > 1 ? 'text-blue-500' : ''}`}>Ctrl+Tab: Switch Tab</div>
-        </div>
-      </div>
+
     </div>
   );
 };
