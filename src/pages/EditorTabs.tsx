@@ -3,6 +3,27 @@ import { Plus, X, ChevronDown, Search, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ErrorBoundary } from 'react-error-boundary';
 
+// Canvas context types and interfaces
+interface CanvasContext {
+  offscreen: OffscreenCanvas | null;
+  context: OffscreenCanvasRenderingContext2D | null;
+}
+
+interface EditorContextState {
+  [tabId: number]: CanvasContext;
+}
+
+// Canvas Context Provider
+const CanvasContext = React.createContext<{
+  getContext: (tabId: number) => CanvasContext | null;
+  initContext: (tabId: number) => void;
+  destroyContext: (tabId: number) => void;
+}>({
+  getContext: () => null,
+  initContext: () => {},
+  destroyContext: () => {},
+});
+
 // Lazy load all editor components with error handling
 const createErrorHandledLazyComponent = (importFn: () => Promise<any>, componentName: string) => {
   return React.lazy(() => 
@@ -52,9 +73,9 @@ const UIEditor =           createErrorHandledLazyComponent(() => import('../comp
 
 interface EditorType {
   component: React.LazyExoticComponent<React.ComponentType<any>>;
-  title:     string;
-  icon?:     React.ReactNode;
-  type:      string;
+  title: string;
+  icon?: React.ReactNode;
+  type: string;
 }
 
 const EDITOR_TYPES: EditorType[] = [
@@ -88,36 +109,83 @@ interface EditorTabsProps {
   onTabsChange?: (tabs: Tab[]) => void;
 }
 
-// TabErrorBoundary component to handle tab-specific errors
+// Canvas Provider Component
+const CanvasProvider = ({ children }: { children: React.ReactNode }) => {
+  const [contexts, setContexts] = useState<EditorContextState>({});
+
+  const initContext = useCallback((tabId: number) => {
+    const canvas = new OffscreenCanvas(800, 600);
+    const context = canvas.getContext('2d', {
+      alpha: true,
+      desynchronized: true,
+      willReadFrequently: true
+    });
+    
+    if (context) {
+      setContexts(prev => ({
+        ...prev,
+        [tabId]: {
+          offscreen: canvas,
+          context: context
+        }
+      }));
+    }
+  }, []);
+
+  const destroyContext = useCallback((tabId: number) => {
+    setContexts(prev => {
+      const newContexts = { ...prev };
+      const context = newContexts[tabId];
+      
+      if (context?.context) {
+        // Clean up any resources
+        context.context = null;
+      }
+      if (context?.offscreen) {
+        // Clean up OffscreenCanvas
+        context.offscreen = null;
+      }
+      
+      delete newContexts[tabId];
+      return newContexts;
+    });
+  }, []);
+
+  const getContext = useCallback((tabId: number) => {
+    return contexts[tabId] || null;
+  }, [contexts]);
+
+  return (
+    <CanvasContext.Provider value={{ getContext, initContext, destroyContext }}>
+      {children}
+    </CanvasContext.Provider>
+  );
+};
+
+// TabErrorBoundary component
 const TabErrorBoundary = memo(({ children }: { children: React.ReactNode }) => {
   return (
     <ErrorBoundary
       fallbackRender={({ error, resetErrorBoundary }) => (
         <div className="h-full bg-neutral-900 flex flex-col">
-          {/* Error header */}
           <div className="bg-red-500/10 border-b border-red-500/20 p-4">
             <h3 className="text-red-400 font-medium flex items-center gap-2">
               <AlertCircle size={16} />
               Tab Error
             </h3>
           </div>
-
-          {/* Error details */}
           <div className="flex-1 overflow-auto p-4">
             <div className="bg-black/30 rounded-lg p-4 mb-4">
               <pre className="text-red-400 text-sm whitespace-pre-wrap font-mono">
                 {error.message}
               </pre>
             </div>
-            
             {error.stack && (
               <div className="text-xs text-neutral-500 font-mono whitespace-pre-wrap">
                 {error.stack}
               </div>
             )}
           </div>
-
-          {/* Action buttons */}
           <div className="border-t border-neutral-800 p-4 bg-black/30 flex justify-end gap-2">
             <button
               onClick={() => window.location.reload()}
@@ -152,26 +220,37 @@ const LoadingEditor = () => (
   </div>
 );
 
-// Memoized Editor component with error handling
-const Editor = memo(({ type, isActive }: { type: string; isActive: boolean }) => {
+// Modified Editor component with canvas context support
+const Editor = memo(({ type, isActive, tabId }: { type: string; isActive: boolean; tabId: number }) => {
+  const { getContext, initContext, destroyContext } = React.useContext(CanvasContext);
+  
+  useEffect(() => {
+    if (isActive) {
+      initContext(tabId);
+      return () => destroyContext(tabId);
+    }
+  }, [isActive, tabId, initContext, destroyContext]);
+
   const EditorComponent = EDITOR_TYPES.find(e => e.type === type)?.component;
   
-  // Handle missing editor components gracefully
   if (!EditorComponent) {
     throw new Error(`Editor component not found for type: ${type}`);
   }
 
-  // Wrap the editor component in its own error boundary
+  const canvasContext = getContext(tabId);
+
   return (
     <ErrorBoundary
       fallback={<TabErrorBoundary children={undefined} />}
       onError={(error, errorInfo) => {
-        // Log error to your error tracking service
         console.error('Editor Error:', error, errorInfo);
       }}
-      resetKeys={[type]} // Reset when editor type changes
+      resetKeys={[type]}
     >
-      <EditorComponent isActive={isActive} />
+      <EditorComponent 
+        isActive={isActive}
+        canvasContext={canvasContext}
+      />
     </ErrorBoundary>
   );
 });
@@ -179,7 +258,16 @@ const Editor = memo(({ type, isActive }: { type: string; isActive: boolean }) =>
 Editor.displayName = 'Editor';
 
 // Main EditorTabs component
-const EditorTabs: React.FC<EditorTabsProps> = ({
+const EditorTabs: React.FC<EditorTabsProps> = (props) => {
+  return (
+    <CanvasProvider>
+      <EditorTabsContent {...props} />
+    </CanvasProvider>
+  );
+};
+
+// EditorTabs content component
+const EditorTabsContent: React.FC<EditorTabsProps> = ({
   onTabChange,
   defaultTabs = [
     { id: 1, title: 'Level Editor', type: 'level' },
@@ -239,27 +327,23 @@ const EditorTabs: React.FC<EditorTabsProps> = ({
     editor.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Ensure selected index stays within bounds of filtered editors
+  // Keyboard navigation and event handlers
   useEffect(() => {
     setSelectedEditorIndex(0);
   }, [searchTerm, showNewTabMenu]);
 
-  // Keyboard navigation for new tab menu
   useEffect(() => {
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
       const modifierKey = e.ctrlKey || e.metaKey;
       const shiftKey = e.shiftKey;
 
-      // Handle new tab menu keyboard navigation when open
       if (showNewTabMenu) {
-        // Arrow key navigation
         if (e.key === 'ArrowDown') {
           e.preventDefault();
           setSelectedEditorIndex((prevIndex) => 
             Math.min(prevIndex + 1, filteredEditors.length - 1)
           );
           
-          // Scroll selected item into view
           setTimeout(() => {
             const selectedElement = editorListRef.current[selectedEditorIndex + 1];
             if (selectedElement) {
@@ -275,7 +359,6 @@ const EditorTabs: React.FC<EditorTabsProps> = ({
             Math.max(prevIndex - 1, 0)
           );
           
-          // Scroll selected item into view
           setTimeout(() => {
             const selectedElement = editorListRef.current[selectedEditorIndex - 1];
             if (selectedElement) {
@@ -285,27 +368,19 @@ const EditorTabs: React.FC<EditorTabsProps> = ({
               });
             }
           }, 0);
-        } 
-        
-        // Enter key to select highlighted editor
-        else if (e.key === 'Enter') {
+        } else if (e.key === 'Enter') {
           e.preventDefault();
           const selectedEditor = filteredEditors[selectedEditorIndex];
           if (selectedEditor) {
             addNewTab(selectedEditor.type);
           }
-        }
-        
-        // Escape key to close menu
-        else if (e.key === 'Escape') {
+        } else if (e.key === 'Escape') {
           e.preventDefault();
           setShowNewTabMenu(false);
         }
-
         return;
       }
 
-      // Existing global shortcuts
       if (e.key === 'n' && e.altKey) {
         e.preventDefault();
         setShowNewTabMenu(true);
@@ -336,7 +411,6 @@ const EditorTabs: React.FC<EditorTabsProps> = ({
       }
     };
 
-    // Add event listener to the entire document
     document.addEventListener('keydown', handleGlobalKeyDown, true);
     return () => document.removeEventListener('keydown', handleGlobalKeyDown, true);
   }, [
@@ -349,8 +423,7 @@ const EditorTabs: React.FC<EditorTabsProps> = ({
     selectedEditorIndex, 
     addNewTab
   ]);
-  
-  // Click outside handler for new tab menu
+
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (newTabMenuRef.current && !newTabMenuRef.current.contains(e.target as Node)) {
@@ -500,7 +573,6 @@ const EditorTabs: React.FC<EditorTabsProps> = ({
               tabIndex={isActive ? 0 : -1}
               aria-hidden={!isActive}
               style={{
-                // Completely prevent any interaction with inactive tabs
                 ...(isActive ? {} : {
                   visibility: 'hidden',
                   position: 'absolute',
@@ -512,7 +584,6 @@ const EditorTabs: React.FC<EditorTabsProps> = ({
                 })
               }}
             >
-              {/* Keyboard event trap for inactive tabs */}
               {!isActive && (
                 <div 
                   onKeyDown={e => e.stopPropagation()} 
@@ -522,18 +593,20 @@ const EditorTabs: React.FC<EditorTabsProps> = ({
                 />
               )}
               
-              {/* Editor instance with error boundary */}
               <TabErrorBoundary>
                 <div 
                   className="h-full" 
                   data-editor-type={tab.type}
                   onKeyDown={isActive ? e => {
-                    // Allow keyboard events to propagate only within the editor
                     e.stopPropagation();
                   } : undefined}
                 >
                   <Suspense fallback={<LoadingEditor />}>
-                    <Editor type={tab.type} isActive={isActive} />
+                    <Editor 
+                      type={tab.type} 
+                      isActive={isActive} 
+                      tabId={tab.id}
+                    />
                   </Suspense>
                 </div>
               </TabErrorBoundary>
@@ -541,8 +614,6 @@ const EditorTabs: React.FC<EditorTabsProps> = ({
           );
         })}
       </div>
-
-
     </div>
   );
 };
