@@ -248,6 +248,7 @@ const EditorTabs: React.FC<EditorTabsProps> = ({
   useEffect(() => {
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
       const modifierKey = e.ctrlKey || e.metaKey;
+      const shiftKey = e.shiftKey;
 
       // Handle new tab menu keyboard navigation when open
       if (showNewTabMenu) {
@@ -322,6 +323,14 @@ const EditorTabs: React.FC<EditorTabsProps> = ({
         e.preventDefault();
         const currentIndex = tabs.findIndex(t => t.id === activeTab);
         const nextIndex = (currentIndex + 1) % tabs.length;
+        setActiveTab(tabs[nextIndex].id);
+        onTabChange?.(tabs[nextIndex].type);
+      }
+
+      if (modifierKey && shiftKey && e.key === 'Tab') {
+        e.preventDefault();
+        const currentIndex = tabs.findIndex(t => t.id === activeTab);
+        const nextIndex = (currentIndex - 1 + tabs.length) % tabs.length;
         setActiveTab(tabs[nextIndex].id);
         onTabChange?.(tabs[nextIndex].type);
       }
