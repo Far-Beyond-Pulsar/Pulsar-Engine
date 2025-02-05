@@ -1,0 +1,42 @@
+{
+    "version": "1.0.0",
+    "metadata": {
+      "name": "Humanoid",
+      "author": "Trident_For_U",
+      "created": "2025-02-05T12:00:00Z"
+    },
+    "bones": [
+      {
+        "id": "root",
+        "name": "Root",
+        "position": { "x": 0, "y": 0, "z": 0 },
+        "rotation": { "x": 0, "y": 0, "z": 0 },
+        "scale": { "x": 1, "y": 1, "z": 1 },
+        "parent": null
+      },
+      {
+        "id": "spine",
+        "name": "Spine",
+        "position": { "x": 0, "y": 1, "z": 0 },
+        "rotation": { "x": 0, "y": 0, "z": 0 },
+        "scale": { "x": 1, "y": 1, "z": 1 },
+        "parent": "root"
+      },
+      {
+        "id": "left_arm",
+        "name": "Left Arm",
+        "position": { "x": 1, "y": 2, "z": 0 },
+        "rotation": { "x": 0, "y": 0, "z": 0 },
+        "scale": { "x": 1, "y": 1, "z": 1 },
+        "parent": "spine"
+      },
+      {
+        "id": "right_arm",
+        "name": "Right Arm", 
+        "position": { "x": -1, "y": 2, "z": 0 },
+        "rotation": { "x": 0, "y": 0, "z": 0 },
+        "scale": { "x": 1, "y": 1, "z": 1 },
+        "parent": "spine"
+      }
+    ]
+  }

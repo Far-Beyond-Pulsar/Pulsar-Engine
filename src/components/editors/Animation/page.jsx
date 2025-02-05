@@ -1,431 +1,461 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { 
-  Play, Pause, SkipBack, ChevronRight, Plus, RotateCcw, Clock, Upload, Save, Trash2, 
-  Edit, ChevronsRight, ChevronsLeft, Camera 
-} from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Camera, Play, Pause, Save, Upload, Undo, Redo, Settings, Maximize2, Grid, Layers, ChevronRight, Plus, Trash2, Move, RotateCcw } from 'lucide-react';
 
-// Dynamically import Three.js to ensure it's only loaded on client-side
-const importThree = () => {
-  if (typeof window !== 'undefined') {
-    return {
-      THREE: require('three'),
-      FBXLoader: require('three/examples/jsm/loaders/FBXLoader').FBXLoader,
-      OrbitControls: require('three/examples/jsm/controls/OrbitControls').OrbitControls
-    };
-  }
-  return {};
-};
-
-const FBXAnimator = () => {
-  // State management
-  const [isPlaying, setIsPlaying] = useState(false);
+const AnimationEditor = () => {
+  const [timeline, setTimeline] = useState([]);
   const [currentFrame, setCurrentFrame] = useState(0);
-  const [animations, setAnimations] = useState([]);
-  const [selectedAnimation, setSelectedAnimation] = useState(null);
-  const [animationSettings, setAnimationSettings] = useState({
-    duration: 1.0,
-    frameRate: 30,
-    loopMode: 'None'
-  });
-  const [isClient, setIsClient] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [skeleton, setSkeleton] = useState(null);
+  const [undoStack, setUndoStack] = useState([]);
+  const [redoStack, setRedoStack] = useState([]);
+  const [selectedBone, setSelectedBone] = useState(null);
+  const [zoom, setZoom] = useState(1);
+  const [viewportMode, setViewportMode] = useState('perspective');
+  const [layers, setLayers] = useState([]);
+  const [fps, setFps] = useState(30);
+  const [showGrid, setShowGrid] = useState(true);
+  const [snapToGrid, setSnapToGrid] = useState(true);
+  const [tools, setTools] = useState([
+    { id: 'move', icon: Move, active: true },
+    { id: 'rotate', icon: RotateCcw, active: false },
+  ]);
+  
+  const canvasRef = useRef(null);
+  const timelineRef = useRef(null);
+  const animationRef = useRef(null);
 
-  // Refs for 3D scene management
-  const sceneRef = useRef(null);
-  const rendererRef = useRef(null);
-  const cameraRef = useRef(null);
-  const controlsRef = useRef(null);
-  const modelRef = useRef(null);
-  const mixerRef = useRef(null);
-  const animationActionRef = useRef(null);
-  const animationFrameRef = useRef(null);
-
-  // File handling
-  const fileInputRef = useRef(null);
-
-  // Ensure client-side loading
   useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  // Initialize 3D scene
-  const initializeScene = useCallback(() => {
-    // Ensure we're on the client and have a valid DOM element
-    if (!isClient || !sceneRef.current || rendererRef.current) return;
-
-    // Dynamically import Three.js modules
-    const { THREE, FBXLoader, OrbitControls } = importThree();
-    if (!THREE || !FBXLoader || !OrbitControls) return;
-
-    // Scene setup
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x1a1a1a);
+    initializeViewport();
+    const removeKeyboardShortcuts = setupKeyboardShortcuts();
     
-    // Camera
-    const camera = new THREE.PerspectiveCamera(75, sceneRef.current.clientWidth / sceneRef.current.clientHeight, 0.1, 1000);
-    camera.position.set(0, 100, 200);
-    
-    // Renderer
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(sceneRef.current.clientWidth, sceneRef.current.clientHeight);
-    
-    // Clear previous content and append new renderer
-    if (sceneRef.current.firstChild) {
-      sceneRef.current.removeChild(sceneRef.current.firstChild);
-    }
-    sceneRef.current.appendChild(renderer.domElement);
-
-    // Lights
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-    scene.add(ambientLight);
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    directionalLight.position.set(0, 200, 100);
-    scene.add(directionalLight);
-
-    // Orbit Controls
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.target.set(0, 100, 0);
-    controls.update();
-
-    // Grid
-    const gridHelper = new THREE.GridHelper(500, 50);
-    scene.add(gridHelper);
-
-    // Store references
-    cameraRef.current = camera;
-    rendererRef.current = renderer;
-    controlsRef.current = controls;
-
-    // Create a reference to the scene
-    const sceneInstance = scene;
-
-    // Animation loop
-    const animate = () => {
-      animationFrameRef.current = requestAnimationFrame(animate);
-      
-      if (controlsRef.current) {
-        controlsRef.current.update();
-      }
-      
-      // Update animation mixer if exists
-      if (mixerRef.current) {
-        mixerRef.current.update(0.016); // Approximate 60fps
-      }
-
-      if (rendererRef.current && cameraRef.current) {
-        rendererRef.current.render(sceneInstance, cameraRef.current);
-      }
-    };
-    animate();
-
-    return sceneInstance;
-  }, [isClient]);
-
-  // Handle scene initialization and cleanup
-  useEffect(() => {
-    const scene = initializeScene();
-
-    // Cleanup function
     return () => {
-      // Cancel animation frame
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-
-      // Dispose renderer
-      if (rendererRef.current) {
-        rendererRef.current.dispose();
-      }
-
-      // Dispose controls
-      if (controlsRef.current) {
-        controlsRef.current.dispose();
+      removeKeyboardShortcuts();
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [initializeScene]);
-
-  // Handle window resize
-  useEffect(() => {
-    const handleResize = () => {
-      if (cameraRef.current && rendererRef.current && sceneRef.current) {
-        cameraRef.current.aspect = sceneRef.current.clientWidth / sceneRef.current.clientHeight;
-        cameraRef.current.updateProjectionMatrix();
-        rendererRef.current.setSize(sceneRef.current.clientWidth, sceneRef.current.clientHeight);
-      }
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Load FBX file
-  const handleFileUpload = (event) => {
-    if (!isClient) return;
-
-    const { THREE, FBXLoader } = importThree();
-    if (!THREE || !FBXLoader) return;
-
-    const file = event.target.files[0];
-    if (!file) return;
-
-    const loader = new FBXLoader();
-    loader.load(
-      URL.createObjectURL(file),
-      (fbx) => {
-        // Remove previous model if exists
-        if (modelRef.current && sceneRef.current) {
-          const scene = cameraRef.current?.userData?.scene;
-          if (scene) {
-            scene.remove(modelRef.current);
-          }
-        }
-
-        // Store new model
-        modelRef.current = fbx;
-        
-        // Ensure scene is initialized and add model
-        const scene = cameraRef.current?.userData?.scene;
-        if (scene) {
-          scene.add(fbx);
-        }
-
-        // Handle animations
-        const newAnimations = fbx.animations || [];
-        setAnimations(newAnimations);
-
-        // Setup animation mixer
-        if (mixerRef.current) {
-          mixerRef.current.stopAllAction();
-        }
-        mixerRef.current = new THREE.AnimationMixer(fbx);
-
-        // If animations exist, select the first one
-        if (newAnimations.length > 0) {
-          playAnimation(newAnimations[0]);
-        }
-      },
-      (progress) => {
-        console.log((progress.loaded / progress.total) * 100 + '% loaded');
-      },
-      (error) => {
-        console.error('Error loading FBX:', error);
+  useEffect(() => {
+    if (!isPlaying) {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
       }
-    );
-  };
+      return;
+    }
 
-  // Play animation
-  const playAnimation = (animation) => {
-    if (!isClient) return;
-
-    const { THREE } = importThree();
-    if (!THREE) return;
-
-    if (mixerRef.current && animation) {
-      // Stop previous animation
-      if (animationActionRef.current) {
-        animationActionRef.current.stop();
+    let lastTime = 0;
+    const animate = (currentTime) => {
+      if (lastTime !== 0) {
+        const deltaTime = currentTime - lastTime;
+        setCurrentFrame(prev => {
+          const nextFrame = prev + (deltaTime * fps) / 1000;
+          const maxFrame = Math.max(...timeline.map(t => t.frame), fps * 10);
+          return nextFrame > maxFrame ? 0 : nextFrame;
+        });
       }
+      lastTime = currentTime;
+      animationRef.current = requestAnimationFrame(animate);
+    };
 
-      // Play new animation
-      const action = mixerRef.current.clipAction(animation);
-      action.setLoop(
-        animationSettings.loopMode === 'Loop' ? THREE.LoopRepeat :
-        animationSettings.loopMode === 'Ping Pong' ? THREE.LoopPingPong :
-        THREE.LoopOnce
-      );
-      action.play();
-      animationActionRef.current = action;
-      setSelectedAnimation(animation);
-      setIsPlaying(true);
+    animationRef.current = requestAnimationFrame(animate);
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, [isPlaying, fps, timeline]);
+
+  const initializeViewport = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    if (showGrid) {
+      setupGridSystem(ctx);
     }
   };
 
-  // Export current animation as FBX
+  const setupGridSystem = (ctx) => {
+    ctx.strokeStyle = '#1a1a1a';
+    ctx.lineWidth = 1;
+    const gridSize = 50;
+    const width = ctx.canvas.width;
+    const height = ctx.canvas.height;
+
+    for (let x = 0; x <= width; x += gridSize) {
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, height);
+      ctx.stroke();
+    }
+
+    for (let y = 0; y <= height; y += gridSize) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(width, y);
+      ctx.stroke();
+    }
+  };
+
+  const setupKeyboardShortcuts = () => {
+    const handleKeyDown = (e) => {
+      if (e.target.tagName === 'INPUT') return;
+
+      if (e.ctrlKey && e.key === 'z') {
+        e.preventDefault();
+        handleUndo();
+      } else if (e.ctrlKey && e.key === 'y') {
+        e.preventDefault();
+        handleRedo();
+      } else if (e.ctrlKey && e.key === 's') {
+        e.preventDefault();
+        exportAnimation();
+      } else if (e.key === ' ') {
+        e.preventDefault();
+        setIsPlaying(prev => !prev);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  };
+
+  const handleToolSelect = (toolId) => {
+    setTools(prev => prev.map(tool => ({
+      ...tool,
+      active: tool.id === toolId
+    })));
+  };
+
+  const addKeyframe = (boneId) => {
+    const newKeyframe = {
+      id: Date.now(),
+      frame: currentFrame,
+      boneId,
+      transform: {
+        position: { x: 0, y: 0, z: 0 },
+        rotation: { x: 0, y: 0, z: 0 },
+        scale: { x: 1, y: 1, z: 1 }
+      },
+      easing: 'linear'
+    };
+    
+    pushToUndoStack('ADD_KEYFRAME', newKeyframe);
+    setTimeline(prev => [...prev, newKeyframe]);
+  };
+
+  const pushToUndoStack = (type, data) => {
+    setUndoStack(prev => [...prev, { type, data, timestamp: Date.now() }]);
+    setRedoStack([]);
+  };
+
+  const handleUndo = () => {
+    if (undoStack.length === 0) return;
+    
+    const action = undoStack[undoStack.length - 1];
+    setUndoStack(prev => prev.slice(0, -1));
+    setRedoStack(prev => [...prev, action]);
+    
+    executeUndoAction(action);
+  };
+
+  const handleRedo = () => {
+    if (redoStack.length === 0) return;
+    
+    const action = redoStack[redoStack.length - 1];
+    setRedoStack(prev => prev.slice(0, -1));
+    setUndoStack(prev => [...prev, action]);
+    
+    executeRedoAction(action);
+  };
+
+  const executeUndoAction = (action) => {
+    switch (action.type) {
+      case 'ADD_KEYFRAME':
+        setTimeline(prev => prev.filter(frame => frame.id !== action.data.id));
+        break;
+      case 'MODIFY_BONE':
+        setSkeleton(action.data.previousState);
+        break;
+    }
+  };
+
+  const executeRedoAction = (action) => {
+    switch (action.type) {
+      case 'ADD_KEYFRAME':
+        setTimeline(prev => [...prev, action.data]);
+        break;
+      case 'MODIFY_BONE':
+        setSkeleton(action.data.newState);
+        break;
+    }
+  };
+
+  const updateBoneProperty = (property, axis, value) => {
+    const numValue = parseFloat(value);
+    if (isNaN(numValue)) return;
+
+    setSkeleton(prev => {
+      const newSkeleton = {...prev};
+      const bone = newSkeleton.bones.find(b => b.id === selectedBone);
+      if (bone) {
+        const previousState = {...bone[property]};
+        bone[property] = {
+          ...bone[property],
+          [axis]: numValue
+        };
+        pushToUndoStack('MODIFY_BONE', {
+          boneId: selectedBone,
+          property,
+          previousState,
+          newState: {...bone[property]}
+        });
+      }
+      return newSkeleton;
+    });
+  };
+
+  const selectKeyframe = (keyframeId) => {
+    const keyframe = timeline.find(k => k.id === keyframeId);
+    if (keyframe) {
+      setCurrentFrame(keyframe.frame);
+    }
+  };
+
   const exportAnimation = () => {
-    if (selectedAnimation) {
-      // Note: Full FBX export requires additional libraries
-      // This is a placeholder for actual export functionality
-      console.log('Exporting animation:', selectedAnimation);
-      alert('Full FBX export requires server-side processing');
-    }
+    const animData = {
+      version: '1.0.0',
+      metadata: {
+        created: new Date().toISOString(),
+        fps,
+        duration: timeline.length > 0 ? Math.max(...timeline.map(t => t.frame)) / fps : 0
+      },
+      skeleton,
+      timeline,
+      layers
+    };
+    
+    const blob = new Blob([JSON.stringify(animData, null, 2)], { 
+      type: 'application/json' 
+    });
+    
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'animation.anim';
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
-  // Render the component
   return (
-    <div className="flex flex-col h-screen bg-black text-white">
-      {/* Main Content */}
-      <div className="flex-1 flex">
-        {/* Left Panel - Animation List */}
-        <div className="w-64 border-r border-neutral-800">
-          <div className="p-2 border-b border-neutral-800 flex items-center justify-between">
-            <h2 className="text-sm font-medium">Animations</h2>
-            <input 
-              type="file" 
-              ref={fileInputRef} 
-              onChange={handleFileUpload}
-              accept=".fbx"
-              className="hidden"
-            />
-            <button 
-              className="p-1 hover:bg-neutral-800 rounded"
-              onClick={() => fileInputRef.current?.click()}
+    <div className="flex flex-col h-screen bg-black text-blue-400 select-none">
+      {/* Top Bar */}
+      <div className="flex items-center justify-between p-2 bg-gray-900 border-b border-blue-900">
+        <div className="flex gap-2">
+          {tools.map(tool => (
+            <button
+              key={tool.id}
+              className={`p-2 rounded ${
+                tool.active ? 'bg-blue-900' : 'hover:bg-gray-800'
+              }`}
+              onClick={() => handleToolSelect(tool.id)}
             >
-              <Upload size={16} />
+              <tool.icon size={20} />
+            </button>
+          ))}
+        </div>
+        
+        <div className="flex gap-2">
+          <button 
+            className="p-2 hover:bg-gray-800 rounded"
+            onClick={() => setIsPlaying(!isPlaying)}
+          >
+            {isPlaying ? <Pause size={20} /> : <Play size={20} />}
+          </button>
+          
+          <button 
+            className="p-2 hover:bg-gray-800 rounded"
+            onClick={handleUndo}
+          >
+            <Undo size={20} />
+          </button>
+          
+          <button 
+            className="p-2 hover:bg-gray-800 rounded"
+            onClick={handleRedo}
+          >
+            <Redo size={20} />
+          </button>
+          
+          <button 
+            className="p-2 hover:bg-gray-800 rounded"
+            onClick={exportAnimation}
+          >
+            <Save size={20} />
+          </button>
+          
+          <button 
+            className="p-2 hover:bg-gray-800 rounded"
+            onClick={() => setShowGrid(!showGrid)}
+          >
+            <Grid size={20} />
+          </button>
+        </div>
+      </div>
+
+      <div className="flex flex-1 overflow-hidden">
+        {/* Left Sidebar - Hierarchy */}
+        <div className="w-64 bg-gray-900 border-r border-blue-900 p-2">
+          <div className="flex justify-between items-center mb-2">
+            <h2 className="font-semibold">Hierarchy</h2>
+            <button className="p-1 hover:bg-gray-800 rounded">
+              <Plus size={16} />
             </button>
           </div>
-          <div className="p-2">
-            {animations.map((anim, index) => (
-              <div 
-                key={index} 
-                className={`flex items-center p-2 ${selectedAnimation === anim ? 'bg-neutral-800' : 'hover:bg-neutral-800'} rounded cursor-pointer`}
-                onClick={() => playAnimation(anim)}
+          
+          <div className="space-y-1">
+            {skeleton?.bones.map((bone, index) => (
+              <div
+                key={index}
+                className={`flex items-center p-1 rounded cursor-pointer ${
+                  selectedBone === bone.id ? 'bg-blue-900' : 'hover:bg-gray-800'
+                }`}
+                onClick={() => setSelectedBone(bone.id)}
               >
-                <ChevronRight size={16} className="mr-2" />
-                <span className="text-sm">{anim.name || `Animation ${index + 1}`}</span>
+                <ChevronRight size={16} />
+                <span className="ml-1">{bone.name}</span>
               </div>
             ))}
-            {animations.length === 0 && (
-              <div className="text-sm text-neutral-500 text-center py-4">
-                No animations loaded
-              </div>
-            )}
           </div>
         </div>
 
-        {/* Preview Area */}
-        <div className="flex-1 flex flex-col">
-          {/* 3D Preview Window */}
-          <div 
-            ref={sceneRef} 
-            className="flex-1 relative"
-          >
-            <div className="absolute top-2 left-2 bg-black/50 p-2 rounded text-sm">
-              {selectedAnimation 
-                ? `Loaded: ${selectedAnimation.name || 'Unnamed Animation'}` 
-                : 'Load an FBX model'}
-            </div>
-          </div>
-
-          {/* Timeline */}
-          <div className="h-48 border-t border-neutral-800">
-            {/* Timeline Controls */}
-            <div className="h-10 border-b border-neutral-800 flex items-center px-4 space-x-2">
-              <button 
-                className="p-1 hover:bg-neutral-800 rounded"
-                onClick={() => setIsPlaying(!isPlaying)}
-                disabled={!selectedAnimation}
-              >
-                {isPlaying ? <Pause size={16} /> : <Play size={16} />}
-              </button>
-              <button 
-                className="p-1 hover:bg-neutral-800 rounded"
-                disabled={!selectedAnimation}
-              >
-                <SkipBack size={16} />
-              </button>
-              <button 
-                className="p-1 hover:bg-neutral-800 rounded"
-                disabled={!selectedAnimation}
-              >
-                <RotateCcw size={16} />
-              </button>
-              <div className="h-4 w-px bg-neutral-800 mx-2" />
-              <div className="flex items-center space-x-2">
-                <Clock size={16} className="text-neutral-400" />
-                <span className="text-sm text-neutral-400">Frame {currentFrame}</span>
-              </div>
-              <div className="ml-auto flex space-x-2">
-                <button 
-                  className="p-1 hover:bg-neutral-800 rounded"
-                  onClick={exportAnimation}
-                  disabled={!selectedAnimation}
-                >
-                  <Save size={16} />
-                </button>
-              </div>
-            </div>
-
-            {/* Timeline Grid */}
-            <div className="relative h-[calc(100%-2.5rem)] p-4">
-              <div className="absolute inset-0 p-4">
-                <div className="h-full" style={{
-                  backgroundImage: 'linear-gradient(to right, #1a1a1a 1px, transparent 1px), linear-gradient(to right, #0d0d0d 1px, transparent 1px)',
-                  backgroundSize: '100px 100%, 20px 100%'
-                }}></div>
-              </div>
-              {/* Keyframe Visualization */}
-              <div className="relative h-6 bg-neutral-800/30 rounded">
-                {selectedAnimation && selectedAnimation.tracks && 
-                  selectedAnimation.tracks.map((track, index) => (
-                    <div 
-                      key={index} 
-                      className="absolute h-4 w-1 bg-blue-500 top-1"
-                      style={{ 
-                        left: `${(track.times[0] / selectedAnimation.duration) * 100}%`
-                      }}
-                    ></div>
-                  ))
-                }
-              </div>
-            </div>
+        {/* Main Viewport */}
+        <div className="flex-1 relative">
+          <canvas
+            ref={canvasRef}
+            width={800}
+            height={600}
+            className="w-full h-full"
+          />
+          
+          {/* Viewport Controls */}
+          <div className="absolute bottom-4 right-4 flex gap-2">
+            <button 
+              className="p-2 bg-gray-900 rounded hover:bg-gray-800"
+              onClick={() => setViewportMode(
+                viewportMode === 'perspective' ? 'orthographic' : 'perspective'
+              )}
+            >
+              <Camera size={20} />
+            </button>
+            <button 
+              className="p-2 bg-gray-900 rounded hover:bg-gray-800"
+              onClick={() => setZoom(1)}
+            >
+              <Maximize2 size={20} />
+            </button>
           </div>
         </div>
 
-        {/* Right Panel - Properties */}
-        <div className="w-80 border-l border-neutral-800">
-          <div className="h-8 border-b border-neutral-800 px-4 flex items-center">
-            <span className="text-sm text-neutral-400">Properties</span>
+        {/* Right Sidebar - Properties */}
+        <div className="w-64 bg-gray-900 border-l border-blue-900 p-2">
+          <div className="flex justify-between items-center mb-2">
+            <h2 className="font-semibold">Properties</h2>
+            <button className="p-1 hover:bg-gray-800 rounded">
+              <Settings size={16} />
+            </button>
           </div>
-          <div className="p-4">
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm text-neutral-400 mb-1">Duration (s)</label>
-                <input 
-                  type="number" 
-                  value={animationSettings.duration}
-                  onChange={(e) => setAnimationSettings(prev => ({
-                    ...prev, 
-                    duration: parseFloat(e.target.value)
-                  }))}
-                  className="bg-neutral-900 border border-neutral-800 rounded px-2 py-1 text-sm w-24" 
-                />
+          
+          {selectedBone && (
+            <div className="space-y-2">
+              <div className="space-y-1">
+                <label className="text-sm">Position</label>
+                {['X', 'Y', 'Z'].map(axis => (
+                  <div key={axis} className="flex items-center gap-2">
+                    <span className="w-6">{axis}</span>
+                    <input
+                      type="number"
+                      className="w-full bg-gray-800 p-1 rounded"
+                      value={skeleton.bones.find(b => b.id === selectedBone).position[axis.toLowerCase()]}
+                      onChange={(e) => updateBoneProperty('position', axis.toLowerCase(), e.target.value)}
+                    />
+                  </div>
+                ))}
               </div>
-              <div>
-                <label className="block text-sm text-neutral-400 mb-1">Framerate</label>
-                <input 
-                  type="number" 
-                  value={animationSettings.frameRate}
-                  onChange={(e) => setAnimationSettings(prev => ({
-                    ...prev, 
-                    frameRate: parseInt(e.target.value)
-                  }))}
-                  className="bg-neutral-900 border border-neutral-800 rounded px-2 py-1 text-sm w-24" 
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-neutral-400 mb-1">Loop</label>
-                <select 
-                  value={animationSettings.loopMode}
-                  onChange={(e) => setAnimationSettings(prev => ({
-                    ...prev, 
-                    loopMode: e.target.value
-                  }))}
-                  className="bg-neutral-900 border border-neutral-800 rounded px-2 py-1 text-sm w-full"
-                >
-                  <option>None</option>
-                  <option>Loop</option>
-                  <option>Ping Pong</option>
-                </select>
-              </div>
-              <div className="pt-4 border-t border-neutral-800">
-                <label className="block text-sm font-medium mb-2">Keyframe Events</label>
-                <button 
-                  className="w-full px-3 py-1 bg-neutral-800 hover:bg-neutral-700 rounded text-sm text-center"
-                  disabled={!selectedAnimation}
-                >
-                  Add Keyframe Event
-                </button>
+              
+              <div className="space-y-1">
+                <label className="text-sm">Rotation</label>
+                {['X', 'Y', 'Z'].map(axis => (
+                  <div key={axis} className="flex items-center gap-2">
+                    <span className="w-6">{axis}</span>
+                    <input
+                      type="number"
+                      className="w-full bg-gray-800 p-1 rounded"
+                      value={skeleton.bones.find(b => b.id === selectedBone).rotation[axis.toLowerCase()]}
+                      onChange={(e) => updateBoneProperty('rotation', axis.toLowerCase(), e.target.value)}
+                    />
+                  </div>
+                ))}
               </div>
             </div>
+          )}
+        </div>
+      </div>
+
+      {/* Timeline */}
+      <div className="h-48 bg-gray-900 border-t border-blue-900">
+        <div className="flex h-full">
+          {/* Layers Panel */}
+          <div className="w-64 border-r border-blue-900 p-2">
+            <div className="flex justify-between items-center mb-2">
+              <h2 className="font-semibold">Layers</h2>
+              <button className="p-1 hover:bg-gray-800 rounded">
+                <Layers size={16} />
+              </button>
+              </div>
+          </div>
+          
+          {/* Timeline Tracks */}
+          <div className="flex-1 relative p-2" ref={timelineRef}>
+            {/* Time Ruler */}
+            <div className="h-6 mb-2 border-b border-blue-900">
+              {Array.from({ length: 10 }).map((_, i) => (
+                <span
+                  key={i}
+                  className="absolute text-xs"
+                  style={{ left: `${i * 10}%` }}
+                >
+                  {i * fps}f
+                </span>
+              ))}
+            </div>
+            
+            {/* Tracks */}
+            <div className="space-y-1">
+              {skeleton?.bones.map((bone, index) => (
+                <div key={index} className="h-6 relative bg-gray-800 rounded">
+                  {timeline
+                    .filter(keyframe => keyframe.boneId === bone.id)
+                    .map((keyframe, kIndex) => (
+                      <div
+                        key={kIndex}
+                        className="absolute w-2 h-4 bg-blue-500 rounded cursor-pointer hover:bg-blue-400"
+                        style={{ left: `${(keyframe.frame / (fps * 10)) * 100}%`, top: '4px' }}
+                        onClick={() => selectKeyframe(keyframe.id)}
+                      />
+                    ))}
+                </div>
+              ))}
+            </div>
+            
+            {/* Playhead */}
+            <div
+              className="absolute top-0 w-px h-full bg-blue-500"
+              style={{ left: `${(currentFrame / (fps * 10)) * 100}%` }}
+            />
           </div>
         </div>
       </div>
@@ -433,4 +463,4 @@ const FBXAnimator = () => {
   );
 };
 
-export default FBXAnimator;
+export default AnimationEditor;
