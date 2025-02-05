@@ -1,8 +1,8 @@
 [package]
 name = "pulsar-engine"
 version = "0.1.0"
-description = "A Tauri App"
-authors = ["you"]
+description = "A High-Performance Cross-Platform game engine implemented in Rust with an editor in React"
+authors = ["Tristan J. Poland"]
 license = ""
 repository = ""
 default-run = "pulsar-engine"

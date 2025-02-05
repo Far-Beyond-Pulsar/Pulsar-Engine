@@ -39,9 +39,9 @@
         "icons/icon.ico"
       ],
       "identifier": "com.pulsar.dev",
-      "longDescription": "",
+      "longDescription": "A High-Performance Cross-Platform game engine implemented in Rust with an editor in React",
       "resources": [],
-      "shortDescription": "",
+      "shortDescription": "A High-Performance Cross-Platform game engine implemented in Rust with an editor in React",
       "targets": "all",
       "macOS": {
         "exceptionDomain": "",
