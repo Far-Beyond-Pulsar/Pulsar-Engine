@@ -987,6 +987,30 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "92773504d58c093f6de2459af4af33faa518c13451eb8f2b5698ed3d36e7c813"
 
 [[package]]
+name = "dynasty-macros"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d96c5083bb48635fac1e1207aaab43cd35b1e4e1266eff5aad7f8c5e6df52a08"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.96",
+]
+
+[[package]]
+name = "dynasty-rs"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0704c1ec401cd17ed06c44720839373f290433db79b1372f57ecd8c25679e637"
+dependencies = [
+ "dynasty-macros",
+ "inventory",
+ "once_cell",
+ "thiserror 2.0.11",
+ "uuid",
+]
+
+[[package]]
 name = "embed-resource"
 version = "2.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2162,6 +2186,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e0242819d153cba4b4b05a5a8f2a7e9bbf97b6055b2a002b395c96b5ff3c0222"
 dependencies = [
  "cfg-if",
+]
+
+[[package]]
+name = "inventory"
+version = "0.3.19"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "54b12ebb6799019b044deaf431eadfe23245b259bba5a2c0796acec3943a3cdb"
+dependencies = [
+ "rustversion",
 ]
 
 [[package]]
@@ -3349,6 +3382,7 @@ dependencies = [
  "anyhow",
  "base64 0.22.1",
  "crossbeam-channel",
+ "dynasty-rs",
  "env_logger",
  "gpu-allocator 0.22.0",
  "log",

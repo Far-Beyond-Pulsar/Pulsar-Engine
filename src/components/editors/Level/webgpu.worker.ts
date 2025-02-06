@@ -1,4 +1,9 @@
 // webgpu.worker.ts
+// This file is a WebGPU worker that renders a a shader to an OffscreenCanvas.
+// It is used by the Level editor to render the level in the WebGPU renderer.
+// The worker is created and terminated by the EditorWorkerManager, this is
+// done to avoid lagging the main render thread with the viewport rendering.
+
 /// <reference types="@webgpu/types" />
 let device: GPUDevice | null = null;
 let context: GPUCanvasContext | null = null;

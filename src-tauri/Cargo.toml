@@ -34,6 +34,7 @@ gpu-allocator = "=0.22" # Pin to a specific version
 windows = "0.59.0" # Pin Windows dependencies to consistent version
 windows-sys = "0.59.0"
 windows-core = "0.59.0"
+dynasty-rs = "0.1.0"
 
 [features]
 default = ["custom-protocol"]
