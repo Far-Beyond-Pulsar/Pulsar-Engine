@@ -10,7 +10,7 @@ edition = "2021"
 rust-version = "1.66"
 
 [build-dependencies]
-tauri-build = { version = "1.5", features = [] }
+tauri-build = { version = "2.1", features = [] }
 
 [dependencies]
 serde_json = "1.0"
@@ -19,22 +19,22 @@ walkdir = "2.5.0"
 base64 = "0.22.1"
 tron = "1.0.0"
 parking_lot = "0.12.3"
-log = "0.4.25"
-env_logger = "0.10.2"
-anyhow = "1.0.95"
-thiserror = "2.0.11"
-tokio = { version = "1.43.0", features = ["macros"] }
+log = "0.4.27"
+env_logger = "0.11.6"
+anyhow = "1.0.97"
+thiserror = "2.0.12"
+tokio = { version = "1.44.1", features = ["macros"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_derive = "1.0"
 crossbeam-channel = "0.5.6"
 raw-window-handle = "0.6.2"
 tao = "0.16.10"
-wgpu = "0.19.0" # Using an older compatible version
-gpu-allocator = "=0.22" # Pin to a specific version
+wgpu = "24.0.3" # Using an older compatible version
+gpu-allocator = "=0.27" # Pin to a specific version
 windows = "0.59.0" # Pin Windows dependencies to consistent version
 windows-sys = "0.59.0"
-windows-core = "0.59.0"
-dynasty-rs = "0.1.0"
+windows-core = "0.60.0"
+dynasty-rs = "0.2.0"
 
 [features]
 default = ["custom-protocol"]
